@@ -1,104 +1,110 @@
 const Leanplum = require('../../lib/leanplum').Leanplum;
 
-describe('Test Leanplum methods.', function() {
-	it('setAppIdForDevelopmentMode', function() {
-		Leanplum.setAppIdForDevelopmentMode('app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs',
-			'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY');
+const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs';
+// const KEY_DEV = 'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY';
+const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74';
+
+describe('Test Leanplum methods.', () => {
+	before(() => {
+		// Leanplum.setAppIdForDevelopmentMode(APP_ID, KEY_DEV);
+		Leanplum.setAppIdForProductionMode(APP_ID, KEY_PROD);
 	});
-	it('setAppIdForProductionMode', function() {
-		Leanplum.setAppIdForProductionMode();
-	});
-	it('setApiPath', function() {
+	it('setApiPath', () => {
 		Leanplum.setApiPath();
 	});
-	it('setEmail', function() {
+	it('setEmail', () => {
 		Leanplum.setEmail();
 	});
-	it('setUpdateCheckingEnabledInDevelopmentMode', function() {
+	it('setUpdateCheckingEnabledInDevelopmentMode', () => {
 		Leanplum.setUpdateCheckingEnabledInDevelopmentMode();
 	});
-	it('setNetworkTimeout', function() {
+	it('setNetworkTimeout', () => {
 		Leanplum.setNetworkTimeout();
 	});
-	it('setSocketHost', function() {
+	it('setSocketHost', () => {
 		Leanplum.setSocketHost();
 	});
-	it('setDeviceId', function() {
+	it('setDeviceId', () => {
 		Leanplum.setDeviceId();
 	});
-	it('setAppVersion', function() {
+	it('setAppVersion', () => {
 		Leanplum.setAppVersion();
 	});
-	it('setDeviceName', function() {
+	it('setDeviceName', () => {
 		Leanplum.setDeviceName();
 	});
-	it('setDeviceModel', function() {
+	it('setDeviceModel', () => {
 		Leanplum.setDeviceModel();
 	});
-	it('setSystemName', function() {
+	it('setSystemName', () => {
 		Leanplum.setSystemName();
 	});
-	it('setSystemVersion', function() {
+	it('setSystemVersion', () => {
 		Leanplum.setSystemVersion();
 	});
-	it('setVariables', function() {
+	it('setVariables', () => {
 		Leanplum.setVariables();
 	});
-	it('setRequestBatching', function() {
+	it('setRequestBatching', () => {
 		Leanplum.setRequestBatching();
 	});
-	it('getVariables', function() {
+	it('getVariables', () => {
 		Leanplum.getVariables();
 	});
-	it('getVariable', function() {
+	it('getVariable', () => {
 		Leanplum.getVariable();
 	});
-	it('getVariants', function() {
+	it('getVariants', () => {
 		Leanplum.getVariants();
 	});
-	it('addStartResponseHandler', function() {
+	it('addStartResponseHandler', () => {
 		Leanplum.addStartResponseHandler();
 	});
-	it('addVariablesChangedHandler', function() {
+	it('addVariablesChangedHandler', () => {
 		Leanplum.addVariablesChangedHandler();
 	});
-	it('removeStartResponseHandler', function() {
+	it('removeStartResponseHandler', () => {
 		Leanplum.removeStartResponseHandler();
 	});
-	it('removeVariablesChangedHandler', function() {
+	it('removeVariablesChangedHandler', () => {
 		Leanplum.removeVariablesChangedHandler();
 	});
-	it('start', function() {
-		Leanplum.start();
+	it('start', (done) => {
+		let userId = (Math.random() * 100000000).toFixed(0);
+		let userAttributes = {
+			gender: 'female',
+			age: 27,
+		};
+		Leanplum.start(userId, userAttributes, done);
 	});
-	it('startFromCache', function() {
+	it('startFromCache', () => {
 		Leanplum.startFromCache();
 	});
-	it('stop', function() {
+	it('stop', () => {
 		Leanplum.stop();
 	});
-	it('pauseSession', function() {
+	it('pauseSession', () => {
 		Leanplum.pauseSession();
 	});
-	it('resumeSession', function() {
+	it('resumeSession', () => {
 		Leanplum.resumeSession();
 	});
-	it('pauseState', function() {
+	it('pauseState', () => {
 		Leanplum.pauseState();
 	});
-	it('resumeState', function() {
+	it('resumeState', () => {
 		Leanplum.resumeState();
 	});
-	it('setUserId', function() {
+	it('setUserId', () => {
 		Leanplum.setUserId();
 	});
-	it('setUserAttributes', function() {
+	it('setUserAttributes', () => {
 		Leanplum.setUserAttributes();
 	});
-	it('track', function() {
+	it('track', () => {
 		Leanplum.track();
 	});
-	it('advanceTo', function() {
+	it('advanceTo', () => {
 		Leanplum.advanceTo();
 	});
 });

@@ -36,9 +36,17 @@ Leanplum.start(function(success) {
 });
 ```
 ## Development
-
-We use grunt for automation.
-- `grunt ` 
+### Setup
+Install yarn package manager and run have it install all dependencies.
+```bash
+npm i -g yarn
+yarn install
+```
+### Tasks
+- `yarn start` - Starts the grunt watch daemon for development.
+- `yarn run lint` - Lints all files.
+- `yarn run build` - Builds a distribution version of the library.
+- `yarn run test` - Runs the unit tests.
 
 ## Contributing
 1. Fork it!
