@@ -1,14 +1,8 @@
 module.exports = function(grunt) {
     'use strict';
     grunt.initConfig({
-        jshint: {
-            files: [
-                'lib/leanplum.js'
-            ],
-            options: {
-                globals: {},
-                jshintrc: '.jshintrc'
-            }
+        eslint: {
+            target: ['lib/leanplum.js']
         },
         uglify: {
             options: {
@@ -31,11 +25,11 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks("grunt-eslint");
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-uglify');
 
-    grunt.registerTask('lint', ['jshint']);
+    grunt.registerTask('lint', ['eslint']);
     grunt.registerTask('build', ['uglify']);
     grunt.registerTask('default', ['watch']);
 };
