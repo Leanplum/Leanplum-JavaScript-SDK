@@ -1483,6 +1483,10 @@ mock-local-storage@^1.0.2:
   dependencies:
     core-js "^0.8.3"
 
+mock-socket@^6.0.4:
+  version "6.0.4"
+  resolved "https://registry.yarnpkg.com/mock-socket/-/mock-socket-6.0.4.tgz#85f58a0aa83bc1db4ca7d14b42d8f9dd663e7569"
+
 ms@0.7.1:
   version "0.7.1"
   resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
