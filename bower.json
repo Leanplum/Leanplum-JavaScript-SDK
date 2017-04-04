@@ -1,0 +1,21 @@
+{
+  "name": "leanplum-javascript-sdk",
+  "description": "",
+  "main": "lib/leanplum.js",
+  "authors": [
+    "Ben Marten <ben.marten@me.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/Leanplum/Leanplum-JavaScript-SDK",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "underscore": "^1.8.3"
+  }
+}
