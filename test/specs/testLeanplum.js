@@ -1,4 +1,5 @@
 const sinon = require('sinon');
+const sleep = require('sleep');
 
 const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs';
 const KEY_DEV = 'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY';
@@ -53,10 +54,10 @@ function interceptRequest(callback) {
  * @param {String} mode The Leanplum mode.
  */
 function setAppId(mode) {
-	if (mode === testModes.PROD) {
-		Leanplum.setAppIdForProductionMode(APP_ID, KEY_PROD);
+	if (mode === testModes.DEV) {
+		Leanplum.setAppIdForDevelopmentMode(APP_ID, KEY_PROD);
 	} else {
-		Leanplum.setAppIdForDevelopmentMode(APP_ID, KEY_DEV);
+		Leanplum.setAppIdForProductionMode(APP_ID, KEY_DEV);
 	}
 };
 
@@ -76,7 +77,7 @@ Object.keys(testModes).forEach((mode) => {
 
 			beforeEach(() => {
 				Leanplum = require('../../src/leanplum').Leanplum;
-				setAppId(mode);
+				setAppId(testModes[mode]);
 			});
 
 			afterEach(() => {
@@ -125,7 +126,7 @@ Object.keys(testModes).forEach((mode) => {
 						'Content-Type': 'application/json',
 					}, JSON.stringify(startResponse));
 				});
-				setAppId(mode);
+				setAppId(testModes[mode]);
 				Leanplum.start(userId, userAttributes, (success) => {
 					assert.equal(success, true);
 					requests = [];
@@ -181,6 +182,7 @@ Object.keys(testModes).forEach((mode) => {
 			});
 
 			it('resumeState', (done) => {
+				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'resumeState');
@@ -190,9 +192,10 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.resumeState();
-			});
+			}).timeout(7000);
 
 			it('setUserAttributes', (done) => {
+				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'setUserAttributes');
@@ -202,9 +205,10 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.setUserAttributes(userId, userAttributes);
-			});
+			}).timeout(7000);
 
 			it('track', (done) => {
+				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'track');
@@ -214,9 +218,10 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.track();
-			});
+			}).timeout(7000);
 
 			it('advanceTo', (done) => {
+				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'advance');
@@ -226,7 +231,7 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.advanceTo();
-			});
+			}).timeout(7000);
 		});
 	});
 });
