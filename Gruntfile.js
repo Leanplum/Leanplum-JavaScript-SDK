@@ -3,10 +3,21 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-babel');
 
   grunt.initConfig({
     eslint: {
       target: ['lib/leanplum.js'],
+    },
+    babel: {
+      options: {
+        sourceMap: true,
+      },
+      dist: {
+        files: {
+          'dist/leanplum.js': 'src/leanplum.js',
+        },
+      },
     },
     uglify: {
       options: {
@@ -14,7 +25,7 @@ module.exports = function(grunt) {
       },
       js: {
         files: {
-          'dist/leanplum.min.js': ['lib/leanplum.js'],
+          'dist/leanplum.min.js': ['dist/leanplum.js'],
         },
       },
     },
@@ -44,7 +55,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('lint', ['eslint']);
-  grunt.registerTask('build', ['uglify']);
+  grunt.registerTask('build', ['babel', 'uglify']);
   grunt.registerTask('test', ['mochaTest']);
   grunt.registerTask('default', ['watch']);
 };
