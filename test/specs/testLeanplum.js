@@ -21,7 +21,7 @@ const userAttributes = {
 	age: 27,
 };
 
-let Leanplum = require('../../lib/leanplum').Leanplum;
+let Leanplum = require('../../src/leanplum').Leanplum;
 
 /**
  * Extracts the leanplum action type from a request.
@@ -75,14 +75,14 @@ Object.keys(testModes).forEach((mode) => {
 			});
 
 			beforeEach(() => {
-				Leanplum = require('../../lib/leanplum').Leanplum;
+				Leanplum = require('../../src/leanplum').Leanplum;
 				setAppId(mode);
 			});
 
 			afterEach(() => {
 				requests = [];
 				assert.equal(requests.length, 0);
-				delete require.cache[require.resolve('../../lib/leanplum')];
+				delete require.cache[require.resolve('../../src/leanplum')];
 			});
 
 			it('start', (done) => {
@@ -118,7 +118,7 @@ Object.keys(testModes).forEach((mode) => {
 
 		describe('Test action methods.', () => {
 			before((done) => {
-				Leanplum = require('../../lib/leanplum').Leanplum;
+				Leanplum = require('../../src/leanplum').Leanplum;
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					request.respond(200, {
@@ -135,7 +135,7 @@ Object.keys(testModes).forEach((mode) => {
 
 			after(() => {
 				xhr.restore();
-				delete require.cache[require.resolve('../../lib/leanplum')];
+				delete require.cache[require.resolve('../../src/leanplum')];
 			});
 
 			beforeEach(() => {});
