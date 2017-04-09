@@ -7,6 +7,7 @@ const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74';
 
 const startResponse = require('./responses/start.json');
 const successResponse = require('./responses/success.json');
+const LEANPLUM_PATH = '../../dist/leanplum';
 
 // const mockWebSocket = require('mock-socket').WebSocket;
 // global.WebSocket = mockWebSocket;
@@ -22,7 +23,7 @@ const userAttributes = {
 	age: 27,
 };
 
-let Leanplum = require('../../src/leanplum').Leanplum;
+let Leanplum = require(LEANPLUM_PATH);
 
 /**
  * Extracts the leanplum action type from a request.
@@ -76,14 +77,14 @@ Object.keys(testModes).forEach((mode) => {
 			});
 
 			beforeEach(() => {
-				Leanplum = require('../../src/leanplum').Leanplum;
+				Leanplum = require(LEANPLUM_PATH);
 				setAppId(testModes[mode]);
 			});
 
 			afterEach(() => {
 				requests = [];
 				assert.equal(requests.length, 0);
-				delete require.cache[require.resolve('../../src/leanplum')];
+				delete require.cache[require.resolve(LEANPLUM_PATH)];
 			});
 
 			it('start', (done) => {
@@ -119,7 +120,7 @@ Object.keys(testModes).forEach((mode) => {
 
 		describe('Test action methods.', () => {
 			before((done) => {
-				Leanplum = require('../../src/leanplum').Leanplum;
+				Leanplum = require(LEANPLUM_PATH);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					request.respond(200, {
@@ -136,7 +137,7 @@ Object.keys(testModes).forEach((mode) => {
 
 			after(() => {
 				xhr.restore();
-				delete require.cache[require.resolve('../../src/leanplum')];
+				delete require.cache[require.resolve(LEANPLUM_PATH)];
 			});
 
 			beforeEach(() => {});

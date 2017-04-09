@@ -1,3 +1,25 @@
+import Constants from './Constants';
+import ArgsBuilder from './ArgsBuilder';
+import BrowserDetector from './BrowserDetector';
+
+let _requestQueue = [];
+let _variablesChangedHandlers = [];
+let _variants = [];
+let _startHandlers = [];
+
+let _actionMetadata = {};
+let _token = '';
+let _batchEnabled = true;
+let _batchCooldown = 5;
+let API_PATH = 'https://www.leanplum.com/api';
+let SOCKET_HOST = 'dev.leanplum.com';
+
+let NETWORK_TIMEOUT_SECONDS = 10;
+
+let _localStorageEnabled = undefined;
+let _alternateLocalStorage = {};
+let browserDetector = new BrowserDetector();
+
 /**
  * @preserve Leanplum Javascript SDK v1.1.10.
  * Copyright 2016, Leanplum, Inc. All rights reserved.
@@ -5,189 +27,80 @@
  * You may not distribute this source code without prior written permission
  * from Leanplum.
  */
-(function() {
-  let exports = {};
-  let _ = function() {};
-
-  if (!this['Leanplum']) {
-    this['Leanplum'] = exports;
-  }
-
-  let API_PATH = 'https://www.leanplum.com/api';
-  let SOCKET_HOST = 'dev.leanplum.com';
-  const SDK_VERSION = '1.1.10';
-  const CLIENT = 'js';
-  let NETWORK_TIMEOUT_SECONDS = 10;
-
-  const METHODS = {
-    START: 'start',
-    STOP: 'stop',
-    ADVANCE: 'advance',
-    TRACK: 'track',
-    PAUSE_SESSION: 'pauseSession',
-    RESUME_SESSION: 'resumeSession',
-    PAUSE_STATE: 'pauseState',
-    RESUME_STATE: 'resumeState',
-    DOWNLOAD_FILE: 'downloadFile',
-    MULTI: 'multi',
-    SET_VARS: 'setVars',
-    GET_VARS: 'getVars',
-    SET_USER_ATTRIBUTES: 'setUserAttributes',
-    UPLOAD_FILE: 'uploadFile',
-    REGISTER_DEVICE: 'registerDevice',
-  };
-
-  const PARAMS = {
-    ACTION: 'action',
-    APP_ID: 'appId',
-    CLIENT: 'client',
-    CLIENT_KEY: 'clientKey',
-    DEVICE_ID: 'deviceId',
-    SDK_VERSION: 'sdkVersion',
-    USER_ID: 'userId',
-    NEW_USER_ID: 'newUserId',
-    DEV_MODE: 'devMode',
-    VERSION_NAME: 'versionName',
-    SYSTEM_NAME: 'systemName',
-    SYSTEM_VERSION: 'systemVersion',
-    BROWSER_NAME: 'browserName',
-    BROWSER_VERSION: 'browserVersion',
-    DEVICE_NAME: 'deviceName',
-    DEVICE_MODEL: 'deviceModel',
-    USER_ATTRIBUTES: 'userAttributes',
-    LOCALE: 'locale',
-    COUNTRY: 'country',
-    REGION: 'region',
-    CITY: 'city',
-    LOCATION: 'location',
-    STATE: 'state',
-    INFO: 'info',
-    EVENT: 'event',
-    VALUE: 'value',
-    FILENAME: 'filename',
-    TIME: 'time',
-    DATA: 'data',
-    VARS: 'vars',
-    FILE: 'file',
-    SIZE: 'size',
-    VARIATION: 'variation',
-    HASH: 'hash',
-    EMAIL: 'email',
-    VARIABLES: 'vars',
-    PARAMS: 'params',
-    INCLUDE_DEFAULTS: 'includeDefaults',
-  };
-
-  const KEYS = {
-    IS_REGISTERED: 'isRegistered',
-    LATEST_VERSION: 'latestVersion',
-    VARS: 'vars',
-    VARIANTS: 'variants',
-    ACTION_METADATA: 'actionMetadata',
-    TOKEN: 'token',
-  };
-
-  const DEFAULT_KEYS = {
-    COUNT: '__leanplum_unsynced',
-    ITEM: '__leanplum_unsynced_',
-    VARIABLES: '__leanplum_variables',
-    VARIANTS: '__leanplum_variants',
-    ACTION_METADATA: '__leanplum_action_metadata',
-    TOKEN: '__leanplum_token',
-    DEVICE_ID: '__leanplum_device_id',
-    USER_ID: '__leanplum_user_id',
-  };
-
-  const VALUES = {
-    DETECT: '(detect)',
-  };
-
-  let Leanplum = {
-    _checkForUpdatesInDevelopmentMode: true,
-    _requestQueue: [],
-    _variablesChangedHandlers: [],
-    _variants: [],
-    _startHandlers: [],
-    _actionMetadata: {},
-    _token: '',
-    _batchEnabled: true,
-    _batchCooldown: 5,
-  };
-
-  exports['setApiPath'] = function(apiPath) {
+class Leanplum {
+  // ***************************************************************************
+  // Public Methods
+  // ***************************************************************************
+  static setApiPath(apiPath) {
     if (!apiPath || apiPath.isEmpty()) {
       return;
     }
     API_PATH = apiPath;
   };
 
-  exports['setEmail'] = function(email) {
+  static setEmail(email) {
     Leanplum._email = email;
   };
 
-  exports['setUpdateCheckingEnabledInDevelopmentMode'] = function(enabled) {
-    Leanplum._checkForUpdatesInDevelopmentMode = enabled;
-  };
-
-  exports['setNetworkTimeout'] = function(seconds) {
+  static setNetworkTimeout(seconds) {
     NETWORK_TIMEOUT_SECONDS = seconds;
   };
 
-  exports['setAppIdForDevelopmentMode'] = function(appId, accessKey) {
+  static setAppIdForDevelopmentMode(appId, accessKey) {
     Leanplum._appId = appId;
     Leanplum._clientKey = accessKey;
     Leanplum._devMode = true;
   };
 
-  exports['setAppIdForProductionMode'] = function(appId, accessKey) {
+  static setAppIdForProductionMode(appId, accessKey) {
     Leanplum._appId = appId;
     Leanplum._clientKey = accessKey;
     Leanplum._devMode = false;
   };
 
-  exports['setSocketHost'] = function(host) {
+  static setSocketHost(host) {
     SOCKET_HOST = host;
   };
 
-  exports['setDeviceId'] = function(deviceId) {
+  static setDeviceId(deviceId) {
     Leanplum._deviceId = deviceId;
   };
 
-  exports['setAppVersion'] = function(versionName) {
+  static setAppVersion(versionName) {
     Leanplum._versionName = versionName;
   };
 
-  exports['setDeviceName'] = function(deviceName) {
+  static setDeviceName(deviceName) {
     Leanplum._deviceName = deviceName;
   };
 
-  exports['setDeviceModel'] = function(deviceModel) {
+  static setDeviceModel(deviceModel) {
     Leanplum._deviceModel = deviceModel;
   };
 
-  exports['setSystemName'] = function(systemName) {
+  static setSystemName(systemName) {
     Leanplum._systemName = systemName;
   };
 
-  exports['setSystemVersion'] = function(systemVersion) {
+  static setSystemVersion(systemVersion) {
     Leanplum._systemVersion = systemVersion;
   };
 
-  exports['setVariables'] = function(variables) {
+  static setVariables(variables) {
     Leanplum._variables = variables;
   };
 
-  exports['setRequestBatching'] = function(batchEnabled, cooldownSeconds) {
-    Leanplum._batchEnabled = batchEnabled;
-    Leanplum._batchCooldown = cooldownSeconds;
+  static setRequestBatching(batchEnabled, cooldownSeconds) {
+    _batchEnabled = batchEnabled;
+    _batchCooldown = cooldownSeconds;
   };
 
-  exports['getVariables'] = function(variables) {
+  static getVariables(variables) {
     return Leanplum._merged !== undefined ? Leanplum._merged :
       Leanplum._variables;
   };
 
-  exports['getVariable'] = function(args) {
+  static getVariable(args) {
     let current = exports['getVariables']();
     for (let i = 0; i < arguments.length; i++) {
       current = current[arguments.i];
@@ -195,39 +108,39 @@
     return current;
   };
 
-  exports['getVariants'] = function() {
-    return Leanplum._variants || [];
+  static getVariants() {
+    return _variants || [];
   };
 
-  exports['addStartResponseHandler'] = function(handler) {
-    Leanplum._startHandlers.push(handler);
+  static addStartResponseHandler(handler) {
+    _startHandlers.push(handler);
     if (Leanplum._hasStarted) {
       handler(Leanplum._startSuccessful);
     }
   };
 
-  exports['addVariablesChangedHandler'] = function(handler) {
-    Leanplum._variablesChangedHandlers.push(handler);
+  static addVariablesChangedHandler(handler) {
+    _variablesChangedHandlers.push(handler);
     if (Leanplum._hasReceivedDiffs) {
       handler();
     }
   };
 
-  exports['removeStartResponseHandler'] = function(handler) {
-    let idx = Leanplum._startHandlers.indexOf(handler);
+  static removeStartResponseHandler(handler) {
+    let idx = _startHandlers.indexOf(handler);
     if (idx >= 0) {
-      Leanplum._startHandlers.splice(idx, 1);
+      _startHandlers.splice(idx, 1);
     }
   };
 
-  exports['removeVariablesChangedHandler'] = function(handler) {
-    let idx = Leanplum._variablesChangedHandlers.indexOf(handler);
+  static removeVariablesChangedHandler(handler) {
+    let idx = _variablesChangedHandlers.indexOf(handler);
     if (idx >= 0) {
-      Leanplum._variablesChangedHandlers.splice(idx, 1);
+      _variablesChangedHandlers.splice(idx, 1);
     }
   };
 
-  exports['start'] = function(userId, userAttributes, callback) {
+  static start(userId, userAttributes, callback) {
     // Overloads.
     if (typeof(userId) == 'function') {
       callback = userId;
@@ -248,22 +161,22 @@
     }
 
     // Issue request.
-    Leanplum.request(METHODS.START,
+    Leanplum._request(Constants.METHODS.START,
       new ArgsBuilder()
-      .add(PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
-      .add(PARAMS.COUNTRY, VALUES.DETECT)
-      .add(PARAMS.REGION, VALUES.DETECT)
-      .add(PARAMS.CITY, VALUES.DETECT)
-      .add(PARAMS.LOCATION, VALUES.DETECT)
-      .add(PARAMS.SYSTEM_NAME, Leanplum._systemName || BrowserDetect.OS)
-      .add(PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || ''))
-      .add(PARAMS.BROWSER_NAME, BrowserDetect.browser)
-      .add(PARAMS.BROWSER_VERSION, '' + BrowserDetect.version)
-      .add(PARAMS.LOCALE, VALUES.DETECT)
-      .add(PARAMS.DEVICE_NAME, Leanplum._deviceName || (BrowserDetect.browser +
-        ' ' + BrowserDetect.version))
-      .add(PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
-      .add(PARAMS.INCLUDE_DEFAULTS, false)
+      .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
+      .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.SYSTEM_NAME, Leanplum._systemName || browserDetector.OS)
+      .add(Constants.PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || ''))
+      .add(Constants.PARAMS.BROWSER_NAME, browserDetector.browser)
+      .add(Constants.PARAMS.BROWSER_VERSION, '' + browserDetector.version)
+      .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName || (browserDetector.browser +
+        ' ' + browserDetector.version))
+      .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
+      .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
       // TODO: referer
       , {
         queued: true,
@@ -275,7 +188,7 @@
             Leanplum._startSuccessful = true;
 
             if (Leanplum._devMode) {
-              let latestVersion = startResponse[KEYS.LATEST_VERSION];
+              let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION];
               if (latestVersion) {
                 console.log('A newer version of Leanplum, ' + latestVersion +
                   ', is available. ' + 'Go to leanplum.com to download it.');
@@ -288,23 +201,23 @@
             }
 
             Leanplum.setContent(
-              startResponse[KEYS.VARS],
-              startResponse[KEYS.VARIANTS],
-              startResponse[KEYS.ACTION_METADATA]);
-            Leanplum._token = startResponse[KEYS.TOKEN];
+              startResponse[Constants.KEYS.VARS],
+              startResponse[Constants.KEYS.VARIANTS],
+              startResponse[Constants.KEYS.ACTION_METADATA]);
+            _token = startResponse[Constants.KEYS.TOKEN];
           } else {
             Leanplum._startSuccessful = false;
-            Leanplum.loadDiffs();
+            Leanplum._loadDiffs();
           }
-          for (let i = 0; i < Leanplum._startHandlers.length; i++) {
-            Leanplum._startHandlers[i](Leanplum._startSuccessful);
+          for (let i = 0; i < _startHandlers.length; i++) {
+            _startHandlers[i](Leanplum._startSuccessful);
           }
         },
       }
     );
   };
 
-  exports['startFromCache'] = function(userId, userAttributes, callback) {
+  static startFromCache(userId, userAttributes, callback) {
     // Overloads.
     if (typeof(userId) == 'function') {
       callback = userId;
@@ -333,21 +246,132 @@
         console.log('Your browser doesn\'t support WebSockets.');
       }
     }
-    Leanplum.loadDiffs();
-    for (let i = 0; i < Leanplum._startHandlers.length; i++) {
-      Leanplum._startHandlers[i](Leanplum._startSuccessful);
+    Leanplum._loadDiffs();
+    for (let i = 0; i < _startHandlers.length; i++) {
+      _startHandlers[i](Leanplum._startSuccessful);
+    }
+  };
+  static stop() {
+    Leanplum._request(Constants.METHODS.STOP, undefined, {
+      sendNow: true,
+      queued: true,
+    });
+  };
+
+  static pauseSession() {
+    Leanplum._request(Constants.METHODS.PAUSE_SESSION, undefined, {
+      sendNow: true,
+      queued: true,
+    });
+  };
+
+  static resumeSession() {
+    Leanplum._request(Constants.METHODS.RESUME_SESSION, undefined, {
+      sendNow: true,
+      queued: true,
+    });
+  };
+
+  static pauseState() {
+    Leanplum._request(Constants.METHODS.PAUSE_STATE, undefined, {
+      queued: true,
+    });
+  };
+
+  static resumeState() {
+    Leanplum._request(Constants.METHODS.RESUME_STATE, undefined, {
+      queued: true,
+    });
+  };
+
+  static setUserId(userId) {
+    exports['setUserAttributes'](userId);
+  }
+
+  static setUserAttributes(userId, userAttributes) {
+    if (userAttributes === undefined) {
+      if (typeof userId == 'object') {
+        userAttributes = userId;
+        userId = undefined;
+      } else if (typeof userId != 'string') {
+        console.log('Leanplum: setUserAttributes expects a string or an ' +
+          'object');
+        return;
+      }
+    }
+    Leanplum._request(Constants.METHODS.SET_USER_ATTRIBUTES,
+      new ArgsBuilder()
+      .add(Constants.PARAMS.USER_ATTRIBUTES,
+        userAttributes ? JSON.stringify(userAttributes) : undefined)
+      .add(Constants.PARAMS.NEW_USER_ID, userId), {
+        queued: true,
+      });
+    if (userId) {
+      Leanplum._userId = userId;
+      Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._userId);
     }
   };
 
-  Leanplum._socketIOConnect = function() {
+  static track(event, value, info, params) {
+    // Overloads.
+    // object && !null && !undefined -> params
+    // string -> info, params
+    // *, object && !null && !undefined -> value, params
+    if (typeof(value) == 'object' && value !== null && value !== undefined) {
+      params = value;
+      info = undefined;
+      value = undefined;
+    } else if (typeof(value) == 'string') {
+      params = info;
+      info = value;
+      value = undefined;
+    } else if (typeof(info) == 'object' && info !== null &&
+      info !== undefined) {
+      params = info;
+      info = undefined;
+    }
+
+    Leanplum._request(Constants.METHODS.TRACK,
+      new ArgsBuilder()
+      .add(Constants.PARAMS.EVENT, event)
+      .add(Constants.PARAMS.VALUE, value || 0.0)
+      .add(Constants.PARAMS.INFO, info)
+      .add(Constants.PARAMS.PARAMS, JSON.stringify(params)), {
+        queued: true,
+      });
+  };
+
+  static advanceTo(state, info, params) {
+    // Overloads.
+    // string|null|undefined, * -> info, params
+    // object && !null && !undefined -> params
+    if (typeof(info) == 'object' && info !== null && info !== undefined) {
+      params = info;
+      info = undefined;
+    }
+
+    Leanplum._request(Constants.METHODS.ADVANCE,
+      new ArgsBuilder()
+      .add(Constants.PARAMS.STATE, state)
+      .add(Constants.PARAMS.INFO, info)
+      .add(Constants.PARAMS.PARAMS, JSON.stringify(params)), {
+        queued: true,
+      });
+  };
+
+  // ***************************************************************************
+  // Private Methods
+  // ***************************************************************************
+
+  static _socketIOConnect() {
     let client = new SocketIOClient();
     let authSent = false;
     client.onopen = function() {
       if (!authSent) {
         console.log('Leanplum: Connected to development server.');
         let args = {};
-        args[PARAMS.APP_ID] = Leanplum._appId;
-        args[PARAMS.DEVICE_ID] = Leanplum._deviceId;
+        args[Constants.PARAMS.APP_ID] = Leanplum._appId;
+        args[Constants.PARAMS.DEVICE_ID] = Leanplum._deviceId;
         client.emit('auth', args);
         authSent = true;
       }
@@ -357,16 +381,16 @@
     };
     client.onmessage = function(event, args) {
       if (event == 'updateVars') {
-        Leanplum.request(METHODS.GET_VARS,
+        Leanplum._request(Constants.METHODS.GET_VARS,
           new ArgsBuilder()
-          .add(PARAMS.INCLUDE_DEFAULTS, false), {
+          .add(Constants.PARAMS.INCLUDE_DEFAULTS, false), {
             queued: false,
             sendNow: true,
             response: function(response) {
               let getVarsResponse = Leanplum._getLastResponse(response);
-              let values = getVarsResponse[KEYS.VARS];
-              let variants = getVarsResponse[KEYS.VARIANTS];
-              let actionMetadata = getVarsResponse[KEYS.ACTION_METADATA];
+              let values = getVarsResponse[Constants.KEYS.VARS];
+              let variants = getVarsResponse[Constants.KEYS.VARIANTS];
+              let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA];
               if (!_.isEqual(values, Leanplum._diffs)) {
                 Leanplum.setContent(values, variants, actionMetadata);
               }
@@ -399,129 +423,21 @@
     }, 5000);
   };
 
-  exports['stop'] = function() {
-    Leanplum.request(METHODS.STOP, undefined, {
-      sendNow: true,
-      queued: true,
-    });
-  };
-
-  exports['pauseSession'] = function() {
-    Leanplum.request(METHODS.PAUSE_SESSION, undefined, {
-      sendNow: true,
-      queued: true,
-    });
-  };
-
-  exports['resumeSession'] = function() {
-    Leanplum.request(METHODS.RESUME_SESSION, undefined, {
-      sendNow: true,
-      queued: true,
-    });
-  };
-
-  exports['pauseState'] = function() {
-    Leanplum.request(METHODS.PAUSE_STATE, undefined, {
-      queued: true,
-    });
-  };
-
-  exports['resumeState'] = function() {
-    Leanplum.request(METHODS.RESUME_STATE, undefined, {
-      queued: true,
-    });
-  };
-
-  exports['setUserId'] = function(userId) {
-      exports['setUserAttributes'](userId);
-    },
-
-    exports['setUserAttributes'] = function(userId, userAttributes) {
-      if (userAttributes === undefined) {
-        if (typeof userId == 'object') {
-          userAttributes = userId;
-          userId = undefined;
-        } else if (typeof userId != 'string') {
-          console.log('Leanplum: setUserAttributes expects a string or an ' +
-            'object');
-          return;
-        }
-      }
-      Leanplum.request(METHODS.SET_USER_ATTRIBUTES,
-        new ArgsBuilder()
-        .add(PARAMS.USER_ATTRIBUTES,
-          userAttributes ? JSON.stringify(userAttributes) : undefined)
-        .add(PARAMS.NEW_USER_ID, userId), {
-          queued: true,
-        });
-      if (userId) {
-        Leanplum._userId = userId;
-        Leanplum._saveToLocalStorage(DEFAULT_KEYS.USER_ID, Leanplum._userId);
-      }
-    };
-
-  exports['track'] = function(event, value, info, params) {
-    // Overloads.
-    // object && !null && !undefined -> params
-    // string -> info, params
-    // *, object && !null && !undefined -> value, params
-    if (typeof(value) == 'object' && value !== null && value !== undefined) {
-      params = value;
-      info = undefined;
-      value = undefined;
-    } else if (typeof(value) == 'string') {
-      params = info;
-      info = value;
-      value = undefined;
-    } else if (typeof(info) == 'object' && info !== null &&
-      info !== undefined) {
-      params = info;
-      info = undefined;
-    }
-
-    Leanplum.request(METHODS.TRACK,
-      new ArgsBuilder()
-      .add(PARAMS.EVENT, event)
-      .add(PARAMS.VALUE, value || 0.0)
-      .add(PARAMS.INFO, info)
-      .add(PARAMS.PARAMS, JSON.stringify(params)), {
-        queued: true,
-      });
-  };
-
-  exports['advanceTo'] = function(state, info, params) {
-    // Overloads.
-    // string|null|undefined, * -> info, params
-    // object && !null && !undefined -> params
-    if (typeof(info) == 'object' && info !== null && info !== undefined) {
-      params = info;
-      info = undefined;
-    }
-
-    Leanplum.request(METHODS.ADVANCE,
-      new ArgsBuilder()
-      .add(PARAMS.STATE, state)
-      .add(PARAMS.INFO, info)
-      .add(PARAMS.PARAMS, JSON.stringify(params)), {
-        queued: true,
-      });
-  };
-
   // Leanplum utility methods.
 
-  Leanplum.setContent = function(diffs, variants, actionMetadata) {
+  static _setContent(diffs, variants, actionMetadata) {
     Leanplum._diffs = diffs;
-    Leanplum._variants = variants;
-    Leanplum._actionMetadata = actionMetadata;
+    _variants = variants;
+    _actionMetadata = actionMetadata;
     Leanplum._hasReceivedDiffs = true;
     Leanplum._merged = Leanplum.mergeHelper(Leanplum._variables, diffs);
     Leanplum.saveDiffs();
-    for (let i = 0; i < Leanplum._variablesChangedHandlers.length; i++) {
-      Leanplum._variablesChangedHandlers[i]();
+    for (let i = 0; i < _variablesChangedHandlers.length; i++) {
+      _variablesChangedHandlers[i]();
     }
   };
 
-  Leanplum.mergeHelper = function(vars, diff) {
+  static _mergeHelper(vars, diff) {
     if (typeof diff == 'number' || typeof diff == 'boolean' ||
       typeof diff == 'string') {
       return diff;
@@ -608,55 +524,55 @@
     return merged;
   };
 
-  Leanplum.sendVariables = function() {
+  static _sendVariables() {
     let body = {};
-    body[PARAMS.VARIABLES] = Leanplum._variables;
-    Leanplum.request(METHODS.SET_VARS,
+    body[Constants.PARAMS.VARIABLES] = Leanplum._variables;
+    Leanplum._request(Constants.METHODS.SET_VARS,
       new ArgsBuilder().body(JSON.stringify(body)), {
         sendNow: true,
       });
   };
 
-  Leanplum.loadDiffs = function() {
+  static _loadDiffs() {
     try {
       Leanplum.setContent(
         JSON.parse(Leanplum._getFromLocalStorage(
-          DEFAULT_KEYS.VARIABLES) || null),
+          Constants.DEFAULT_KEYS.VARIABLES) || null),
         JSON.parse(Leanplum._getFromLocalStorage(
-          DEFAULT_KEYS.VARIANTS) || null),
+          Constants.DEFAULT_KEYS.VARIANTS) || null),
         JSON.parse(Leanplum._getFromLocalStorage(
-          DEFAULT_KEYS.ACTION_METADATA) || null));
-      Leanplum._token = Leanplum._getFromLocalStorage(DEFAULT_KEYS.TOKEN);
+          Constants.DEFAULT_KEYS.ACTION_METADATA) || null));
+      _token = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.TOKEN);
     } catch (e) {
       console.log('Leanplum: Invalid diffs: ' + e);
     }
   };
 
-  Leanplum.saveDiffs = function() {
+  static _saveDiffs() {
     Leanplum._saveToLocalStorage(
-      DEFAULT_KEYS.VARIABLES, JSON.stringify(Leanplum._diffs || {}));
+      Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(Leanplum._diffs || {}));
     Leanplum._saveToLocalStorage(
-      DEFAULT_KEYS.VARIANTS, JSON.stringify(Leanplum._variants || [])
+      Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(_variants || [])
     );
-    Leanplum._saveToLocalStorage(DEFAULT_KEYS.ACTION_METADATA,
-      JSON.stringify(Leanplum._actionMetadata || {}));
-    Leanplum._saveToLocalStorage(DEFAULT_KEYS.TOKEN, Leanplum._token);
+    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
+      JSON.stringify(_actionMetadata || {}));
+    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, _token);
   };
 
-  Leanplum._saveRequestForLater = function(args) {
-    let count = Leanplum._getFromLocalStorage(DEFAULT_KEYS.COUNT) || 0;
-    let itemKey = DEFAULT_KEYS.ITEM + count;
+  static _saveRequestForLater(args) {
+    let count = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0;
+    let itemKey = Constants.DEFAULT_KEYS.ITEM + count;
     Leanplum._saveToLocalStorage(itemKey, JSON.stringify(args));
     count++;
-    Leanplum._saveToLocalStorage(DEFAULT_KEYS.COUNT, count);
+    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.COUNT, count);
   };
 
-  Leanplum._popUnsentRequests = function() {
+  static _popUnsentRequests() {
     let requestData = [];
-    let count = Leanplum._getFromLocalStorage(DEFAULT_KEYS.COUNT) || 0;
-    Leanplum._removeFromLocalStorage(DEFAULT_KEYS.COUNT);
+    let count = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0;
+    Leanplum._removeFromLocalStorage(Constants.DEFAULT_KEYS.COUNT);
     for (let i = 0; i < count; i++) {
-      let itemKey = DEFAULT_KEYS.ITEM + i;
+      let itemKey = Constants.DEFAULT_KEYS.ITEM + i;
       try {
         let requestArgs = JSON.parse(Leanplum._getFromLocalStorage(itemKey));
         requestData.push(requestArgs);
@@ -666,14 +582,14 @@
     return requestData;
   };
 
-  Leanplum.request = function(action, params, options) {
+  static _request(action, params, options) {
     options = options || {};
     params = params || new ArgsBuilder();
 
     // Get or create device ID and user ID.
     if (!Leanplum._deviceId) {
       Leanplum._deviceId =
-        Leanplum._getFromLocalStorage(DEFAULT_KEYS.DEVICE_ID);
+        Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID);
     }
     if (!Leanplum._deviceId) {
       let id = '';
@@ -683,25 +599,25 @@
         id += possible.charAt(Math.floor(Math.random() * possible.length));
       }
       Leanplum._deviceId = id;
-      Leanplum._saveToLocalStorage(DEFAULT_KEYS.DEVICE_ID, id);
+      Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID, id);
     }
     if (!Leanplum._userId) {
-      Leanplum._userId = Leanplum._getFromLocalStorage(DEFAULT_KEYS.USER_ID);
+      Leanplum._userId = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.USER_ID);
       if (!Leanplum._userId) {
         Leanplum._userId = Leanplum._deviceId;
       }
     }
-    Leanplum._saveToLocalStorage(DEFAULT_KEYS.USER_ID, Leanplum._userId);
+    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._userId);
 
     let argsBuilder = params
-      .attachApiKeys()
-      .add(PARAMS.SDK_VERSION, SDK_VERSION)
-      .add(PARAMS.DEVICE_ID, Leanplum._deviceId)
-      .add(PARAMS.USER_ID, Leanplum._userId)
-      .add(PARAMS.ACTION, action)
-      .add(PARAMS.VERSION_NAME, Leanplum._versionName)
-      .add(PARAMS.DEV_MODE, Leanplum._devMode)
-      .add(PARAMS.TIME, '' + (new Date().getTime() / 1000));
+      .attachApiKeys(Leanplum._appId, Leanplum._clientKey)
+      .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
+      .add(Constants.PARAMS.DEVICE_ID, Leanplum._deviceId)
+      .add(Constants.PARAMS.USER_ID, Leanplum._userId)
+      .add(Constants.PARAMS.ACTION, action)
+      .add(Constants.PARAMS.VERSION_NAME, Leanplum._versionName)
+      .add(Constants.PARAMS.DEV_MODE, Leanplum._devMode)
+      .add(Constants.PARAMS.TIME, '' + (new Date().getTime() / 1000));
     let success = options.success || options.response;
     let error = options.error || options.response;
 
@@ -721,7 +637,7 @@
     }
 
     let sendNow = (Leanplum._devMode || options.sendNow ||
-      !Leanplum._batchEnabled);
+      !_batchEnabled);
 
     let sendUnsentRequests = function() {
       let requestsToSend = Leanplum._popUnsentRequests();
@@ -730,10 +646,10 @@
           'data': requestsToSend,
         });
         let multiRequestArgs = new ArgsBuilder()
-          .attachApiKeys()
-          .add(PARAMS.SDK_VERSION, SDK_VERSION)
-          .add(PARAMS.ACTION, METHODS.MULTI)
-          .add(PARAMS.TIME, '' + (new Date().getTime() / 1000))
+          .attachApiKeys(Leanplum._appId, Leanplum._clientKey)
+          .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
+          .add(Constants.PARAMS.ACTION, Constants.METHODS.MULTI)
+          .add(Constants.PARAMS.TIME, '' + (new Date().getTime() / 1000))
           .build();
         Leanplum._ajax('POST', API_PATH + '?' + multiRequestArgs, requestData,
           success, error, options.queued);
@@ -741,10 +657,10 @@
     };
 
     // Deal with cooldown.
-    if (!sendNow && Leanplum._batchCooldown) {
+    if (!sendNow && _batchCooldown) {
       let now = new Date().getTime() / 1000;
       if (!Leanplum._lastRequestTime ||
-        now - Leanplum._lastRequestTime >= Leanplum._batchCooldown) {
+        now - Leanplum._lastRequestTime >= _batchCooldown) {
         sendNow = true;
         Leanplum._lastRequestTime = now;
       } else {
@@ -753,7 +669,7 @@
             Leanplum._cooldownTimeout = null;
             Leanplum._lastRequestTime = new Date().getTime() / 1000;
             sendUnsentRequests();
-          }, (Leanplum._batchCooldown -
+          }, (_batchCooldown -
             (now - Leanplum._lastRequestTime)) * 1000);
         }
       }
@@ -767,21 +683,21 @@
 
   // //////////////// Response parsing //////////////////
 
-  Leanplum._numResponses = function(response) {
+  static _numResponses(response) {
     if (!response || !response['response']) {
       return 0;
     }
     return response['response'].length;
   };
 
-  Leanplum._getResponseAt = function(response, index) {
+  static _getResponseAt(response, index) {
     if (!response || !response['response']) {
       return null;
     }
     return response['response'][index];
   };
 
-  Leanplum._getLastResponse = function(response) {
+  static _getLastResponse(response) {
     let count = Leanplum._numResponses(response);
     if (count > 0) {
       return Leanplum._getResponseAt(response, count - 1);
@@ -790,14 +706,14 @@
     }
   };
 
-  Leanplum._isResponseSuccess = function(response) {
+  static _isResponseSuccess(response) {
     if (!response) {
       return false;
     }
     return response['success'] ? true : false;
   };
 
-  Leanplum._getResponseError = function(response) {
+  static _getResponseError(response) {
     if (!response) {
       return null;
     }
@@ -808,147 +724,38 @@
     return error['message'];
   };
 
-  Leanplum._localStorageEnabled = undefined;
-  Leanplum._alternateLocalStorage = {};
-
-  Leanplum._getFromLocalStorage = function(key) {
-    if (Leanplum._localStorageEnabled === false) {
-      return Leanplum._alternateLocalStorage[key];
+  static _getFromLocalStorage(key) {
+    if (_localStorageEnabled === false) {
+      return _alternateLocalStorage[key];
     }
     return localStorage[key];
   };
 
-  Leanplum._saveToLocalStorage = function(key, value) {
-    if (Leanplum._localStorageEnabled === false) {
-      Leanplum._alternateLocalStorage[key] = value;
+  static _saveToLocalStorage(key, value) {
+    if (_localStorageEnabled === false) {
+      _alternateLocalStorage[key] = value;
       return;
     }
     try {
       localStorage[key] = value;
     } catch (e) {
-      Leanplum._localStorageEnabled = false;
+      _localStorageEnabled = false;
       Leanplum._saveToLocalStorage(key, value);
     }
   };
 
-  Leanplum._removeFromLocalStorage = function(key) {
-    if (Leanplum._localStorageEnabled === false) {
-      delete Leanplum._alternateLocalStorage[key];
+  static _removeFromLocalStorage(key) {
+    if (_localStorageEnabled === false) {
+      delete _alternateLocalStorage[key];
       return;
     }
     try {
       localStorage.removeItem(key);
     } catch (e) {
-      Leanplum._localStorageEnabled = false;
+      _localStorageEnabled = false;
       Leanplum._removeFromLocalStorage(key);
     }
-  };
-
-  // //////////////// Args builder //////////////////
-
-  let ArgsBuilder = function() {
-    this.argString = '';
-    this.argValues = {};
-  };
-  ArgsBuilder.prototype.add = function(key, value) {
-    if (typeof(value) === 'undefined') {
-      return this;
-    }
-    if (this.argString) {
-      this.argString += '&';
-    }
-    this.argString += key + '=' + encodeURIComponent(value);
-    this.argValues[key] = value;
-    return this;
-  };
-  ArgsBuilder.prototype.body = function(body) {
-    if (body) {
-      this._body = body;
-      return this;
-    }
-    return this._body;
-  };
-  ArgsBuilder.prototype.attachApiKeys = function(argsBuilder) {
-    return this.add(PARAMS.APP_ID, Leanplum._appId)
-      .add(PARAMS.CLIENT, CLIENT)
-      .add(PARAMS.CLIENT_KEY, Leanplum._clientKey);
-  };
-  ArgsBuilder.prototype.build = function() {
-    return this.argString;
-  };
-  ArgsBuilder.prototype.buildDict = function() {
-    return this.argValues;
-  };
-
-  // //////////////// Socket IO //////////////////
-
-  let SocketIOClient = function() {
-    this.connected = false;
-    this.connecting = false;
-  };
-  SocketIOClient.prototype.emit = function(name, args) {
-    this.socket.send('5:::' + JSON.stringify({
-      'name': name,
-      'args': args,
-    }));
-  };
-  SocketIOClient.prototype.connect = function() {
-    let self = this;
-    self.connecting = true;
-    Leanplum._ajax('POST', 'https://' + SOCKET_HOST + '/socket.io/1', '',
-      function(line) {
-        let parts = line.split(':');
-        let session = parts[0];
-        let heartbeat = parseInt(parts[1]) / 2 * 1000;
-        self.socket = new WebSocket('wss://' + SOCKET_HOST +
-          '/socket.io/1/websocket/' + session);
-        let heartbeatInterval = null;
-        self.socket.onopen = function() {
-          self.connected = true;
-          self.connecting = false;
-          if (self.onopen) {
-            self.onopen();
-          }
-          heartbeatInterval = setInterval(function() {
-            self.socket.send('2:::');
-          }, heartbeat);
-        };
-        self.socket.onclose = function() {
-          self.connected = false;
-          clearInterval(heartbeatInterval);
-          if (self.onclose) {
-            self.onclose();
-          }
-        };
-        self.socket.onmessage = function(event) {
-          let parts = event.data.split(':');
-          let code = parseInt(parts[0]);
-          if (code == 2) {
-            self.socket.send('2::');
-          } else if (code == 5) {
-            let messageId = parts[1];
-            let data = JSON.parse(parts.slice(3).join(':'));
-            let event = data['name'];
-            let args = data['args'];
-            if (messageId) {
-              self.socket.send('6:::' + messageId);
-            }
-            if (self.onmessage) {
-              self.onmessage(event, args);
-            }
-          } else if (code == 7) {
-            console.log('Socket error: ' + event.data);
-          }
-        };
-        self.socket.onerror = function(event) {
-          self.socket.close();
-          if (self.onerror) {
-            self.onerror(event);
-          }
-        };
-      }, null, false, true // nullm, queued, plainText
-    );
-  };
+  }
 
   // //////////////// AJAX //////////////////
 
@@ -971,7 +778,7 @@
    * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    * DEALINGS IN THE SOFTWARE.
    */
-  Leanplum._ajaxIE8 = function(method, url, data, success, error, queued,
+  static _ajaxIE8(method, url, data, success, error, queued,
     plainText) {
     let xdr = new XDomainRequest();
     xdr.onload = function() {
@@ -1020,18 +827,18 @@
     xdr.send(data);
   };
 
-  Leanplum._enqueueRequest = function(args) {
-    Leanplum._requestQueue.push(args);
+  static _enqueueRequest(args) {
+    _requestQueue.push(args);
   };
 
-  Leanplum._dequeueRequest = function() {
-    let args = Leanplum._requestQueue.shift();
+  static _dequeueRequest() {
+    let args = _requestQueue.shift();
     if (args) {
       Leanplum._ajax.apply(null, args);
     }
   };
 
-  Leanplum._ajax = function(method, url, data, success, error, queued,
+  static _ajax(method, url, data, success, error, queued,
     plainText) {
     if (queued) {
       if (Leanplum._runningRequest) {
@@ -1107,240 +914,6 @@
       }
     }, NETWORK_TIMEOUT_SECONDS * 1000);
   };
+}
 
-  //     Underscore.js 1.4.2
-  //     http://underscorejs.org
-  //     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
-  //     Underscore may be freely distributed under the MIT license.
-
-  // Extend a given object with all the properties in passed-in object(s).
-  _.iextend = function(obj) {
-    // eslint-disable-next-line prefer-rest-params
-    each(slice.call(arguments, 1), function(source) {
-      for (let prop in source) {
-        if ({}.hasOwnProperty.call(source, prop)) {
-          obj[prop] = source[prop];
-        }
-      }
-    });
-    return obj;
-  };
-
-  _.isFunction = function(obj) {
-    return typeof obj === 'function';
-  };
-
-  _.has = function(obj, key) {
-    return hasOwnProperty.call(obj, key);
-  };
-
-  // Internal recursive comparison function for `isEqual`.
-  let eq = function(a, b, aStack, bStack) {
-    // Identical objects are equal. `0 === -0`, but they aren't identical.
-    // See the Harmony `egal` proposal:
-    // http://wiki.ecmascript.org/doku.php?id=harmony:egal.
-    if (a === b) return a !== 0 || 1 / a == 1 / b;
-    // A strict comparison is necessary because `null == undefined`.
-    if (a == null || b == null) return a === b;
-    // Unwrap any wrapped objects.
-    if (a instanceof _) a = a._wrapped;
-    if (b instanceof _) b = b._wrapped;
-    // Compare `[[Class]]` names.
-    let className = Object.prototype.toString.call(a);
-    if (className != Object.prototype.toString.call(b)) return false;
-    switch (className) {
-      // Strings, numbers, dates, and booleans are compared by value.
-      case '[object String]':
-        // Primitives and their corresponding object wrappers are equivalent;
-        // thus, `"5"` is equivalent to `new String("5")`.
-        return a == String(b);
-      case '[object Number]':
-        // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is
-        // performed for other numeric values.
-        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
-      case '[object Date]':
-      case '[object Boolean]':
-        // Coerce dates and booleans to numeric primitive values. Dates are
-        // compared by their millisecond representations. Note that invalid
-        // dates with millisecond representations of `NaN` are not equivalent.
-        return +a == +b;
-        // RegExps are compared by their source patterns and flags.
-      case '[object RegExp]':
-        return a.source == b.source &&
-          a.global == b.global &&
-          a.multiline == b.multiline &&
-          a.ignoreCase == b.ignoreCase;
-    }
-    if (typeof a != 'object' || typeof b != 'object') return false;
-    // Assume equality for cyclic structures. The algorithm for detecting cyclic
-    // structures is adapted from ES 5.1 section 15.12.3, abstract operation
-    // `JO`.
-    let length = aStack.length;
-    while (length--) {
-      // Linear search. Performance is inversely proportional to the number of
-      // unique nested structures.
-      if (aStack[length] == a) return bStack[length] == b;
-    }
-    // Add the first object to the stack of traversed objects.
-    aStack.push(a);
-    bStack.push(b);
-    let size = 0;
-    let result = true;
-    // Recursively compare objects and arrays.
-    if (className == '[object Array]') {
-      // Compare array lengths to determine if a deep comparison is necessary.
-      size = a.length;
-      result = size == b.length;
-      if (result) {
-        // Deep compare the contents, ignoring non-numeric properties.
-        while (size--) {
-          if (!(result = eq(a[size], b[size], aStack, bStack))) break;
-        }
-      }
-    } else {
-      // Objects with different constructors are not equivalent, but `Object`s
-      // from different frames are.
-      let aCtor = a.constructor;
-      let bCtor = b.constructor;
-      if (aCtor !== bCtor && !(_.isFunction(aCtor) &&
-          (aCtor instanceof aCtor) && _.isFunction(bCtor) &&
-          (bCtor instanceof bCtor))) {
-        return false;
-      }
-      // Deep compare objects.
-      for (let key in a) {
-        if (_.has(a, key)) {
-          // Count the expected number of properties.
-          size++;
-          // Deep compare each member.
-          if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) {
-            break;
-          }
-        }
-      }
-      // Ensure that both objects contain the same number of properties.
-      if (result) {
-        for (key in b) {
-          if (_.has(b, key) && !(size--)) break;
-        }
-        result = !size;
-      }
-    }
-    // Remove the first object from the stack of traversed objects.
-    aStack.pop();
-    bStack.pop();
-    return result;
-  };
-
-  // Perform a deep comparison to check if two objects are equal.
-  _.isEqual = function(a, b) {
-    return eq(a, b, [], []);
-  };
-
-  // Browser detection. Source: http://www.quirksmode.org/js/detect.html
-  let BrowserDetect = {
-    init: function() {
-      this.browser = this.searchString(this.dataBrowser) ||
-        'An unknown browser';
-      this.version = this.searchVersion(navigator.userAgent) ||
-        this.searchVersion(navigator.appVersion) || 'an unknown version';
-      this.OS = this.searchString(this.dataOS) || 'an unknown OS';
-    },
-    searchString: function(data) {
-      for (let i = 0; i < data.length; i++) {
-        let dataString = data[i].string;
-        let dataProp = data[i].prop;
-        this.versionSearchString = data[i].versionSearch || data[i].identity;
-        if (dataString) {
-          if (dataString.indexOf(data[i].subString) != -1)
-            return data[i].identity;
-        } else if (dataProp)
-          return data[i].identity;
-      }
-    },
-    searchVersion: function(dataString) {
-      if (!dataString) {
-        return;
-      }
-      let index = dataString.indexOf(this.versionSearchString);
-      if (index == -1) {
-        return;
-      }
-      return parseFloat(dataString.substring(index +
-        this.versionSearchString.length + 1));
-    },
-    dataBrowser: [{
-      string: navigator.userAgent,
-      subString: 'Chrome',
-      identity: 'Chrome',
-    }, {
-      string: navigator.userAgent,
-      subString: 'OmniWeb',
-      versionSearch: 'OmniWeb/',
-      identity: 'OmniWeb',
-    }, {
-      string: navigator.vendor,
-      subString: 'Apple',
-      identity: 'Safari',
-      versionSearch: 'Version',
-    }, {
-      prop: window.opera,
-      identity: 'Opera',
-      versionSearch: 'Version',
-    }, {
-      string: navigator.vendor,
-      subString: 'iCab',
-      identity: 'iCab',
-    }, {
-      string: navigator.vendor,
-      subString: 'KDE',
-      identity: 'Konqueror',
-    }, {
-      string: navigator.userAgent,
-      subString: 'Firefox',
-      identity: 'Firefox',
-    }, {
-      string: navigator.vendor,
-      subString: 'Camino',
-      identity: 'Camino',
-    }, { // for newer Netscapes (6+)
-      string: navigator.userAgent,
-      subString: 'Netscape',
-      identity: 'Netscape',
-    }, {
-      string: navigator.userAgent,
-      subString: 'MSIE',
-      identity: 'Explorer',
-      versionSearch: 'MSIE',
-    }, {
-      string: navigator.userAgent,
-      subString: 'Gecko',
-      identity: 'Mozilla',
-      versionSearch: 'rv',
-    }, { // for older Netscapes (4-)
-      string: navigator.userAgent,
-      subString: 'Mozilla',
-      identity: 'Netscape',
-      versionSearch: 'Mozilla',
-    }],
-    dataOS: [{
-      string: navigator.platform,
-      subString: 'Win',
-      identity: 'Windows',
-    }, {
-      string: navigator.platform,
-      subString: 'Mac',
-      identity: 'Mac OS',
-    }, {
-      string: navigator.userAgent,
-      subString: 'iPhone',
-      identity: 'iOS',
-    }, {
-      string: navigator.platform,
-      subString: 'Linux',
-      identity: 'Linux',
-    }],
-
-  };
-  BrowserDetect.init();
-}).call(this);
+module.exports = Leanplum;

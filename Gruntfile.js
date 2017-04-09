@@ -1,23 +1,23 @@
+const webpackConfig = require('./webpack.config');
+
 module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-eslint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-mocha-test');
-  grunt.loadNpmTasks('grunt-babel');
+  grunt.loadNpmTasks('grunt-webpack');
 
   grunt.initConfig({
     eslint: {
       target: ['lib/leanplum.js'],
     },
-    babel: {
+    webpack: {
       options: {
-        sourceMap: true,
+        stats: !process.env.NODE_ENV || process.env.NODE_ENV === 'development',
       },
-      dist: {
-        files: {
-          'dist/leanplum.js': 'src/leanplum.js',
-        },
-      },
+      prod: webpackConfig,
+      dev: Object.assign({
+        watch: true,
+      }, webpackConfig),
     },
     uglify: {
       options: {
@@ -55,7 +55,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('lint', ['eslint']);
-  grunt.registerTask('build', ['babel', 'uglify']);
+  grunt.registerTask('build', ['webpack:prod', 'uglify']);
   grunt.registerTask('test', ['mochaTest']);
-  grunt.registerTask('default', ['watch']);
+  grunt.registerTask('default', ['webpack:dev']);
 };
