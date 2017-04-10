@@ -1,24 +1,21 @@
 import Constants from './Constants';
 import ArgsBuilder from './ArgsBuilder';
 import BrowserDetector from './BrowserDetector';
+import SocketIoClient from './SocketIoClient';
+import Request from './Request';
 
-let _requestQueue = [];
 let _variablesChangedHandlers = [];
 let _variants = [];
 let _startHandlers = [];
-
 let _actionMetadata = {};
 let _token = '';
 let _batchEnabled = true;
 let _batchCooldown = 5;
-let API_PATH = 'https://www.leanplum.com/api';
-let SOCKET_HOST = 'dev.leanplum.com';
-
-let NETWORK_TIMEOUT_SECONDS = 10;
-
+let _apiPath = 'https://www.leanplum.com/api';
+let _socketHost = 'dev.leanplum.com';
 let _localStorageEnabled = undefined;
 let _alternateLocalStorage = {};
-let browserDetector = new BrowserDetector();
+let _browserDetector = new BrowserDetector();
 
 /**
  * @preserve Leanplum Javascript SDK v1.1.10.
@@ -31,19 +28,23 @@ class Leanplum {
   // ***************************************************************************
   // Public Methods
   // ***************************************************************************
-  static setApiPath(apiPath) {
-    if (!apiPath || apiPath.isEmpty()) {
+  static setApiPath(_apiPath) {
+    if (!_apiPath || _apiPath.isEmpty()) {
       return;
     }
-    API_PATH = apiPath;
+    _apiPath = _apiPath;
   };
 
   static setEmail(email) {
     Leanplum._email = email;
   };
 
+  /**
+   * Sets the network timeout.
+   * @param {number} seconds The timeout in seconds.
+   */
   static setNetworkTimeout(seconds) {
-    NETWORK_TIMEOUT_SECONDS = seconds;
+    Request.setNetworkTimeout(seconds);
   };
 
   static setAppIdForDevelopmentMode(appId, accessKey) {
@@ -59,7 +60,7 @@ class Leanplum {
   };
 
   static setSocketHost(host) {
-    SOCKET_HOST = host;
+    _socketHost = host;
   };
 
   static setDeviceId(deviceId) {
@@ -157,7 +158,7 @@ class Leanplum {
     }
     Leanplum._userId = userId;
     if (callback) {
-      exports['addStartResponseHandler'](callback);
+      Leanplum.addStartResponseHandler(callback);
     }
 
     // Issue request.
@@ -168,13 +169,13 @@ class Leanplum {
       .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
       .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
       .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
-      .add(Constants.PARAMS.SYSTEM_NAME, Leanplum._systemName || browserDetector.OS)
+      .add(Constants.PARAMS.SYSTEM_NAME, Leanplum._systemName || _browserDetector.OS)
       .add(Constants.PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || ''))
-      .add(Constants.PARAMS.BROWSER_NAME, browserDetector.browser)
-      .add(Constants.PARAMS.BROWSER_VERSION, '' + browserDetector.version)
+      .add(Constants.PARAMS.BROWSER_NAME, _browserDetector.browser)
+      .add(Constants.PARAMS.BROWSER_VERSION, '' + _browserDetector.version)
       .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
-      .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName || (browserDetector.browser +
-        ' ' + browserDetector.version))
+      .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName || (_browserDetector.browser +
+        ' ' + _browserDetector.version))
       .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
       .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
       // TODO: referer
@@ -200,7 +201,7 @@ class Leanplum {
               }
             }
 
-            Leanplum.setContent(
+            Leanplum._setContent(
               startResponse[Constants.KEYS.VARS],
               startResponse[Constants.KEYS.VARIANTS],
               startResponse[Constants.KEYS.ACTION_METADATA]);
@@ -234,7 +235,7 @@ class Leanplum {
     }
     Leanplum._userId = userId;
     if (callback) {
-      exports['addStartResponseHandler'](callback);
+      Leanplum.addStartResponseHandler(callback);
     }
 
     Leanplum._hasStarted = true;
@@ -364,7 +365,7 @@ class Leanplum {
   // ***************************************************************************
 
   static _socketIOConnect() {
-    let client = new SocketIOClient();
+    let client = new SocketIoClient();
     let authSent = false;
     client.onopen = function() {
       if (!authSent) {
@@ -372,7 +373,7 @@ class Leanplum {
         let args = {};
         args[Constants.PARAMS.APP_ID] = Leanplum._appId;
         args[Constants.PARAMS.DEVICE_ID] = Leanplum._deviceId;
-        client.emit('auth', args);
+        client.send('auth', args);
         authSent = true;
       }
     };
@@ -392,19 +393,19 @@ class Leanplum {
               let variants = getVarsResponse[Constants.KEYS.VARIANTS];
               let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA];
               if (!_.isEqual(values, Leanplum._diffs)) {
-                Leanplum.setContent(values, variants, actionMetadata);
+                Leanplum._setContent(values, variants, actionMetadata);
               }
             },
           }
         );
       } else if (event == 'getVariables') {
         Leanplum.sendVariables();
-        client.emit('getContentResponse', {
+        client.send('getContentResponse', {
           'updated': true,
         });
       } else if (event == 'getActions') {
         // Unsupported in JavaScript SDK.
-        client.emit('getContentResponse', {
+        client.send('getContentResponse', {
           'updated': false,
         });
       } else if (event == 'registerDevice') {
@@ -415,10 +416,10 @@ class Leanplum {
       console.log('Leanplum: Disconnected to development server.');
       authSent = false;
     };
-    client.connect();
+    client.connect(_socketHost);
     setInterval(function() {
       if (!client.connected && !client.connecting) {
-        client.connect();
+        client.connect(_socketHost);
       }
     }, 5000);
   };
@@ -430,8 +431,8 @@ class Leanplum {
     _variants = variants;
     _actionMetadata = actionMetadata;
     Leanplum._hasReceivedDiffs = true;
-    Leanplum._merged = Leanplum.mergeHelper(Leanplum._variables, diffs);
-    Leanplum.saveDiffs();
+    Leanplum._merged = Leanplum._mergeHelper(Leanplum._variables, diffs);
+    Leanplum._saveDiffs();
     for (let i = 0; i < _variablesChangedHandlers.length; i++) {
       _variablesChangedHandlers[i]();
     }
@@ -505,7 +506,7 @@ class Leanplum {
         while (subscript >= merged.length) {
           merged.push(null);
         }
-        merged[subscript] = Leanplum.mergeHelper(merged[subscript], diffValue);
+        merged[subscript] = Leanplum._mergeHelper(merged[subscript], diffValue);
       });
       return merged;
     }
@@ -518,7 +519,7 @@ class Leanplum {
       }
     });
     diffIterator(function(attr) {
-      merged[attr] = Leanplum.mergeHelper(vars != null ? vars[attr] : null,
+      merged[attr] = Leanplum._mergeHelper(vars != null ? vars[attr] : null,
         diff[attr]);
     });
     return merged;
@@ -535,7 +536,7 @@ class Leanplum {
 
   static _loadDiffs() {
     try {
-      Leanplum.setContent(
+      Leanplum._setContent(
         JSON.parse(Leanplum._getFromLocalStorage(
           Constants.DEFAULT_KEYS.VARIABLES) || null),
         JSON.parse(Leanplum._getFromLocalStorage(
@@ -631,7 +632,7 @@ class Leanplum {
     }
 
     if (params.body()) {
-      Leanplum._ajax('POST', API_PATH + '?' + argsBuilder.build(),
+      Request.ajax('POST', _apiPath + '?' + argsBuilder.build(),
         params.body(), success, error, options.queued);
       return;
     }
@@ -651,7 +652,7 @@ class Leanplum {
           .add(Constants.PARAMS.ACTION, Constants.METHODS.MULTI)
           .add(Constants.PARAMS.TIME, '' + (new Date().getTime() / 1000))
           .build();
-        Leanplum._ajax('POST', API_PATH + '?' + multiRequestArgs, requestData,
+        Request.ajax('POST', _apiPath + '?' + multiRequestArgs, requestData,
           success, error, options.queued);
       }
     };
@@ -756,164 +757,6 @@ class Leanplum {
       Leanplum._removeFromLocalStorage(key);
     }
   }
-
-  // //////////////// AJAX //////////////////
-
-  /*
-   * Ajax functions from:
-   *
-   * Parse JavaScript SDK
-   * Version: 1.1.5
-   * Built: Mon Oct 01 2012 17:57:13
-   * http://parse.com
-   *
-   * Copyright 2012 Parse, Inc.
-   * The Parse JavaScript SDK is freely distributable under the MIT license.
-   *
-   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   * DEALINGS IN THE SOFTWARE.
-   */
-  static _ajaxIE8(method, url, data, success, error, queued,
-    plainText) {
-    let xdr = new XDomainRequest();
-    xdr.onload = function() {
-      let response;
-      let ranCallback = false;
-      if (plainText) {
-        response = xdr.responseText;
-      } else {
-        try {
-          response = JSON.parse(xdr.responseText);
-        } catch (e) {
-          setTimeout(function() {
-            if (error) {
-              error(null, xdr);
-            }
-          }, 0);
-          ranCallback = true;
-        }
-      }
-      if (!ranCallback) {
-        setTimeout(function() {
-          if (success) {
-            success(response, xdr);
-          }
-        }, 0);
-      }
-      if (queued) {
-        Leanplum._runningRequest = false;
-        Leanplum._dequeueRequest();
-      }
-    };
-    xdr.onerror = xdr.ontimeout = function() {
-      setTimeout(function() {
-        if (error) {
-          error(null, xdr);
-        }
-      }, 0);
-      if (queued) {
-        Leanplum._runningRequest = false;
-        Leanplum._dequeueRequest();
-      }
-    };
-    xdr.onprogress = function() {};
-    xdr.open(method, url);
-    xdr.timeout = NETWORK_TIMEOUT_SECONDS * 1000;
-    xdr.send(data);
-  };
-
-  static _enqueueRequest(args) {
-    _requestQueue.push(args);
-  };
-
-  static _dequeueRequest() {
-    let args = _requestQueue.shift();
-    if (args) {
-      Leanplum._ajax.apply(null, args);
-    }
-  };
-
-  static _ajax(method, url, data, success, error, queued,
-    plainText) {
-    if (queued) {
-      if (Leanplum._runningRequest) {
-        // eslint-disable-next-line prefer-rest-params
-        return Leanplum._enqueueRequest(arguments);
-      }
-      Leanplum._runningRequest = true;
-    }
-
-    if (typeof(XDomainRequest) !== 'undefined') {
-      if (location.protocol === 'http:' && url.indexOf('https:') == 0) {
-        url = 'http:' + url.substring(6);
-      }
-      // eslint-disable-next-line prefer-rest-params
-      return Leanplum._ajaxIE8.apply(null, arguments);
-    }
-
-    let handled = false;
-
-    let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        if (handled) {
-          return;
-        }
-        handled = true;
-
-        let response;
-        let ranCallback = false;
-        if (plainText) {
-          response = xhr.responseText;
-        } else {
-          try {
-            response = JSON.parse(xhr.responseText);
-          } catch (e) {
-            setTimeout(function() {
-              if (error) {
-                error(null, xhr);
-              }
-            }, 0);
-            ranCallback = true;
-          }
-        }
-
-        if (!ranCallback) {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            setTimeout(function() {
-              if (success) {
-                success(response, xhr);
-              }
-            }, 0);
-          } else {
-            setTimeout(function() {
-              if (error) {
-                error(response, xhr);
-              }
-            }, 0);
-          }
-        }
-
-        if (queued) {
-          Leanplum._runningRequest = false;
-          Leanplum._dequeueRequest();
-        }
-      }
-    };
-    xhr.open(method, url, true);
-    xhr.setRequestHeader('Content-Type', 'text/plain'); // Avoid pre-flight.
-    xhr.send(data);
-    setTimeout(function() {
-      if (!handled) {
-        xhr.abort();
-      }
-    }, NETWORK_TIMEOUT_SECONDS * 1000);
-  };
 }
 
 module.exports = Leanplum;

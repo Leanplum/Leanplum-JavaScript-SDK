@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -181,6 +181,201 @@ module.exports = {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _requestQueue = [];
+var _networkTimeoutSeconds = 10;
+
+/**
+ * Ajax functions from:
+ *
+ * Parse JavaScript SDK
+ * Version: 1.1.5
+ * Built: Mon Oct 01 2012 17:57:13
+ * http://parse.com
+ *
+ * Copyright 2012 Parse, Inc.
+ * The Parse JavaScript SDK is freely distributable under the MIT license.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+var Request = function () {
+  function Request() {
+    _classCallCheck(this, Request);
+  }
+
+  _createClass(Request, null, [{
+    key: 'setNetworkTimeout',
+
+    /**
+     * Sets the network timeout.
+     * @param {number} seconds The timeout in seconds.
+     */
+    value: function setNetworkTimeout(seconds) {
+      _networkTimeoutSeconds = seconds;
+    }
+  }, {
+    key: 'ajax',
+    value: function ajax(method, url, data, success, error, queued, plainText) {
+      if (queued) {
+        if (Request._runningRequest) {
+          // eslint-disable-next-line prefer-rest-params
+          return Request._enqueueRequest(arguments);
+        }
+        Request._runningRequest = true;
+      }
+
+      if (typeof XDomainRequest !== 'undefined') {
+        if (location.protocol === 'http:' && url.indexOf('https:') == 0) {
+          url = 'http:' + url.substring(6);
+        }
+        // eslint-disable-next-line prefer-rest-params
+        return Request._ajaxIE8.apply(null, arguments);
+      }
+
+      var handled = false;
+
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (handled) {
+            return;
+          }
+          handled = true;
+
+          var response = void 0;
+          var ranCallback = false;
+          if (plainText) {
+            response = xhr.responseText;
+          } else {
+            try {
+              response = JSON.parse(xhr.responseText);
+            } catch (e) {
+              setTimeout(function () {
+                if (error) {
+                  error(null, xhr);
+                }
+              }, 0);
+              ranCallback = true;
+            }
+          }
+
+          if (!ranCallback) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              setTimeout(function () {
+                if (success) {
+                  success(response, xhr);
+                }
+              }, 0);
+            } else {
+              setTimeout(function () {
+                if (error) {
+                  error(response, xhr);
+                }
+              }, 0);
+            }
+          }
+
+          if (queued) {
+            Request._runningRequest = false;
+            Request._dequeueRequest();
+          }
+        }
+      };
+      xhr.open(method, url, true);
+      xhr.setRequestHeader('Content-Type', 'text/plain'); // Avoid pre-flight.
+      xhr.send(data);
+      setTimeout(function () {
+        if (!handled) {
+          xhr.abort();
+        }
+      }, _networkTimeoutSeconds * 1000);
+    }
+  }, {
+    key: '_ajaxIE8',
+    value: function _ajaxIE8(method, url, data, success, error, queued, plainText) {
+      var xdr = new XDomainRequest();
+      xdr.onload = function () {
+        var response = void 0;
+        var ranCallback = false;
+        if (plainText) {
+          response = xdr.responseText;
+        } else {
+          try {
+            response = JSON.parse(xdr.responseText);
+          } catch (e) {
+            setTimeout(function () {
+              if (error) {
+                error(null, xdr);
+              }
+            }, 0);
+            ranCallback = true;
+          }
+        }
+        if (!ranCallback) {
+          setTimeout(function () {
+            if (success) {
+              success(response, xdr);
+            }
+          }, 0);
+        }
+        if (queued) {
+          Request._runningRequest = false;
+          Request._dequeueRequest();
+        }
+      };
+      xdr.onerror = xdr.ontimeout = function () {
+        setTimeout(function () {
+          if (error) {
+            error(null, xdr);
+          }
+        }, 0);
+        if (queued) {
+          Request._runningRequest = false;
+          Request._dequeueRequest();
+        }
+      };
+      xdr.onprogress = function () {};
+      xdr.open(method, url);
+      xdr.timeout = _networkTimeoutSeconds * 1000;
+      xdr.send(data);
+    }
+  }, {
+    key: '_enqueueRequest',
+    value: function _enqueueRequest(args) {
+      _requestQueue.push(args);
+    }
+  }, {
+    key: '_dequeueRequest',
+    value: function _dequeueRequest() {
+      var args = _requestQueue.shift();
+      if (args) {
+        Request.ajax.apply(null, args);
+      }
+    }
+  }]);
+
+  return Request;
+}();
+
+module.exports = Request;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _Constants = __webpack_require__(0);
 
 var _Constants2 = _interopRequireDefault(_Constants);
@@ -189,13 +384,27 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+/**
+ * Leanplum ArgsBuilder, use to construct request payload.
+ */
 var ArgsBuilder = function () {
+  /**
+   * Create a new empty request argument.
+   */
   function ArgsBuilder() {
     _classCallCheck(this, ArgsBuilder);
 
     this.argString = '';
     this.argValues = {};
   }
+
+  /**
+   * Add given key, value to the payload.
+   * @param {string} key The key for the value.
+   * @param {string} value The value for given key.
+   * @return {ArgsBuilder} Returns an object of ArgsBuilder.
+   */
+
 
   _createClass(ArgsBuilder, [{
     key: 'add',
@@ -212,6 +421,14 @@ var ArgsBuilder = function () {
     }
   }, {
     key: 'body',
+
+
+    /**
+     * Cache the given body.
+     * @param  {String} body A given body.
+     * @return {ArgsBuilder/String} Returns Argsbuilder if body given, else the
+     *                              body.
+     */
     value: function body(_body) {
       if (_body) {
         this._body = _body;
@@ -221,16 +438,36 @@ var ArgsBuilder = function () {
     }
   }, {
     key: 'attachApiKeys',
+
+
+    /**
+     * Convenience method to attach given appId and appKey to request.
+     * @param  {String} appId The appId to attach.
+     * @param  {String} clientKey The appKey to attach.
+     * @return {ArgsBuilder} Returns an object of ArgsBuilder.
+     */
     value: function attachApiKeys(appId, clientKey) {
       return this.add(_Constants2.default.PARAMS.APP_ID, appId).add(_Constants2.default.PARAMS.CLIENT, _Constants2.default.CLIENT).add(_Constants2.default.PARAMS.CLIENT_KEY, clientKey);
     }
   }, {
     key: 'build',
+
+
+    /**
+     * Return the arguments.
+     * @return {String} Arguments string.
+     */
     value: function build() {
       return this.argString;
     }
   }, {
     key: 'buildDict',
+
+
+    /**
+     * Return the argument values.
+     * @return {Object} The argument values.
+     */
     value: function buildDict() {
       return this.argValues;
     }
@@ -244,7 +481,7 @@ var ArgsBuilder = function () {
 module.exports = ArgsBuilder;
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -370,7 +607,127 @@ var BrowserDetector = function () {
 module.exports = BrowserDetector;
 
 /***/ }),
-/* 3 */
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Request = __webpack_require__(1);
+
+var _Request2 = _interopRequireDefault(_Request);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Socket.io 1.0 client class.
+ */
+var SocketIoClient = function () {
+  /**
+   * Initializes a new SocketIoClient, not connected by default.
+   */
+  function SocketIoClient() {
+    _classCallCheck(this, SocketIoClient);
+
+    this.connected = false;
+    this.connecting = false;
+  }
+
+  /**
+   * Connects to the given socketHost.
+   * @param  {string} socketHost The host to connect to.
+   */
+
+
+  _createClass(SocketIoClient, [{
+    key: 'connect',
+    value: function connect(socketHost) {
+      var self = this;
+      self.connecting = true;
+      _Request2.default.ajax('POST', 'https://' + socketHost + '/socket.io/1', '', function (line) {
+        var parts = line.split(':');
+        var session = parts[0];
+        var heartbeat = parseInt(parts[1]) / 2 * 1000;
+        self.socket = new WebSocket('wss://' + socketHost + '/socket.io/1/websocket/' + session);
+        var heartbeatInterval = null;
+        self.socket.onopen = function () {
+          self.connected = true;
+          self.connecting = false;
+          if (self.onopen) {
+            self.onopen();
+          }
+          heartbeatInterval = setInterval(function () {
+            self.socket.send('2:::');
+          }, heartbeat);
+        };
+        self.socket.onclose = function () {
+          self.connected = false;
+          clearInterval(heartbeatInterval);
+          if (self.onclose) {
+            self.onclose();
+          }
+        };
+        self.socket.onmessage = function (event) {
+          var parts = event.data.split(':');
+          var code = parseInt(parts[0]);
+          if (code == 2) {
+            self.socket.send('2::');
+          } else if (code == 5) {
+            var messageId = parts[1];
+            var data = JSON.parse(parts.slice(3).join(':'));
+            var _event = data['name'];
+            var args = data['args'];
+            if (messageId) {
+              self.socket.send('6:::' + messageId);
+            }
+            if (self.onmessage) {
+              self.onmessage(_event, args);
+            }
+          } else if (code == 7) {
+            console.log('Socket error: ' + event.data);
+          }
+        };
+        self.socket.onerror = function (event) {
+          self.socket.close();
+          if (self.onerror) {
+            self.onerror(event);
+          }
+        };
+      }, null, false, true // nullm, queued, plainText
+      );
+    }
+  }, {
+    key: 'send',
+
+
+    /**
+     * Sends given event with arguments to the server.
+     * @param  {string} name Name of the event.
+     * @param  {any} args Arguments to send.
+     */
+    value: function send(name, args) {
+      if (!this.connected) {
+        console.log('Leanplum: Socket is not connected.');
+        return;
+      }
+      this.socket.send('5:::' + JSON.stringify({
+        'name': name,
+        'args': args
+      }));
+    }
+  }]);
+
+  return SocketIoClient;
+}();
+
+module.exports = SocketIoClient;
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -384,35 +741,38 @@ var _Constants = __webpack_require__(0);
 
 var _Constants2 = _interopRequireDefault(_Constants);
 
-var _ArgsBuilder = __webpack_require__(1);
+var _ArgsBuilder = __webpack_require__(2);
 
 var _ArgsBuilder2 = _interopRequireDefault(_ArgsBuilder);
 
-var _BrowserDetector = __webpack_require__(2);
+var _BrowserDetector = __webpack_require__(3);
 
 var _BrowserDetector2 = _interopRequireDefault(_BrowserDetector);
+
+var _SocketIoClient = __webpack_require__(4);
+
+var _SocketIoClient2 = _interopRequireDefault(_SocketIoClient);
+
+var _Request = __webpack_require__(1);
+
+var _Request2 = _interopRequireDefault(_Request);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _requestQueue = [];
 var _variablesChangedHandlers = [];
 var _variants = [];
 var _startHandlers = [];
-
 var _actionMetadata = {};
 var _token = '';
 var _batchEnabled = true;
 var _batchCooldown = 5;
-var API_PATH = 'https://www.leanplum.com/api';
-var SOCKET_HOST = 'dev.leanplum.com';
-
-var NETWORK_TIMEOUT_SECONDS = 10;
-
+var _apiPath = 'https://www.leanplum.com/api';
+var _socketHost = 'dev.leanplum.com';
 var _localStorageEnabled = undefined;
 var _alternateLocalStorage = {};
-var browserDetector = new _BrowserDetector2.default();
+var _browserDetector = new _BrowserDetector2.default();
 
 /**
  * @preserve Leanplum Javascript SDK v1.1.10.
@@ -433,11 +793,11 @@ var Leanplum = function () {
     // ***************************************************************************
     // Public Methods
     // ***************************************************************************
-    value: function setApiPath(apiPath) {
-      if (!apiPath || apiPath.isEmpty()) {
+    value: function setApiPath(_apiPath) {
+      if (!_apiPath || _apiPath.isEmpty()) {
         return;
       }
-      API_PATH = apiPath;
+      _apiPath = _apiPath;
     }
   }, {
     key: 'setEmail',
@@ -446,8 +806,14 @@ var Leanplum = function () {
     }
   }, {
     key: 'setNetworkTimeout',
+
+
+    /**
+     * Sets the network timeout.
+     * @param {number} seconds The timeout in seconds.
+     */
     value: function setNetworkTimeout(seconds) {
-      NETWORK_TIMEOUT_SECONDS = seconds;
+      _Request2.default.setNetworkTimeout(seconds);
     }
   }, {
     key: 'setAppIdForDevelopmentMode',
@@ -466,7 +832,7 @@ var Leanplum = function () {
   }, {
     key: 'setSocketHost',
     value: function setSocketHost(host) {
-      SOCKET_HOST = host;
+      _socketHost = host;
     }
   }, {
     key: 'setDeviceId',
@@ -578,11 +944,11 @@ var Leanplum = function () {
       }
       Leanplum._userId = userId;
       if (callback) {
-        exports['addStartResponseHandler'](callback);
+        Leanplum.addStartResponseHandler(callback);
       }
 
       // Issue request.
-      Leanplum._request(_Constants2.default.METHODS.START, new _ArgsBuilder2.default().add(_Constants2.default.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes)).add(_Constants2.default.PARAMS.COUNTRY, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.REGION, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.CITY, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.LOCATION, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.SYSTEM_NAME, Leanplum._systemName || browserDetector.OS).add(_Constants2.default.PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || '')).add(_Constants2.default.PARAMS.BROWSER_NAME, browserDetector.browser).add(_Constants2.default.PARAMS.BROWSER_VERSION, '' + browserDetector.version).add(_Constants2.default.PARAMS.LOCALE, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.DEVICE_NAME, Leanplum._deviceName || browserDetector.browser + ' ' + browserDetector.version).add(_Constants2.default.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser').add(_Constants2.default.PARAMS.INCLUDE_DEFAULTS, false)
+      Leanplum._request(_Constants2.default.METHODS.START, new _ArgsBuilder2.default().add(_Constants2.default.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes)).add(_Constants2.default.PARAMS.COUNTRY, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.REGION, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.CITY, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.LOCATION, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.SYSTEM_NAME, Leanplum._systemName || _browserDetector.OS).add(_Constants2.default.PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || '')).add(_Constants2.default.PARAMS.BROWSER_NAME, _browserDetector.browser).add(_Constants2.default.PARAMS.BROWSER_VERSION, '' + _browserDetector.version).add(_Constants2.default.PARAMS.LOCALE, _Constants2.default.VALUES.DETECT).add(_Constants2.default.PARAMS.DEVICE_NAME, Leanplum._deviceName || _browserDetector.browser + ' ' + _browserDetector.version).add(_Constants2.default.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser').add(_Constants2.default.PARAMS.INCLUDE_DEFAULTS, false)
       // TODO: referer
       , {
         queued: true,
@@ -605,7 +971,7 @@ var Leanplum = function () {
               }
             }
 
-            Leanplum.setContent(startResponse[_Constants2.default.KEYS.VARS], startResponse[_Constants2.default.KEYS.VARIANTS], startResponse[_Constants2.default.KEYS.ACTION_METADATA]);
+            Leanplum._setContent(startResponse[_Constants2.default.KEYS.VARS], startResponse[_Constants2.default.KEYS.VARIANTS], startResponse[_Constants2.default.KEYS.ACTION_METADATA]);
             _token = startResponse[_Constants2.default.KEYS.TOKEN];
           } else {
             Leanplum._startSuccessful = false;
@@ -635,7 +1001,7 @@ var Leanplum = function () {
       }
       Leanplum._userId = userId;
       if (callback) {
-        exports['addStartResponseHandler'](callback);
+        Leanplum.addStartResponseHandler(callback);
       }
 
       Leanplum._hasStarted = true;
@@ -763,7 +1129,7 @@ var Leanplum = function () {
     // ***************************************************************************
 
     value: function _socketIOConnect() {
-      var client = new SocketIOClient();
+      var client = new _SocketIoClient2.default();
       var authSent = false;
       client.onopen = function () {
         if (!authSent) {
@@ -771,7 +1137,7 @@ var Leanplum = function () {
           var args = {};
           args[_Constants2.default.PARAMS.APP_ID] = Leanplum._appId;
           args[_Constants2.default.PARAMS.DEVICE_ID] = Leanplum._deviceId;
-          client.emit('auth', args);
+          client.send('auth', args);
           authSent = true;
         }
       };
@@ -789,18 +1155,18 @@ var Leanplum = function () {
               var variants = getVarsResponse[_Constants2.default.KEYS.VARIANTS];
               var actionMetadata = getVarsResponse[_Constants2.default.KEYS.ACTION_METADATA];
               if (!_.isEqual(values, Leanplum._diffs)) {
-                Leanplum.setContent(values, variants, actionMetadata);
+                Leanplum._setContent(values, variants, actionMetadata);
               }
             }
           });
         } else if (event == 'getVariables') {
           Leanplum.sendVariables();
-          client.emit('getContentResponse', {
+          client.send('getContentResponse', {
             'updated': true
           });
         } else if (event == 'getActions') {
           // Unsupported in JavaScript SDK.
-          client.emit('getContentResponse', {
+          client.send('getContentResponse', {
             'updated': false
           });
         } else if (event == 'registerDevice') {
@@ -811,10 +1177,10 @@ var Leanplum = function () {
         console.log('Leanplum: Disconnected to development server.');
         authSent = false;
       };
-      client.connect();
+      client.connect(_socketHost);
       setInterval(function () {
         if (!client.connected && !client.connecting) {
-          client.connect();
+          client.connect(_socketHost);
         }
       }, 5000);
     }
@@ -829,8 +1195,8 @@ var Leanplum = function () {
       _variants = variants;
       _actionMetadata = actionMetadata;
       Leanplum._hasReceivedDiffs = true;
-      Leanplum._merged = Leanplum.mergeHelper(Leanplum._variables, diffs);
-      Leanplum.saveDiffs();
+      Leanplum._merged = Leanplum._mergeHelper(Leanplum._variables, diffs);
+      Leanplum._saveDiffs();
       for (var i = 0; i < _variablesChangedHandlers.length; i++) {
         _variablesChangedHandlers[i]();
       }
@@ -902,7 +1268,7 @@ var Leanplum = function () {
           while (subscript >= _merged.length) {
             _merged.push(null);
           }
-          _merged[subscript] = Leanplum.mergeHelper(_merged[subscript], diffValue);
+          _merged[subscript] = Leanplum._mergeHelper(_merged[subscript], diffValue);
         });
         return _merged;
       }
@@ -915,7 +1281,7 @@ var Leanplum = function () {
         }
       });
       diffIterator(function (attr) {
-        merged[attr] = Leanplum.mergeHelper(vars != null ? vars[attr] : null, diff[attr]);
+        merged[attr] = Leanplum._mergeHelper(vars != null ? vars[attr] : null, diff[attr]);
       });
       return merged;
     }
@@ -932,7 +1298,7 @@ var Leanplum = function () {
     key: '_loadDiffs',
     value: function _loadDiffs() {
       try {
-        Leanplum.setContent(JSON.parse(Leanplum._getFromLocalStorage(_Constants2.default.DEFAULT_KEYS.VARIABLES) || null), JSON.parse(Leanplum._getFromLocalStorage(_Constants2.default.DEFAULT_KEYS.VARIANTS) || null), JSON.parse(Leanplum._getFromLocalStorage(_Constants2.default.DEFAULT_KEYS.ACTION_METADATA) || null));
+        Leanplum._setContent(JSON.parse(Leanplum._getFromLocalStorage(_Constants2.default.DEFAULT_KEYS.VARIABLES) || null), JSON.parse(Leanplum._getFromLocalStorage(_Constants2.default.DEFAULT_KEYS.VARIANTS) || null), JSON.parse(Leanplum._getFromLocalStorage(_Constants2.default.DEFAULT_KEYS.ACTION_METADATA) || null));
         _token = Leanplum._getFromLocalStorage(_Constants2.default.DEFAULT_KEYS.TOKEN);
       } catch (e) {
         console.log('Leanplum: Invalid diffs: ' + e);
@@ -1010,7 +1376,7 @@ var Leanplum = function () {
       }
 
       if (params.body()) {
-        Leanplum._ajax('POST', API_PATH + '?' + argsBuilder.build(), params.body(), success, error, options.queued);
+        _Request2.default.ajax('POST', _apiPath + '?' + argsBuilder.build(), params.body(), success, error, options.queued);
         return;
       }
 
@@ -1023,7 +1389,7 @@ var Leanplum = function () {
             'data': requestsToSend
           });
           var multiRequestArgs = new _ArgsBuilder2.default().attachApiKeys(Leanplum._appId, Leanplum._clientKey).add(_Constants2.default.PARAMS.SDK_VERSION, _Constants2.default.SDK_VERSION).add(_Constants2.default.PARAMS.ACTION, _Constants2.default.METHODS.MULTI).add(_Constants2.default.PARAMS.TIME, '' + new Date().getTime() / 1000).build();
-          Leanplum._ajax('POST', API_PATH + '?' + multiRequestArgs, requestData, success, error, options.queued);
+          _Request2.default.ajax('POST', _apiPath + '?' + multiRequestArgs, requestData, success, error, options.queued);
         }
       };
 
@@ -1134,168 +1500,6 @@ var Leanplum = function () {
         _localStorageEnabled = false;
         Leanplum._removeFromLocalStorage(key);
       }
-    }
-
-    // //////////////// AJAX //////////////////
-
-    /*
-     * Ajax functions from:
-     *
-     * Parse JavaScript SDK
-     * Version: 1.1.5
-     * Built: Mon Oct 01 2012 17:57:13
-     * http://parse.com
-     *
-     * Copyright 2012 Parse, Inc.
-     * The Parse JavaScript SDK is freely distributable under the MIT license.
-     *
-     * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-     * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-     * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-     * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-     * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-     * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-     * DEALINGS IN THE SOFTWARE.
-     */
-
-  }, {
-    key: '_ajaxIE8',
-    value: function _ajaxIE8(method, url, data, success, error, queued, plainText) {
-      var xdr = new XDomainRequest();
-      xdr.onload = function () {
-        var response = void 0;
-        var ranCallback = false;
-        if (plainText) {
-          response = xdr.responseText;
-        } else {
-          try {
-            response = JSON.parse(xdr.responseText);
-          } catch (e) {
-            setTimeout(function () {
-              if (error) {
-                error(null, xdr);
-              }
-            }, 0);
-            ranCallback = true;
-          }
-        }
-        if (!ranCallback) {
-          setTimeout(function () {
-            if (success) {
-              success(response, xdr);
-            }
-          }, 0);
-        }
-        if (queued) {
-          Leanplum._runningRequest = false;
-          Leanplum._dequeueRequest();
-        }
-      };
-      xdr.onerror = xdr.ontimeout = function () {
-        setTimeout(function () {
-          if (error) {
-            error(null, xdr);
-          }
-        }, 0);
-        if (queued) {
-          Leanplum._runningRequest = false;
-          Leanplum._dequeueRequest();
-        }
-      };
-      xdr.onprogress = function () {};
-      xdr.open(method, url);
-      xdr.timeout = NETWORK_TIMEOUT_SECONDS * 1000;
-      xdr.send(data);
-    }
-  }, {
-    key: '_enqueueRequest',
-    value: function _enqueueRequest(args) {
-      _requestQueue.push(args);
-    }
-  }, {
-    key: '_dequeueRequest',
-    value: function _dequeueRequest() {
-      var args = _requestQueue.shift();
-      if (args) {
-        Leanplum._ajax.apply(null, args);
-      }
-    }
-  }, {
-    key: '_ajax',
-    value: function _ajax(method, url, data, success, error, queued, plainText) {
-      if (queued) {
-        if (Leanplum._runningRequest) {
-          // eslint-disable-next-line prefer-rest-params
-          return Leanplum._enqueueRequest(arguments);
-        }
-        Leanplum._runningRequest = true;
-      }
-
-      if (typeof XDomainRequest !== 'undefined') {
-        if (location.protocol === 'http:' && url.indexOf('https:') == 0) {
-          url = 'http:' + url.substring(6);
-        }
-        // eslint-disable-next-line prefer-rest-params
-        return Leanplum._ajaxIE8.apply(null, arguments);
-      }
-
-      var handled = false;
-
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          if (handled) {
-            return;
-          }
-          handled = true;
-
-          var response = void 0;
-          var ranCallback = false;
-          if (plainText) {
-            response = xhr.responseText;
-          } else {
-            try {
-              response = JSON.parse(xhr.responseText);
-            } catch (e) {
-              setTimeout(function () {
-                if (error) {
-                  error(null, xhr);
-                }
-              }, 0);
-              ranCallback = true;
-            }
-          }
-
-          if (!ranCallback) {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              setTimeout(function () {
-                if (success) {
-                  success(response, xhr);
-                }
-              }, 0);
-            } else {
-              setTimeout(function () {
-                if (error) {
-                  error(response, xhr);
-                }
-              }, 0);
-            }
-          }
-
-          if (queued) {
-            Leanplum._runningRequest = false;
-            Leanplum._dequeueRequest();
-          }
-        }
-      };
-      xhr.open(method, url, true);
-      xhr.setRequestHeader('Content-Type', 'text/plain'); // Avoid pre-flight.
-      xhr.send(data);
-      setTimeout(function () {
-        if (!handled) {
-          xhr.abort();
-        }
-      }, NETWORK_TIMEOUT_SECONDS * 1000);
     }
   }]);
 

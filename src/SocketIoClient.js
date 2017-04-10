@@ -1,22 +1,30 @@
-  let SocketIOClient = function() {
+import Request from './Request';
+
+/**
+ * Socket.io 1.0 client class.
+ */
+class SocketIoClient {
+  /**
+   * Initializes a new SocketIoClient, not connected by default.
+   */
+  constructor() {
     this.connected = false;
     this.connecting = false;
-  };
-  SocketIOClient.prototype.emit = function(name, args) {
-    this.socket.send('5:::' + JSON.stringify({
-      'name': name,
-      'args': args,
-    }));
-  };
-  SocketIOClient.prototype.connect = function() {
+  }
+
+  /**
+   * Connects to the given socketHost.
+   * @param  {string} socketHost The host to connect to.
+   */
+  connect(socketHost) {
     let self = this;
     self.connecting = true;
-    Leanplum._ajax('POST', 'https://' + SOCKET_HOST + '/socket.io/1', '',
+    Request.ajax('POST', 'https://' + socketHost + '/socket.io/1', '',
       function(line) {
         let parts = line.split(':');
         let session = parts[0];
         let heartbeat = parseInt(parts[1]) / 2 * 1000;
-        self.socket = new WebSocket('wss://' + SOCKET_HOST +
+        self.socket = new WebSocket('wss://' + socketHost +
           '/socket.io/1/websocket/' + session);
         let heartbeatInterval = null;
         self.socket.onopen = function() {
@@ -65,3 +73,23 @@
       }, null, false, true // nullm, queued, plainText
     );
   };
+
+  /**
+   * Sends given event with arguments to the server.
+   * @param  {string} name Name of the event.
+   * @param  {any} args Arguments to send.
+   */
+  send(name, args) {
+    if (!this.connected) {
+      console.log('Leanplum: Socket is not connected.');
+      return;
+    }
+    this.socket.send('5:::' + JSON.stringify({
+      'name': name,
+      'args': args,
+    }));
+  };
+
+}
+
+module.exports = SocketIoClient;
