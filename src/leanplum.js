@@ -3,6 +3,7 @@ import ArgsBuilder from './ArgsBuilder';
 import BrowserDetector from './BrowserDetector';
 import SocketIoClient from './SocketIoClient';
 import Request from './Request';
+import PushManager from './PushManager';
 
 let _variablesChangedHandlers = [];
 let _variants = [];
@@ -359,6 +360,47 @@ class Leanplum {
         queued: true,
       });
   };
+
+  static addOnWebPushRegister(callback) {
+    if (_pushManager) {
+      return _pushManager.addOnWebPushRegister(callback);
+    }
+    return false;
+  }
+
+  static webPushSubscribeUser(callback) {
+    if (_pushManager) {
+      return _pushManager.subscribeUser(callback);
+    }
+    return false;
+  }
+
+  static webPushUnsubscribeUser(callback) {
+    if (_pushManager) {
+      return _pushManager.unsubscribeUser(callback);
+    }
+    return false;
+  }
+
+  static isWebPushSupported() {
+    if (_pushManager) {
+      return _pushManager.isWebPushSupported();
+    }
+    return false;
+  }
+
+  static setRegistrationId(registrationId) {
+    if (!registrationId || registrationId.length == 0) {
+      return;
+    }
+    Leanplum._request(Constants.METHODS.SET_DEVICE_ATTRIBUTES,
+      new ArgsBuilder().add(Constants.PARAMS.DEVICE_PUSH_TOKEN,
+        registrationId), {
+        queued: false,
+        sendNow: true,
+      }
+    );
+  }
 
   // ***************************************************************************
   // Private Methods
@@ -758,5 +800,7 @@ class Leanplum {
     }
   }
 }
+
+let _pushManager = new PushManager(Leanplum);
 
 module.exports = Leanplum;

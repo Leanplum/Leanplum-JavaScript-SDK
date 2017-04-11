@@ -13,6 +13,7 @@ module.exports = {
         SET_VARS: 'setVars',
         GET_VARS: 'getVars',
         SET_USER_ATTRIBUTES: 'setUserAttributes',
+        SET_DEVICE_ATTRIBUTES: 'setDeviceAttributes',
         UPLOAD_FILE: 'uploadFile',
         REGISTER_DEVICE: 'registerDevice',
     },
@@ -60,6 +61,7 @@ module.exports = {
         VARIABLES: 'vars',
         PARAMS: 'params',
         INCLUDE_DEFAULTS: 'includeDefaults',
+        DEVICE_PUSH_TOKEN: 'gcmRegistrationId',
     },
 
     KEYS: {

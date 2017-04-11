@@ -8,6 +8,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "grunt-babel": "^6.0.0",
     "sinon": "^2.1.0",
     "sleep": "^5.1.1"
   },
@@ -15,7 +16,7 @@
     "babel-core": "^6.18.2",
     "babel-loader": "^6.2.7",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-es2015": "^6.24.1",
     "babel-preset-es2015-webpack": "^6.4.3",
     "chai": "^3.5.0",
     "eslint": "^3.19.0",
@@ -23,7 +24,7 @@
     "eslint-loader": "^1.6.1",
     "grunt": "^1.0.1",
     "grunt-contrib-jshint": "^1.1.0",
-    "grunt-contrib-uglify": "^2.2.1",
+    "grunt-contrib-uglify": "^2.3.0",
     "grunt-eslint": "^19.0.0",
     "grunt-mocha": "^1.0.4",
     "grunt-mocha-test": "^0.13.2",

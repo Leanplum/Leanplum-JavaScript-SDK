@@ -5,6 +5,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-webpack');
+  grunt.loadNpmTasks('grunt-babel');
 
   grunt.initConfig({
     eslint: {
@@ -19,13 +20,21 @@ module.exports = function(grunt) {
         watch: true,
       }, webpackConfig),
     },
-    uglify: {
+    babel: {
       options: {
-        mangle: true,
+        sourceMap: true,
       },
-      js: {
+      dist: {
         files: {
-          'dist/leanplum.min.js': ['dist/leanplum.js'],
+          'dist/sw/sw.js': 'src/PushServiceWorker.js',
+        },
+      },
+    },
+    uglify: {
+      my_target: {
+        files: {
+          'dist/leanplum.min.js': 'dist/leanplum.js',
+          'dist/sw/sw.min.js': 'dist/sw/sw.js',
         },
       },
     },
@@ -55,7 +64,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('lint', ['eslint']);
-  grunt.registerTask('build', ['webpack:prod', 'uglify']);
+  grunt.registerTask('build', ['webpack:prod', 'babel', 'uglify']);
   grunt.registerTask('test', ['mochaTest']);
   grunt.registerTask('default', ['webpack:dev']);
 };
