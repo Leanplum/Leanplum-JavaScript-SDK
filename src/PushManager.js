@@ -1,7 +1,4 @@
-const applicationServerPublicKey =
-  'BLsciS8gJs2vkV4_wmQ3bkPlKcyYQWUsed48HaVhJIUXKs_eR9Y84Dzo638BG2EE_oDDQonEaD' +
-  'qBTOeGE3eR8Fw';
-const FCM_URL = 'https://fcm.googleapis.com/fcm/send/';
+const FCM_URL = 'https://android.googleapis.com/gcm/send/';
 
 let isSubscribed = false;
 let serviceWorkerRegistration = null;
@@ -17,7 +14,7 @@ class PushManager {
       'serviceWorker' in navigator && 'PushManager' in window) {
       console.log('Service Worker and Push is supported.');
 
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/sw.min.js')
         .then(function(registration) {
           console.log('Leanplum: Service Worker is registered.');
           serviceWorkerRegistration = registration;
@@ -58,11 +55,8 @@ class PushManager {
   }
 
   subscribeUser() {
-    const applicationServerKey = this._urlB64ToUint8Array(
-      applicationServerPublicKey);
     serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: applicationServerKey,
       })
       .then(function(subscription) {
         console.log('User is subscribed.');
@@ -102,21 +96,6 @@ class PushManager {
       });
   }
 
-  _urlB64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/\-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
-
   _updateSubscriptionOnServer(subscription) {
     console.dir(JSON.stringify(subscription, null, 2));
     let registrationId = self._extractRegistrationId(subscription);
@@ -126,9 +105,9 @@ class PushManager {
   }
 
   _extractRegistrationId(subscription) {
-    let endpoint = subscription.endpoint;
-    if (endpoint && endpoint.length) {
-      return endpoint.replace(FCM_URL, '');
+    if (subscription && subscription.endpoint &&
+      subscription.endpoint.length) {
+      return subscription.endpoint.replace(FCM_URL, '');
     }
     return null;
   }
