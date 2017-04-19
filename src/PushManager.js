@@ -1,4 +1,7 @@
 const FCM_URL = 'https://android.googleapis.com/gcm/send/';
+const APPLICATION_SERVER_PUBLIC_KEY =
+  'BJY6L-na0YjgEdYDQIckWcqrCpWSZuF5DDUrJYtWSGoT4juFLg2hSnuOtjews4e3wiuJBozAQJ' +
+  'pHAlEcSojoJ3E';
 
 let isSubscribed = false;
 let serviceWorkerRegistration = null;
@@ -54,9 +57,28 @@ class PushManager {
     return true;
   }
 
+  _urlB64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
   subscribeUser() {
+    const applicationServerKey =
+      this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY);
+    console.log(applicationServerKey);
     serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
+        applicationServerKey: applicationServerKey,
       })
       .then(function(subscription) {
         console.log('User is subscribed.');
@@ -98,9 +120,8 @@ class PushManager {
 
   _updateSubscriptionOnServer(subscription) {
     console.dir(JSON.stringify(subscription, null, 2));
-    let registrationId = self._extractRegistrationId(subscription);
-    if (registrationId) {
-      _leanplum.setRegistrationId(registrationId);
+    if (subscription) {
+      _leanplum.setSubscription(subscription);
     }
   }
 

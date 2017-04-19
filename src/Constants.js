@@ -61,7 +61,7 @@ module.exports = {
         VARIABLES: 'vars',
         PARAMS: 'params',
         INCLUDE_DEFAULTS: 'includeDefaults',
-        DEVICE_PUSH_TOKEN: 'gcmRegistrationId',
+        WEB_PUSH_SUBSCRIPTION: 'webPushSubscription',
     },
 
     KEYS: {

@@ -389,13 +389,13 @@ class Leanplum {
     return false;
   }
 
-  static setRegistrationId(registrationId) {
-    if (!registrationId || registrationId.length == 0) {
+  static setSubscription(subscription) {
+    if (!subscription || subscription.length == 0) {
       return;
     }
     Leanplum._request(Constants.METHODS.SET_DEVICE_ATTRIBUTES,
-      new ArgsBuilder().add(Constants.PARAMS.DEVICE_PUSH_TOKEN,
-        registrationId), {
+      new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION,
+        subscription), {
         queued: false,
         sendNow: true,
       }
