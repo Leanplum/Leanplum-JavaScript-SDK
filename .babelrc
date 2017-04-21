@@ -2,5 +2,9 @@
   "presets": [
     ["es2015"]
   ],
-  "plugins": ["transform-class-properties"]
+  "plugins": [
+    "add-module-exports",
+    "transform-es2015-modules-umd",
+    "transform-class-properties"
+  ]
 }

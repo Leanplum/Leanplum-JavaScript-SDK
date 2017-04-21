@@ -1,7 +1,6 @@
 const FCM_URL = 'https://android.googleapis.com/gcm/send/';
 const APPLICATION_SERVER_PUBLIC_KEY =
-  'BJY6L-na0YjgEdYDQIckWcqrCpWSZuF5DDUrJYtWSGoT4juFLg2hSnuOtjews4e3wiuJBozAQJ' +
-  'pHAlEcSojoJ3E';
+  'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjAnfCt-3vK0Ci68';
 
 let isSubscribed = false;
 let serviceWorkerRegistration = null;
@@ -118,10 +117,22 @@ class PushManager {
       });
   }
 
+  _prepareSubscription(subscription) {
+    let key = subscription.getKey ? subscription.getKey('p256dh') : '';
+    let auth = subscription.getKey ? subscription.getKey('auth') : '';
+    let keyAscii = btoa(String.fromCharCode.apply(null, new Uint8Array(key)));
+    let authAscii = btoa(String.fromCharCode.apply(null, new Uint8Array(auth)));
+    return {
+      endpoint: subscription.endpoint,
+      key: keyAscii,
+      auth: authAscii,
+    };
+  }
+
   _updateSubscriptionOnServer(subscription) {
-    console.dir(JSON.stringify(subscription, null, 2));
     if (subscription) {
-      _leanplum.setSubscription(subscription);
+      let preparedSubscription = this._prepareSubscription(subscription);
+      _leanplum.setSubscription(preparedSubscription);
     }
   }
 

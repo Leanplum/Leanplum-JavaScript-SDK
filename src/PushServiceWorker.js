@@ -16,26 +16,56 @@
  *  limitations under the License
  *
  */
-const TITLE = 'Leanplum WebPush';
-const CLICK_URL = 'https://www.leanplum.com/';
-const ICON_URL = 'https://www.leanplum.com/favicon.ico';
-const TEXT_FALLBACK = 'WebPush payload requires serverside encryption, which ' +
-  'is currently being implemented.';
+
+let openActions = {};
+
 self.addEventListener('push', function(event) {
   console.log('[Service Worker] Push Received.');
-  let text = event.data && event.data.text() ? event.data.text() :
-    TEXT_FALLBACK;
+  let jsonString = event.data && event.data.text() ? event.data.text() : null;
 
-  event.waitUntil(self.registration.showNotification(TITLE, {
-    body: text,
-    icon: ICON_URL,
-  }));
+  if (!jsonString) {
+    console.log('Leanplum: Push received without payload, skipping display.');
+    return;
+  }
+
+  let options = JSON.parse(jsonString);
+
+  if (!options || !options.title || !options.tag) {
+    console.log('Leanplum: No options, title or tag/id received, skipping ' +
+      'display.');
+    return;
+  }
+
+  if (options.data && options.data.openAction) {
+    openActions[options.tag] = options.data.openAction;
+  }
+
+  // Extract title and delete from options.
+  let title = options.title;
+  delete options.title;
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', function(event) {
-  console.log('[Service Worker] Notification click Received.');
+  console.log('Leanplum: [Service Worker] Notification click received.');
 
   event.notification.close();
 
-  event.waitUntil(clients.openWindow(CLICK_URL));
+  if (!event.notification || !event.notification.tag) {
+    console.log('Leanplum: No notification or tag/id received, skipping open ' +
+      'action.');
+    return;
+  }
+
+  let notificationId = event.notification.tag;
+  let openActionUrl = openActions[notificationId];
+  if (!openActionUrl) {
+    console.log('Leanplum: [Service Worker] No action defined, doing nothing.');
+    return;
+  }
+
+  delete openActions.notificationId;
+
+  event.waitUntil(clients.openWindow(openActionUrl));
 });

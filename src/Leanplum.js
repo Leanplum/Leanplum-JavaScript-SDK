@@ -29,11 +29,11 @@ class Leanplum {
   // ***************************************************************************
   // Public Methods
   // ***************************************************************************
-  static setApiPath(_apiPath) {
-    if (!_apiPath || _apiPath.isEmpty()) {
+  static setApiPath(apiPath) {
+    if (!apiPath) {
       return;
     }
-    _apiPath = _apiPath;
+    _apiPath = apiPath;
   };
 
   static setEmail(email) {
@@ -103,7 +103,7 @@ class Leanplum {
   };
 
   static getVariable(args) {
-    let current = exports['getVariables']();
+    let current = Leanplum.getVariables();
     for (let i = 0; i < arguments.length; i++) {
       current = current[arguments.i];
     }
@@ -287,7 +287,7 @@ class Leanplum {
   };
 
   static setUserId(userId) {
-    exports['setUserAttributes'](userId);
+    Leanplum.setUserAttributes(userId);
   }
 
   static setUserAttributes(userId, userAttributes) {
