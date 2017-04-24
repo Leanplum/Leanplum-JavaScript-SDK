@@ -1,10 +1,11 @@
 const FCM_URL = 'https://android.googleapis.com/gcm/send/';
 const APPLICATION_SERVER_PUBLIC_KEY =
-  'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjAnfCt-3vK0Ci68';
+  'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
+  'nfCt-3vK0Ci68';
 
+let isSupported = false;
 let isSubscribed = false;
 let serviceWorkerRegistration = null;
-let onWebPushRegisterCallback = undefined;
 let self;
 let _leanplum;
 
@@ -14,46 +15,44 @@ class PushManager {
     self = this;
     if (navigator && navigator.serviceWorker &&
       'serviceWorker' in navigator && 'PushManager' in window) {
-      console.log('Service Worker and Push is supported.');
-
-      navigator.serviceWorker.register('/sw.min.js')
-        .then(function(registration) {
-          console.log('Leanplum: Service Worker is registered.');
-          serviceWorkerRegistration = registration;
-
-          // Set the initial subscription value
-          serviceWorkerRegistration.pushManager.getSubscription()
-            .then(function(subscription) {
-              isSubscribed = !(subscription === null);
-
-              self._updateSubscriptionOnServer(subscription);
-
-              if (isSubscribed) {
-                console.log('User IS subscribed.');
-              } else {
-                console.log('User is NOT subscribed.');
-              }
-
-              if (onWebPushRegisterCallback) {
-                onWebPushRegisterCallback(isSubscribed);
-              }
-            });
-        })
-        .catch(function(error) {
-          console.log('Service Worker Error', error);
-        });
+      isSupported = true;
     } else {
       console.log('Leanplum: Push messaging is not supported');
     }
   }
 
   isWebPushSupported() {
-    return (serviceWorkerRegistration !== undefined) ? true : false;
+    return isSupported;
   }
 
-  addOnWebPushRegister(cb) {
-    onWebPushRegisterCallback = cb;
-    return true;
+  register(serviceWorkerUrl, callback) {
+    navigator.serviceWorker.register(
+        serviceWorkerUrl ? serviceWorkerUrl : '/sw.min.js')
+      .then(function(registration) {
+        console.log('Leanplum: Service Worker is registered.');
+        serviceWorkerRegistration = registration;
+
+        // Set the initial subscription value
+        serviceWorkerRegistration.pushManager.getSubscription()
+          .then(function(subscription) {
+            isSubscribed = !(subscription === null);
+
+            self._updateSubscriptionOnServer(subscription);
+
+            if (isSubscribed) {
+              console.log('User IS subscribed.');
+            } else {
+              console.log('User is NOT subscribed.');
+            }
+
+            if (callback) {
+              callback(isSubscribed);
+            }
+          });
+      })
+      .catch(function(error) {
+        console.log('Service Worker Error', error);
+      });
   }
 
   _urlB64ToUint8Array(base64String) {
@@ -132,7 +131,7 @@ class PushManager {
   _updateSubscriptionOnServer(subscription) {
     if (subscription) {
       let preparedSubscription = this._prepareSubscription(subscription);
-      _leanplum.setSubscription(preparedSubscription);
+      _leanplum._setSubscription(preparedSubscription);
     }
   }
 
@@ -145,4 +144,4 @@ class PushManager {
   }
 }
 
-module.exports = PushManager;
+export default PushManager;

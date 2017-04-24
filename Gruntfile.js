@@ -27,6 +27,7 @@ module.exports = function(grunt) {
       dist: {
         files: {
           'dist/sw/sw.js': 'src/PushServiceWorker.js',
+          'test/e2e/js/index.js': 'test/e2e/js/index.es6.js',
         },
       },
     },

@@ -233,6 +233,16 @@ Object.keys(testModes).forEach((mode) => {
 				});
 				Leanplum.advanceTo();
 			}).timeout(7000);
+
+
+// Leanplum.setApiPath('http://leanplum-staging.appspot.com/api');
+// Leanplum.setSocketHost('dev-staging.leanplum.com');
+// Leanplum.setRequestBoatching(false, 5);
+// Leanplum.setVariables({
+// Leanplum.getVariable(varName)
+// Leanplum.addStartResponseHandler(function() {
+// Leanplum.setUserAttributes('u1', {
+			
 		});
 	});
 });

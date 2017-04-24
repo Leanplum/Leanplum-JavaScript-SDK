@@ -361,9 +361,18 @@ class Leanplum {
       });
   };
 
-  static addOnWebPushRegister(callback) {
+  static isWebPushSupported() {
     if (_pushManager) {
-      return _pushManager.addOnWebPushRegister(callback);
+      return _pushManager.isWebPushSupported();
+    }
+    return false;
+  }
+
+  static registerWebPush(serviceWorkerUrl, callback) {
+    if (_pushManager && _pushManager.isWebPushSupported()) {
+      return _pushManager.register(serviceWorkerUrl, callback);
+    } else {
+      console.log('Leanplum: WebPush is not supported.');
     }
     return false;
   }
@@ -382,14 +391,7 @@ class Leanplum {
     return false;
   }
 
-  static isWebPushSupported() {
-    if (_pushManager) {
-      return _pushManager.isWebPushSupported();
-    }
-    return false;
-  }
-
-  static setSubscription(subscription) {
+  static _setSubscription(subscription) {
     if (!subscription || subscription.length == 0) {
       return;
     }
