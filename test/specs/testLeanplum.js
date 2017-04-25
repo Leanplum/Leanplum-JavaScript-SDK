@@ -7,7 +7,7 @@ const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74';
 
 const startResponse = require('./responses/start.json');
 const successResponse = require('./responses/success.json');
-const LEANPLUM_PATH = '../../dist/leanplum';
+const LEANPLUM_PATH = '../../dist/leanplum.min.js';
 
 // const mockWebSocket = require('mock-socket').WebSocket;
 // global.WebSocket = mockWebSocket;
@@ -128,6 +128,7 @@ Object.keys(testModes).forEach((mode) => {
 					}, JSON.stringify(startResponse));
 				});
 				setAppId(testModes[mode]);
+				Leanplum.setRequestBatching(false);
 				Leanplum.start(userId, userAttributes, (success) => {
 					assert.equal(success, true);
 					requests = [];
@@ -183,7 +184,6 @@ Object.keys(testModes).forEach((mode) => {
 			});
 
 			it('resumeState', (done) => {
-				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'resumeState');
@@ -193,10 +193,9 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.resumeState();
-			}).timeout(7000);
+			});
 
 			it('setUserAttributes', (done) => {
-				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'setUserAttributes');
@@ -206,10 +205,9 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.setUserAttributes(userId, userAttributes);
-			}).timeout(7000);
+			});
 
 			it('track', (done) => {
-				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'track');
@@ -219,10 +217,9 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.track();
-			}).timeout(7000);
+			});
 
 			it('advanceTo', (done) => {
-				sleep.sleep((testModes[mode] === testModes.PROD) ? 5 : 0);
 				interceptRequest((request) => {
 					assert.isNotNull(request);
 					assert.equal(getAction(request), 'advance');
@@ -232,17 +229,15 @@ Object.keys(testModes).forEach((mode) => {
 					done();
 				});
 				Leanplum.advanceTo();
-			}).timeout(7000);
+			});
 
-
-// Leanplum.setApiPath('http://leanplum-staging.appspot.com/api');
-// Leanplum.setSocketHost('dev-staging.leanplum.com');
-// Leanplum.setRequestBoatching(false, 5);
-// Leanplum.setVariables({
-// Leanplum.getVariable(varName)
-// Leanplum.addStartResponseHandler(function() {
-// Leanplum.setUserAttributes('u1', {
-			
+			// Leanplum.setApiPath('http://leanplum-staging.appspot.com/api');
+			// Leanplum.setSocketHost('dev-staging.leanplum.com');
+			// Leanplum.setRequestBatching(false, 5);
+			// Leanplum.setVariables({
+			// Leanplum.getVariable(varName)
+			// Leanplum.addStartResponseHandler(function() {
+			// Leanplum.setUserAttributes('u1', {
 		});
 	});
 });

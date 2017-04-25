@@ -70,7 +70,7 @@ class PushManager {
     return outputArray;
   }
 
-  subscribeUser() {
+  subscribeUser(callback) {
     const applicationServerKey =
       this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY);
     console.log(applicationServerKey);
@@ -85,8 +85,8 @@ class PushManager {
 
         isSubscribed = true;
 
-        if (onWebPushRegisterCallback) {
-          onWebPushRegisterCallback(isSubscribed);
+        if (callback) {
+          callback(isSubscribed);
         }
       })
       .catch(function(err) {
@@ -94,7 +94,7 @@ class PushManager {
       });
   }
 
-  unsubscribeUser() {
+  unsubscribeUser(callback) {
     serviceWorkerRegistration.pushManager.getSubscription()
       .then(function(subscription) {
         if (subscription) {
@@ -110,8 +110,8 @@ class PushManager {
         console.log('User is unsubscribed.');
         isSubscribed = false;
 
-        if (onWebPushRegisterCallback) {
-          onWebPushRegisterCallback(isSubscribed);
+        if (callback) {
+          callback(isSubscribed);
         }
       });
   }

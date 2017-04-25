@@ -332,7 +332,6 @@ class Leanplum {
       params = info;
       info = undefined;
     }
-
     Leanplum._request(Constants.METHODS.TRACK,
       new ArgsBuilder()
       .add(Constants.PARAMS.EVENT, event)

@@ -3,6 +3,8 @@ let REMOTE_KEY = 'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY';
 
 Leanplum.setAppIdForDevelopmentMode(REMOTE_APP_ID, REMOTE_KEY);
 Leanplum.start();
+Leanplum.pauseState();
+Leanplum.resumeState();
 Leanplum.addStartResponseHandler(function() {
   console.log('My variants:');
   console.log(Leanplum.getVariants());
