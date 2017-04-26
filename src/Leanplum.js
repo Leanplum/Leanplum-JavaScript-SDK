@@ -367,23 +367,18 @@ class Leanplum {
     return false;
   }
 
-  static registerWebPush(serviceWorkerUrl, callback) {
+  static registerForWebPush(serviceWorkerUrl, callback) {
     if (_pushManager && _pushManager.isWebPushSupported()) {
-      return _pushManager.register(serviceWorkerUrl, callback);
+      return _pushManager.register(serviceWorkerUrl, () => {
+        return _pushManager.subscribeUser(callback);
+      });
     } else {
       console.log('Leanplum: WebPush is not supported.');
     }
     return false;
   }
 
-  static webPushSubscribeUser(callback) {
-    if (_pushManager) {
-      return _pushManager.subscribeUser(callback);
-    }
-    return false;
-  }
-
-  static webPushUnsubscribeUser(callback) {
+  static unregisterFromWebPush(callback) {
     if (_pushManager) {
       return _pushManager.unsubscribeUser(callback);
     }

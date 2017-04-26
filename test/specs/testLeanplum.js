@@ -1,5 +1,4 @@
 const sinon = require('sinon');
-const sleep = require('sleep');
 
 const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs';
 const KEY_DEV = 'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY';
@@ -7,10 +6,8 @@ const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74';
 
 const startResponse = require('./responses/start.json');
 const successResponse = require('./responses/success.json');
-const LEANPLUM_PATH = '../../dist/leanplum.min.js';
+const LEANPLUM_PATH = '../../dist/leanplum.js';
 
-// const mockWebSocket = require('mock-socket').WebSocket;
-// global.WebSocket = mockWebSocket;
 global.WebSocket = undefined;
 
 // Mocking Requests
@@ -231,13 +228,138 @@ Object.keys(testModes).forEach((mode) => {
 				Leanplum.advanceTo();
 			});
 
-			// Leanplum.setApiPath('http://leanplum-staging.appspot.com/api');
-			// Leanplum.setSocketHost('dev-staging.leanplum.com');
-			// Leanplum.setRequestBatching(false, 5);
-			// Leanplum.setVariables({
-			// Leanplum.getVariable(varName)
-			// Leanplum.addStartResponseHandler(function() {
-			// Leanplum.setUserAttributes('u1', {
+			it('verifyDefaultApiPath', (done) => {
+				interceptRequest((request) => {
+					assert.isNotNull(request);
+					assert.include(request.url, 'https://www.leanplum.com/api');
+					request.respond(200, {
+						'Content-Type': 'application/json',
+					}, JSON.stringify(successResponse));
+					done();
+				});
+				Leanplum.track();
+			});
+
+			it('setApiPath', (done) => {
+				const newApiPath = 'http://leanplum-staging.appspot.com/api';
+				interceptRequest((request) => {
+					assert.isNotNull(request);
+					assert.include(request.url, newApiPath);
+					request.respond(200, {
+						'Content-Type': 'application/json',
+					}, JSON.stringify(successResponse));
+					done();
+				});
+				Leanplum.setApiPath(newApiPath);
+				Leanplum.track();
+			});
+
+			it('setUserAttributes', (done) => {
+				interceptRequest((request) => {
+					assert.isNotNull(request);
+					let json = JSON.parse(request.requestBody).data[0];
+					assert.equal(getAction(request), 'setUserAttributes');
+					assert.equal(json.newUserId, 'u1');
+					assert.equal(JSON.parse(json.userAttributes).gender,
+						userAttributes.gender);
+					assert.equal(JSON.parse(json.userAttributes).age,
+						userAttributes.age);
+					request.respond(200, {
+						'Content-Type': 'application/json',
+					}, JSON.stringify(successResponse));
+					done();
+				});
+				Leanplum.setUserAttributes('u1', userAttributes);
+			});
+
+			it('setRequestBatching', (done) => {
+				Leanplum.setRequestBatching(true, 5);
+				let count = 0;
+				interceptRequest((request) => {
+					assert.isNotNull(request);
+					// console.log(request);
+					count++;
+					request.respond(200, {
+						'Content-Type': 'application/json',
+					}, JSON.stringify(successResponse));
+				});
+
+				setTimeout(function() {
+					assert.equal(count, testModes[mode] === testModes.DEV ? 2 : 1);
+					done();
+				}, 10);
+
+				Leanplum.track();
+				Leanplum.advanceTo();
+			});
+		});
+
+		describe('Test variable changed callback after start.', () => {
+			before(() => {});
+
+			after(() => {
+				xhr.restore();
+			});
+
+			beforeEach(() => {
+				Leanplum = require(LEANPLUM_PATH);
+				setAppId(testModes[mode]);
+			});
+
+			afterEach(() => {
+				requests = [];
+				assert.equal(requests.length, 0);
+				delete require.cache[require.resolve(LEANPLUM_PATH)];
+			});
+
+			it('setVariable', (done) => {
+				interceptRequest((request) => {
+					request.respond(200, {
+						'Content-Type': 'application/json',
+					}, JSON.stringify(startResponse));
+				});
+				Leanplum.setVariables(userAttributes);
+				Leanplum.addVariablesChangedHandler(() => {
+					assert.equal(Leanplum.getVariables().gender, userAttributes.gender);
+					assert.equal(Leanplum.getVariables().age, userAttributes.age);
+				});
+				Leanplum.start(userId, userAttributes, (success) => {
+					assert.equal(success, true);
+					return done(success ? null : success);
+				});
+			});
+		});
+
+		describe('Test addStartResponseHandler callback after start.', () => {
+			before(() => {});
+
+			after(() => {
+				xhr.restore();
+			});
+
+			beforeEach(() => {
+				Leanplum = require(LEANPLUM_PATH);
+				setAppId(testModes[mode]);
+			});
+
+			afterEach(() => {
+				requests = [];
+				assert.equal(requests.length, 0);
+				delete require.cache[require.resolve(LEANPLUM_PATH)];
+			});
+
+			it('test addStartResponseHandler', (done) => {
+				interceptRequest((request) => {
+					request.respond(200, {
+						'Content-Type': 'application/json',
+					}, JSON.stringify(startResponse));
+				});
+				Leanplum.addStartResponseHandler(() => {
+					console.log('asdf');
+					return done();
+				});
+				Leanplum.start();
+			});
 		});
 	});
 });
