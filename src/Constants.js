@@ -82,6 +82,7 @@ module.exports = {
         TOKEN: '__leanplum_token',
         DEVICE_ID: '__leanplum_device_id',
         USER_ID: '__leanplum_user_id',
+        PUSH_SUBSCRIPTION: '__leanplum_push_subscription',
     },
 
     VALUES: {
