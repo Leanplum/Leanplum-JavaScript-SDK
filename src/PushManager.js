@@ -1,4 +1,3 @@
-const FCM_URL = 'https://android.googleapis.com/gcm/send/';
 const APPLICATION_SERVER_PUBLIC_KEY =
   'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
   'nfCt-3vK0Ci68';
@@ -16,9 +15,39 @@ class PushManager {
     if (navigator && navigator.serviceWorker &&
       'serviceWorker' in navigator && 'PushManager' in window) {
       isSupported = true;
+      self.register();
     } else {
       console.log('Leanplum: Push messaging is not supported');
     }
+  }
+
+  _getServiceWorkerRegistration() {
+    return new Promise((resolve) => {
+      if (serviceWorkerRegistration) {
+        resolve(serviceWorkerRegistration);
+      } else {
+        navigator.serviceWorker.getRegistration().then((registration) => {
+          resolve(registration);
+        });
+      }
+    });
+  }
+
+  isWebPushSubscribed() {
+    return this._getServiceWorkerRegistration()
+      .then((registration) => {
+        return new Promise((resolve) => {
+          if (!registration) {
+            resolve(false);
+          } else {
+            registration.pushManager.getSubscription()
+              .then(function(subscription) {
+                isSubscribed = !(subscription === null);
+                resolve(isSubscribed);
+              });
+          }
+        });
+      });
   }
 
   isWebPushSupported() {
@@ -37,10 +66,9 @@ class PushManager {
           .then(function(subscription) {
             isSubscribed = !(subscription === null);
 
-            self._updateSubscriptionOnServer(subscription);
-
             if (isSubscribed) {
               console.log('User IS subscribed.');
+              self._updateSubscriptionOnServer(subscription);
             } else {
               console.log('User is NOT subscribed.');
             }
@@ -133,14 +161,6 @@ class PushManager {
       let preparedSubscription = this._prepareSubscription(subscription);
       _leanplum._setSubscription(preparedSubscription);
     }
-  }
-
-  _extractRegistrationId(subscription) {
-    if (subscription && subscription.endpoint &&
-      subscription.endpoint.length) {
-      return subscription.endpoint.replace(FCM_URL, '');
-    }
-    return null;
   }
 }
 

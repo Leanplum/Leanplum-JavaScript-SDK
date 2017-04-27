@@ -368,9 +368,19 @@ class Leanplum {
     return false;
   }
 
+  static isWebPushSubscribed() {
+    if (_pushManager) {
+      return _pushManager.isWebPushSubscribed();
+    }
+    return false;
+  }
+
   static registerForWebPush(serviceWorkerUrl, callback) {
     if (_pushManager && _pushManager.isWebPushSupported()) {
-      return _pushManager.register(serviceWorkerUrl, () => {
+      return _pushManager.register(serviceWorkerUrl, (isSubscribed) => {
+        if (isSubscribed) {
+          return callback(true);
+        }
         return _pushManager.subscribeUser(callback);
       });
     } else {
