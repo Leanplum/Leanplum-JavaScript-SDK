@@ -51,7 +51,7 @@ module.exports = function(grunt) {
             'test/specs/helpers/chai.js',
           ],
         },
-        src: ['test/**/*.js'],
+        src: ['test/specs/testLeanplum.js'],
       },
     },
     watch: {
