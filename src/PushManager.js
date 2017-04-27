@@ -35,6 +35,11 @@ class PushManager {
   }
 
   isWebPushSubscribed() {
+    if (!isSupported) {
+      return new Promise((resolve, reject) => {
+        reject('Leanplum: Push messaging is not supported.');
+      });
+    }
     return this._getServiceWorkerRegistration()
       .then((registration) => {
         return new Promise((resolve) => {
@@ -60,7 +65,7 @@ class PushManager {
 
   register(serviceWorkerUrl, callback) {
     if (!isSupported) {
-      return console.log('Leanplum: Push messaging is not supported');
+      return console.log('Leanplum: Push messaging is not supported.');
     }
     navigator.serviceWorker.register(
         serviceWorkerUrl ? serviceWorkerUrl : '/sw.min.js')
@@ -81,7 +86,7 @@ class PushManager {
           });
       })
       .catch(function(error) {
-        console.log('Leanplum: Service Worker Error', error);
+        console.log('Leanplum: Service Worker Error: ', error);
       });
   }
 
@@ -103,7 +108,6 @@ class PushManager {
   subscribeUser(callback) {
     const applicationServerKey =
       this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY);
-    console.log(applicationServerKey);
     serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey,
@@ -130,7 +134,7 @@ class PushManager {
         }
       })
       .catch(function(error) {
-        console.log('Leanplum: Error unsubscribing', error);
+        console.log('Leanplum: Error unsubscribing.', error);
       })
       .then(function() {
         self._updateSubscriptionOnServer(null);
