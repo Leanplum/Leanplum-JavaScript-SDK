@@ -4,6 +4,7 @@ import BrowserDetector from './BrowserDetector';
 import SocketIoClient from './SocketIoClient';
 import Request from './Request';
 import PushManager from './PushManager';
+import _ from './underscore.js';
 
 let _variablesChangedHandlers = [];
 let _variants = [];
