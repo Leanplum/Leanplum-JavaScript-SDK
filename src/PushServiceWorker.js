@@ -17,10 +17,13 @@
  *
  */
 
+const KEY_NAME = '__name__';
+const OPEN_URL = 'Open URL';
+const URL = 'URL';
+
 let openActions = {};
 
 self.addEventListener('push', function(event) {
-  console.log('[Service Worker] Push Received.');
   let jsonString = event.data && event.data.text() ? event.data.text() : null;
 
   if (!jsonString) {
@@ -29,15 +32,18 @@ self.addEventListener('push', function(event) {
   }
 
   let options = JSON.parse(jsonString);
-
   if (!options || !options.title || !options.tag) {
     console.log('Leanplum: No options, title or tag/id received, skipping ' +
       'display.');
     return;
   }
 
-  if (options.data && options.data.openAction) {
-    openActions[options.tag] = options.data.openAction;
+  // Extract open action url.
+  if (options.data && options.data.openAction &&
+    options.data.openAction.hasOwnProperty(KEY_NAME) &&
+    options.data.openAction[KEY_NAME] === OPEN_URL &&
+    options.data.openAction.hasOwnProperty(URL)) {
+    openActions[options.tag] = options.data.openAction.URL;
   }
 
   // Extract title and delete from options.

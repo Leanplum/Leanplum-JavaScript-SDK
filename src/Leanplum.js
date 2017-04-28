@@ -361,6 +361,10 @@ class Leanplum {
       });
   };
 
+  /**
+   * Determines if webpush is supported in the browser.
+   * @return {Boolean} True if supported, else false.
+   */
   static isWebPushSupported() {
     if (_pushManager) {
       return _pushManager.isWebPushSupported();
@@ -368,36 +372,52 @@ class Leanplum {
     return false;
   }
 
+  /**
+   * Determines if web push is subscribed.
+   * @return {Promise} Resolves if true, rejects if false.
+   */
   static isWebPushSubscribed() {
-    if (_pushManager) {
-      return _pushManager.isWebPushSubscribed();
-    }
-    return false;
+    return _pushManager.isWebPushSubscribed();
   }
 
-  static registerForWebPush(serviceWorkerUrl, callback) {
-    if (_pushManager && _pushManager.isWebPushSupported()) {
-      return _pushManager.register(serviceWorkerUrl, (isSubscribed) => {
-        if (isSubscribed) {
-          return callback(true);
-        }
-        return _pushManager.subscribeUser(callback);
-      });
-    } else {
-      console.log('Leanplum: WebPush is not supported.');
-    }
-    return false;
+  /**
+   * Register the browser for webpush.
+   * @param  {[type]}   serviceWorkerUrl The url on your server that hosts the
+   *                                     /sw.min.js service worker js file.
+   * @param  {Function} callback         A callback with the registration
+   *                                     result.
+   * @return {Promise}                   Resolves if registration successful,
+   *                                     otherwise fails.
+   */
+  static registerForWebPush(serviceWorkerUrl) {
+    return new Promise((resolve, reject) => {
+      if (_pushManager && _pushManager.isWebPushSupported()) {
+        return _pushManager.register(serviceWorkerUrl, (isSubscribed) => {
+          if (isSubscribed) {
+            return resolve(true);
+          }
+          return _pushManager.subscribeUser();
+        });
+      } else {
+        return reject('Leanplum: WebPush is not supported.');
+      }
+    });
   }
 
-  static unregisterFromWebPush(callback) {
-    if (_pushManager) {
-      return _pushManager.unsubscribeUser(callback);
-    }
-    return false;
+  /**
+   * Unregisters the browser form webpush.
+   * @return {Promise}            Resolves on success, otherwise rejects.
+   */
+  static unregisterFromWebPush() {
+    return _pushManager.unsubscribeUser();
   }
 
+  /**
+   * Send the subscription to the Leanplum server.
+   * @param {String/Object} subscription The subscription string.
+   */
   static _setSubscription(subscription) {
-    if (!subscription || subscription.length == 0) {
+    if (!subscription) {
       return;
     }
     Leanplum._request(Constants.METHODS.SET_DEVICE_ATTRIBUTES,
