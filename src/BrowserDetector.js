@@ -75,9 +75,9 @@ const dataOS = [{
 class BrowserDetector {
   constructor() {
     this.browser = this.searchString(dataBrowser) ||
-      'An unknown browser';
+        'An unknown browser';
     this.version = this.searchVersion(navigator.userAgent) ||
-      this.searchVersion(navigator.appVersion) || 'an unknown version';
+        this.searchVersion(navigator.appVersion) || 'an unknown version';
     this.OS = this.searchString(dataOS) || 'an unknown OS';
   };
 
@@ -103,7 +103,7 @@ class BrowserDetector {
       return;
     }
     return parseFloat(dataString.substring(index +
-      this.versionSearchString.length + 1));
+        this.versionSearchString.length + 1));
   }
 }
 

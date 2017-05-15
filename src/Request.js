@@ -49,7 +49,7 @@ class Request {
     let handled = false;
 
     let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         if (handled) {
           return;
@@ -64,7 +64,7 @@ class Request {
           try {
             response = JSON.parse(xhr.responseText);
           } catch (e) {
-            setTimeout(function() {
+            setTimeout(function () {
               if (error) {
                 error(null, xhr);
               }
@@ -75,13 +75,13 @@ class Request {
 
         if (!ranCallback) {
           if (xhr.status >= 200 && xhr.status < 300) {
-            setTimeout(function() {
+            setTimeout(function () {
               if (success) {
                 success(response, xhr);
               }
             }, 0);
           } else {
-            setTimeout(function() {
+            setTimeout(function () {
               if (error) {
                 error(response, xhr);
               }
@@ -98,7 +98,7 @@ class Request {
     xhr.open(method, url, true);
     xhr.setRequestHeader('Content-Type', 'text/plain'); // Avoid pre-flight.
     xhr.send(data);
-    setTimeout(function() {
+    setTimeout(function () {
       if (!handled) {
         xhr.abort();
       }
@@ -107,7 +107,7 @@ class Request {
 
   static _ajaxIE8(method, url, data, success, error, queued, plainText) {
     let xdr = new XDomainRequest();
-    xdr.onload = function() {
+    xdr.onload = function () {
       let response;
       let ranCallback = false;
       if (plainText) {
@@ -116,7 +116,7 @@ class Request {
         try {
           response = JSON.parse(xdr.responseText);
         } catch (e) {
-          setTimeout(function() {
+          setTimeout(function () {
             if (error) {
               error(null, xdr);
             }
@@ -125,7 +125,7 @@ class Request {
         }
       }
       if (!ranCallback) {
-        setTimeout(function() {
+        setTimeout(function () {
           if (success) {
             success(response, xdr);
           }
@@ -136,8 +136,8 @@ class Request {
         Request._dequeueRequest();
       }
     };
-    xdr.onerror = xdr.ontimeout = function() {
-      setTimeout(function() {
+    xdr.onerror = xdr.ontimeout = function () {
+      setTimeout(function () {
         if (error) {
           error(null, xdr);
         }
@@ -147,7 +147,8 @@ class Request {
         Request._dequeueRequest();
       }
     };
-    xdr.onprogress = function() {};
+    xdr.onprogress = function () {
+    };
     xdr.open(method, url);
     xdr.timeout = _networkTimeoutSeconds * 1000;
     xdr.send(data);

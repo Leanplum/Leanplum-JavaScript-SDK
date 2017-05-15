@@ -23,7 +23,7 @@ const URL = 'URL';
 
 let openActions = {};
 
-self.addEventListener('push', function(event) {
+self.addEventListener('push', function (event) {
   let jsonString = event.data && event.data.text() ? event.data.text() : null;
 
   if (!jsonString) {
@@ -34,15 +34,15 @@ self.addEventListener('push', function(event) {
   let options = JSON.parse(jsonString);
   if (!options || !options.title || !options.tag) {
     console.log('Leanplum: No options, title or tag/id received, skipping ' +
-      'display.');
+        'display.');
     return;
   }
 
   // Extract open action url.
   if (options.data && options.data.openAction &&
-    options.data.openAction.hasOwnProperty(KEY_NAME) &&
-    options.data.openAction[KEY_NAME] === OPEN_URL &&
-    options.data.openAction.hasOwnProperty(URL)) {
+      options.data.openAction.hasOwnProperty(KEY_NAME) &&
+      options.data.openAction[KEY_NAME] === OPEN_URL &&
+      options.data.openAction.hasOwnProperty(URL)) {
     openActions[options.tag] = options.data.openAction.URL;
   }
 
@@ -53,14 +53,14 @@ self.addEventListener('push', function(event) {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function (event) {
   console.log('Leanplum: [Service Worker] Notification click received.');
 
   event.notification.close();
 
   if (!event.notification || !event.notification.tag) {
     console.log('Leanplum: No notification or tag/id received, skipping open ' +
-      'action.');
+        'action.');
     return;
   }
 

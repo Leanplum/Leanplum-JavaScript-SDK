@@ -1,5 +1,7 @@
 {
-  "response": [{
-    "success": true
-  }]
+  "response": [
+    {
+      "success": true
+    }
+  ]
 }

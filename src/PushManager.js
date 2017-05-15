@@ -1,9 +1,9 @@
-import _ from './underscore';
-import Constants from './Constants';
+import _ from "./underscore";
+import Constants from "./Constants";
 
 const APPLICATION_SERVER_PUBLIC_KEY =
-  'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
-  'nfCt-3vK0Ci68';
+    'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
+    'nfCt-3vK0Ci68';
 
 let self;
 let _leanplum;
@@ -24,7 +24,7 @@ class PushManager {
     _leanplum = leanplum;
     self = this;
     if (navigator && navigator.serviceWorker &&
-      'serviceWorker' in navigator && 'PushManager' in window) {
+        'serviceWorker' in navigator && 'PushManager' in window) {
       isSupported = true;
       self.register();
     }
@@ -49,22 +49,22 @@ class PushManager {
       });
     }
     return this._getServiceWorkerRegistration()
-      .then((registration) => {
-        return new Promise((resolve) => {
-          if (!registration) {
-            resolve(false);
-          } else {
-            registration.pushManager.getSubscription()
-              .then(function(subscription) {
-                isSubscribed = !(subscription === null);
-                if (isSubscribed) {
-                  self._updateNewSubscriptionOnServer(subscription);
-                }
-                resolve(isSubscribed);
-              });
-          }
+        .then((registration) => {
+          return new Promise((resolve) => {
+            if (!registration) {
+              resolve(false);
+            } else {
+              registration.pushManager.getSubscription()
+                  .then(function (subscription) {
+                    isSubscribed = !(subscription === null);
+                    if (isSubscribed) {
+                      self._updateNewSubscriptionOnServer(subscription);
+                    }
+                    resolve(isSubscribed);
+                  });
+            }
+          });
         });
-      });
   }
 
   /**
@@ -80,24 +80,24 @@ class PushManager {
     }
     navigator.serviceWorker.register(
         serviceWorkerUrl ? serviceWorkerUrl : '/sw.min.js')
-      .then(function(registration) {
-        serviceWorkerRegistration = registration;
+        .then(function (registration) {
+          serviceWorkerRegistration = registration;
 
-        // Set the initial subscription value
-        serviceWorkerRegistration.pushManager.getSubscription()
-          .then(function(subscription) {
-            isSubscribed = !(subscription === null);
-            if (isSubscribed) {
-              self._updateNewSubscriptionOnServer(subscription);
-            }
-            if (callback) {
-              callback(isSubscribed);
-            }
-          });
-      })
-      .catch(function(error) {
-        console.log('Leanplum: Service Worker Error: ', error);
-      });
+          // Set the initial subscription value
+          serviceWorkerRegistration.pushManager.getSubscription()
+              .then(function (subscription) {
+                isSubscribed = !(subscription === null);
+                if (isSubscribed) {
+                  self._updateNewSubscriptionOnServer(subscription);
+                }
+                if (callback) {
+                  callback(isSubscribed);
+                }
+              });
+        })
+        .catch(function (error) {
+          console.log('Leanplum: Service Worker Error: ', error);
+        });
   }
 
   /**
@@ -106,24 +106,24 @@ class PushManager {
    */
   subscribeUser() {
     const applicationServerKey =
-      this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY);
+        this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY);
     return new Promise((resolve, reject) => {
       return serviceWorkerRegistration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: applicationServerKey,
-        })
-        .then(function(subscription) {
-          if (subscription) {
-            self._updateNewSubscriptionOnServer(subscription);
-            isSubscribed = true;
-            return resolve(isSubscribed);
-          }
-          isSubscribed = false;
-          return reject();
-        })
-        .catch(function(err) {
-          return reject('Leanplum: Failed to subscribe the user: ' + err);
-        });
+        userVisibleOnly: true,
+        applicationServerKey: applicationServerKey,
+      })
+          .then(function (subscription) {
+            if (subscription) {
+              self._updateNewSubscriptionOnServer(subscription);
+              isSubscribed = true;
+              return resolve(isSubscribed);
+            }
+            isSubscribed = false;
+            return reject();
+          })
+          .catch(function (err) {
+            return reject('Leanplum: Failed to subscribe the user: ' + err);
+          });
     });
   }
 
@@ -134,22 +134,22 @@ class PushManager {
   unsubscribeUser() {
     return new Promise((resolve, reject) => {
       serviceWorkerRegistration.pushManager.getSubscription()
-        .then(function(subscription) {
-          if (subscription) {
-            return subscription.unsubscribe();
-          }
-          return reject();
-        })
-        .catch(function(error) {
-          reject('Leanplum: Error unsubscribing: ' + error);
-        })
-        .then(function(success) {
-          if (success) {
-            isSubscribed = false;
-            return resolve();
-          }
-          return reject();
-        });
+          .then(function (subscription) {
+            if (subscription) {
+              return subscription.unsubscribe();
+            }
+            return reject();
+          })
+          .catch(function (error) {
+            reject('Leanplum: Error unsubscribing: ' + error);
+          })
+          .then(function (success) {
+            if (success) {
+              isSubscribed = false;
+              return resolve();
+            }
+            return reject();
+          });
     });
   }
 
@@ -177,8 +177,8 @@ class PushManager {
   _urlB64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
-      .replace(/\-/g, '+')
-      .replace(/_/g, '/');
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
 
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
@@ -215,10 +215,10 @@ class PushManager {
       let preparedSubscription = this._prepareSubscription(subscription);
       let preparedSubscriptionString = JSON.stringify(preparedSubscription);
       let existingSubscriptionString = _leanplum._getFromLocalStorage(
-        Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION);
+          Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION);
       if (!_.isEqual(existingSubscriptionString, preparedSubscriptionString)) {
         _leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
-          preparedSubscriptionString);
+            preparedSubscriptionString);
         _leanplum._setSubscription(preparedSubscriptionString);
       }
     }

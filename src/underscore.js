@@ -18,7 +18,7 @@ function eq(a, b, aStack, bStack) {
   let className = Object.prototype.toString.call(a);
   if (className != Object.prototype.toString.call(b)) return false;
   switch (className) {
-    // Strings, numbers, dates, and booleans are compared by value.
+      // Strings, numbers, dates, and booleans are compared by value.
     case '[object String]':
       // Primitives and their corresponding object wrappers are equivalent;
       // thus, `"5"` is equivalent to `new String("5")`.
@@ -36,9 +36,9 @@ function eq(a, b, aStack, bStack) {
       // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source == b.source &&
-        a.global == b.global &&
-        a.multiline == b.multiline &&
-        a.ignoreCase == b.ignoreCase;
+          a.global == b.global &&
+          a.multiline == b.multiline &&
+          a.ignoreCase == b.ignoreCase;
   }
   if (typeof a != 'object' || typeof b != 'object') return false;
   // Assume equality for cyclic structures. The algorithm for detecting cyclic
@@ -105,7 +105,7 @@ class _ {
   // Extend a given object with all the properties in passed-in object(s).
   static iextend(obj) {
     // eslint-disable-next-line prefer-rest-params
-    each(slice.call(arguments, 1), function(source) {
+    each(slice.call(arguments, 1), function (source) {
       for (let prop in source) {
         if ({}.hasOwnProperty.call(source, prop)) {
           obj[prop] = source[prop];

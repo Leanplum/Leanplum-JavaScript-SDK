@@ -5,11 +5,11 @@ Leanplum.setAppIdForDevelopmentMode(REMOTE_APP_ID, REMOTE_KEY);
 Leanplum.start();
 Leanplum.pauseState();
 Leanplum.resumeState();
-Leanplum.addStartResponseHandler(function() {
+Leanplum.addStartResponseHandler(function () {
   console.log('My variants:');
   console.log(Leanplum.getVariants());
 });
-setTimeout(function() {
+setTimeout(function () {
   Leanplum.setUserAttributes('u1', {
     'Gender': 'Male',
     'Age': 24,

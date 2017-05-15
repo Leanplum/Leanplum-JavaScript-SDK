@@ -1,4 +1,4 @@
-import Constants from './Constants';
+import Constants from "./Constants";
 
 /**
  * Leanplum ArgsBuilder, use to construct request payload.
@@ -52,8 +52,8 @@ class ArgsBuilder {
    */
   attachApiKeys(appId, clientKey) {
     return this.add(Constants.PARAMS.APP_ID, appId)
-      .add(Constants.PARAMS.CLIENT, Constants.CLIENT)
-      .add(Constants.PARAMS.CLIENT_KEY, clientKey);
+        .add(Constants.PARAMS.CLIENT, Constants.CLIENT)
+        .add(Constants.PARAMS.CLIENT_KEY, clientKey);
   };
 
   /**
@@ -71,6 +71,7 @@ class ArgsBuilder {
   buildDict() {
     return this.argValues;
   };
-};
+}
+;
 
 module.exports = ArgsBuilder;
