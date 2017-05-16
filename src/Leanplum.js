@@ -20,7 +20,7 @@ let _alternateLocalStorage = {};
 let _browserDetector = new BrowserDetector();
 
 /**
- * @preserve Leanplum Javascript SDK v1.1.10.
+ * @preserve Leanplum Javascript SDK.
  * Copyright 2016, Leanplum, Inc. All rights reserved.
  *
  * You may not distribute this source code without prior written permission
