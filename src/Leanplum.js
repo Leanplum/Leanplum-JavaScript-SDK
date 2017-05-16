@@ -163,62 +163,61 @@ class Leanplum {
       Leanplum.addStartResponseHandler(callback);
     }
 
+    // TODO: Add referer.
+    let args = new ArgsBuilder()
+        .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
+        .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.SYSTEM_NAME, Leanplum._systemName || _browserDetector.OS)
+        .add(Constants.PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || ''))
+        .add(Constants.PARAMS.BROWSER_NAME, _browserDetector.browser)
+        .add(Constants.PARAMS.BROWSER_VERSION, '' + _browserDetector.version)
+        .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName || (_browserDetector.browser +
+            ' ' + _browserDetector.version))
+        .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
+        .add(Constants.PARAMS.INCLUDE_DEFAULTS, false);
+
     // Issue request.
-    Leanplum._request(Constants.METHODS.START,
-        new ArgsBuilder()
-            .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
-            .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
-            .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
-            .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
-            .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
-            .add(Constants.PARAMS.SYSTEM_NAME, Leanplum._systemName || _browserDetector.OS)
-            .add(Constants.PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || ''))
-            .add(Constants.PARAMS.BROWSER_NAME, _browserDetector.browser)
-            .add(Constants.PARAMS.BROWSER_VERSION, '' + _browserDetector.version)
-            .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
-            .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName || (_browserDetector.browser +
-                ' ' + _browserDetector.version))
-            .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
-            .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-        // TODO: referer
-        , {
-          queued: true,
-          sendNow: true,
-          response: function (response) {
-            Leanplum._hasStarted = true;
-            let startResponse = Leanplum._getLastResponse(response);
-            if (Leanplum._isResponseSuccess(startResponse)) {
-              Leanplum._startSuccessful = true;
+    Leanplum._request(Constants.METHODS.START, args, {
+      queued: true,
+      sendNow: true,
+      response: function (response) {
+        Leanplum._hasStarted = true;
+        let startResponse = Leanplum._getLastResponse(response);
+        if (Leanplum._isResponseSuccess(startResponse)) {
+          Leanplum._startSuccessful = true;
 
-              if (Leanplum._devMode) {
-                let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION];
-                if (latestVersion) {
-                  console.log('A newer version of Leanplum, ' + latestVersion +
-                      ', is available. ' + 'Go to leanplum.com to download it.');
-                }
-                if (WebSocket) {
-                  Leanplum._socketIOConnect();
-                } else {
-                  console.log('Your browser doesn\'t support WebSockets.');
-                }
-              }
-
-              Leanplum._setContent(
-                  startResponse[Constants.KEYS.VARS],
-                  startResponse[Constants.KEYS.VARIANTS],
-                  startResponse[Constants.KEYS.ACTION_METADATA]);
-              _token = startResponse[Constants.KEYS.TOKEN];
+          if (Leanplum._devMode) {
+            let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION];
+            if (latestVersion) {
+              console.log('A newer version of Leanplum, ' + latestVersion +
+                  ', is available. ' + 'Go to leanplum.com to download it.');
+            }
+            if (WebSocket) {
+              Leanplum._socketIOConnect();
             } else {
-              Leanplum._startSuccessful = false;
-              Leanplum._loadDiffs();
+              console.log('Your browser doesn\'t support WebSockets.');
             }
-            for (let i = 0; i < _startHandlers.length; i++) {
-              _startHandlers[i](Leanplum._startSuccessful);
-            }
-          },
+          }
+
+          Leanplum._setContent(
+              startResponse[Constants.KEYS.VARS],
+              startResponse[Constants.KEYS.VARIANTS],
+              startResponse[Constants.KEYS.ACTION_METADATA]);
+          _token = startResponse[Constants.KEYS.TOKEN];
+        } else {
+          Leanplum._startSuccessful = false;
+          Leanplum._loadDiffs();
         }
-    );
-  };
+        for (let i = 0; i < _startHandlers.length; i++) {
+          _startHandlers[i](Leanplum._startSuccessful);
+        }
+      },
+    });
+  }
 
   static startFromCache(userId, userAttributes, callback) {
     // Overloads.
@@ -363,7 +362,7 @@ class Leanplum {
   };
 
   /**
-   * Determines if webpush is supported in the browser.
+   * Determines if web push is supported in the browser.
    * @return {Boolean} True if supported, else false.
    */
   static isWebPushSupported() {

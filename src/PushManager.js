@@ -56,7 +56,7 @@ class PushManager {
             } else {
               registration.pushManager.getSubscription()
                   .then(function (subscription) {
-                    isSubscribed = !(subscription === null);
+                    isSubscribed = subscription !== null;
                     if (isSubscribed) {
                       self._updateNewSubscriptionOnServer(subscription);
                     }
