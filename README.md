@@ -55,5 +55,13 @@ yarn install
 4. Push to the branch: `git push origin feature/my-new-feature`
 5. Submit a pull request to develop branch.
 
+## Release / Building
+- `git flow release start "NEW_VERSION"`
+- `yarn install`
+- `./bump_version.sh OLD_VERSION NEW_VERSION`
+- `grunt build`
+- `grunt test`
+- `git flow release finish "NEW_VERSION"`
+
 ## License
 See LICENSE file.
