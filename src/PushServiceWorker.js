@@ -16,7 +16,6 @@
  *  limitations under the License
  *
  */
-
 const ACTION_NAME_KEY = '__name__';
 const OPEN_URL_ACTION = 'Open URL';
 const ARG_URL = 'URL';
@@ -43,7 +42,7 @@ self.addEventListener('push', function (event) {
       options.data.openAction.hasOwnProperty(ACTION_NAME_KEY) &&
       options.data.openAction[ACTION_NAME_KEY] === OPEN_URL_ACTION &&
       options.data.openAction.hasOwnProperty(ARG_URL)) {
-    openActions[options.tag] = options.data.openAction.ARG_URL;
+    openActions[options.tag] = options.data.openAction[ARG_URL];
   }
 
   // Extract title and delete from options.
