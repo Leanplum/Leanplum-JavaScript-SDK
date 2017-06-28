@@ -1,0 +1,10 @@
+.git*
+test/
+.idea/
+.travis.yml
+*.sh
+.DS_Store
+.babelrc
+.arcconfig
+.eslintrc.js
+.lock
