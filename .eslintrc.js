@@ -5,7 +5,6 @@ module.exports = {
     'sourceType': 'module'
   },
   'env': {
-    'browser': true,
     'node': true,
     'es6': true
   },
@@ -19,6 +18,18 @@ module.exports = {
       'single'
     ],
     'eqeqeq': 'off',
-    'max-len': [2, 100, 2] // specify the maximum length of a line in your program (off by default)
+    'max-len': [2, 100, 2], // specify the maximum length of a line in your program (off by default)
+    'comma-dangle': 0,
+    'space-before-function-paren': ['error', 'never'],
+    'radix': [
+      'error',
+      'as-needed'
+    ],
+    'operator-linebreak': ['error', 'after']
+  },
+  'globals': {
+    'window': true,
+    'navigator': true,
+    'btoa': true
   }
 }

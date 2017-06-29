@@ -15,6 +15,7 @@
  *  limitations under the License
  *
  */
+
 import _ from './underscore'
 import Constants from './Constants'
 
@@ -31,15 +32,14 @@ let serviceWorkerRegistration = null
 /**
  * Push Manager handles the registration and subscription for web push.
  */
-class PushManager {
+export default class PushManager {
   /**
    * Creates a new PushManager object.
-   * @param  {[type]} leanplum Reference to the main class to
+   * @param  {object} leanplum Reference to the main class to
    *                           avoid circle import.
    */
   constructor(leanplum) {
     _leanplum = leanplum
-    self = this
     if (navigator && navigator.serviceWorker &&
         'serviceWorker' in navigator && 'PushManager' in window) {
       isSupported = true
@@ -56,7 +56,7 @@ class PushManager {
 
   /**
    * Whether or not the browser is subscribed to web push notifications.
-   * @return {Boolean} True if subscribed, else false.
+   * @return {Promise} True if subscribed, else false.
    */
   isWebPushSubscribed() {
     if (!isSupported) {
@@ -71,7 +71,7 @@ class PushManager {
               resolve(false)
             } else {
               registration.pushManager.getSubscription()
-                  .then(function (subscription) {
+                  .then(function(subscription) {
                     isSubscribed = subscription !== null
                     if (isSubscribed) {
                       self._updateNewSubscriptionOnServer(subscription)
@@ -84,34 +84,35 @@ class PushManager {
   }
 
   /**
-   * Register for webpush.
-   * @param  {String}   serviceWorkerUrl The url that serves the serviceworker
+   * Register for WebPush.
+   * @param  {String}   serviceWorkerUrl The url that serves the service worker
    *                                     on your domain.
    * @param  {Function} callback         The callback to be called with result.
+   * @return {object} nothing
    */
   register(serviceWorkerUrl, callback) {
     if (!isSupported) {
       console.log('Leanplum: Push messaging is not supported.')
-      callback(false)
+      return callback(false)
     }
     navigator.serviceWorker.register(
-        serviceWorkerUrl ? serviceWorkerUrl : '/sw.min.js')
-        .then(function (registration) {
+        serviceWorkerUrl ? serviceWorkerUrl : '/sw.min.js', null)
+        .then(function(registration) {
           serviceWorkerRegistration = registration
 
           // Set the initial subscription value
           serviceWorkerRegistration.pushManager.getSubscription()
-              .then(function (subscription) {
+              .then(function(subscription) {
                 isSubscribed = !(subscription === null)
                 if (isSubscribed) {
                   self._updateNewSubscriptionOnServer(subscription)
                 }
                 if (callback) {
-                  callback(isSubscribed)
+                  return callback(isSubscribed)
                 }
               })
         })
-        .catch(function (error) {
+        .catch(function(error) {
           console.log('Leanplum: Service Worker Error: ', error)
         })
   }
@@ -121,14 +122,13 @@ class PushManager {
    * @return {Promise} Resolves if subscription successful, otherwise rejects.
    */
   subscribeUser() {
-    const applicationServerKey =
-        this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
+    const applicationServerKey = this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
     return new Promise((resolve, reject) => {
       return serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: applicationServerKey
+        applicationServerKey
       })
-          .then(function (subscription) {
+          .then(function(subscription) {
             if (subscription) {
               self._updateNewSubscriptionOnServer(subscription)
               isSubscribed = true
@@ -137,8 +137,8 @@ class PushManager {
             isSubscribed = false
             return reject()
           })
-          .catch(function (err) {
-            return reject('Leanplum: Failed to subscribe the user: ' + err)
+          .catch(function(err) {
+            return reject(`Leanplum: Failed to subscribe the user: ${err}`)
           })
     })
   }
@@ -150,16 +150,16 @@ class PushManager {
   unsubscribeUser() {
     return new Promise((resolve, reject) => {
       serviceWorkerRegistration.pushManager.getSubscription()
-          .then(function (subscription) {
+          .then(function(subscription) {
             if (subscription) {
               return subscription.unsubscribe()
             }
             return reject()
           })
-          .catch(function (error) {
-            reject('Leanplum: Error unsubscribing: ' + error)
+          .catch(function(error) {
+            reject(`Leanplum: Error unsubscribing: ${error}`)
           })
-          .then(function (success) {
+          .then(function(success) {
             if (success) {
               isSubscribed = false
               return resolve()
@@ -171,7 +171,7 @@ class PushManager {
 
   /**
    * Retrieves the service worker registration object from browser.
-   * @return {ServiceWorkerRegistration} Returns the registration or null.
+   * @return {object} Returns the registration or null.
    */
   _getServiceWorkerRegistration() {
     return new Promise((resolve) => {
@@ -186,14 +186,14 @@ class PushManager {
   }
 
   /**
-   * Encodes a base64 url string to an uint8arrary.
-   * @param  {[type]} base64String [description]
-   * @return {[type]}              [description]
+   * Encodes a base64 url string to an uint8 arrary.
+   * @param  {string} base64String [description]
+   * @return {array}              [description]
    */
   _urlB64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
     const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
+        .replace(/-/g, '+')
         .replace(/_/g, '/')
 
     const rawData = window.atob(base64)
@@ -207,10 +207,10 @@ class PushManager {
 
   /**
    * [_prepareSubscription description]
-   * @param  {[type]} subscription [description]
-   * @return {[type]}              [description]
+   * @param  {object} subscription The raw subscription from browser.
+   * @return {object} The subscription objec to be sent to server.
    */
-  _prepareSubscription(subscription) {
+  static _prepareSubscription(subscription) {
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
     let keyAscii = btoa(String.fromCharCode.apply(null, new Uint8Array(key)))
@@ -240,5 +240,3 @@ class PushManager {
     }
   }
 }
-
-export default PushManager
