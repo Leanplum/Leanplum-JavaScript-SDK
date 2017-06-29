@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path')
 
 module.exports = {
   entry: './src/Leanplum.js',
@@ -7,13 +7,13 @@ module.exports = {
     path: path.resolve(__dirname, './dist'),
     filename: 'leanplum.js',
     library: 'Leanplum',
-    libraryTarget: 'umd',
+    libraryTarget: 'umd'
   },
   module: {
     rules: [{
       test: /\.js$/,
       exclude: /node_modules/,
-      loader: 'babel-loader',
-    }],
-  },
-};
+      loader: 'babel-loader'
+    }]
+  }
+}

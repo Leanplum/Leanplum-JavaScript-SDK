@@ -15,7 +15,7 @@
  *  limitations under the License
  *
  */
-import Request from "./Request";
+import Request from './Request'
 
 /**
  * Socket.io 1.0 client class.
@@ -25,8 +25,8 @@ class SocketIoClient {
    * Initializes a new SocketIoClient, not connected by default.
    */
   constructor() {
-    this.connected = false;
-    this.connecting = false;
+    this.connected = false
+    this.connecting = false
   }
 
   /**
@@ -34,62 +34,62 @@ class SocketIoClient {
    * @param  {string} socketHost The host to connect to.
    */
   connect(socketHost) {
-    let self = this;
-    self.connecting = true;
+    let self = this
+    self.connecting = true
     Request.ajax('POST', 'https://' + socketHost + '/socket.io/1', '',
         function (line) {
-          let parts = line.split(':');
-          let session = parts[0];
-          let heartbeat = parseInt(parts[1]) / 2 * 1000;
+          let parts = line.split(':')
+          let session = parts[0]
+          let heartbeat = parseInt(parts[1]) / 2 * 1000
           self.socket = new WebSocket('wss://' + socketHost +
-              '/socket.io/1/websocket/' + session);
-          let heartbeatInterval = null;
+              '/socket.io/1/websocket/' + session)
+          let heartbeatInterval = null
           self.socket.onopen = function () {
-            self.connected = true;
-            self.connecting = false;
+            self.connected = true
+            self.connecting = false
             if (self.onopen) {
-              self.onopen();
+              self.onopen()
             }
             heartbeatInterval = setInterval(function () {
-              self.socket.send('2:::');
-            }, heartbeat);
-          };
+              self.socket.send('2:::')
+            }, heartbeat)
+          }
           self.socket.onclose = function () {
-            self.connected = false;
-            clearInterval(heartbeatInterval);
+            self.connected = false
+            clearInterval(heartbeatInterval)
             if (self.onclose) {
-              self.onclose();
+              self.onclose()
             }
-          };
+          }
           self.socket.onmessage = function (event) {
-            let parts = event.data.split(':');
-            let code = parseInt(parts[0]);
+            let parts = event.data.split(':')
+            let code = parseInt(parts[0])
             if (code == 2) {
-              self.socket.send('2::');
+              self.socket.send('2::')
             } else if (code == 5) {
-              let messageId = parts[1];
-              let data = JSON.parse(parts.slice(3).join(':'));
-              let event = data['name'];
-              let args = data['args'];
+              let messageId = parts[1]
+              let data = JSON.parse(parts.slice(3).join(':'))
+              let event = data['name']
+              let args = data['args']
               if (messageId) {
-                self.socket.send('6:::' + messageId);
+                self.socket.send('6:::' + messageId)
               }
               if (self.onmessage) {
-                self.onmessage(event, args);
+                self.onmessage(event, args)
               }
             } else if (code == 7) {
-              console.log('Socket error: ' + event.data);
+              console.log('Socket error: ' + event.data)
             }
-          };
+          }
           self.socket.onerror = function (event) {
-            self.socket.close();
+            self.socket.close()
             if (self.onerror) {
-              self.onerror(event);
+              self.onerror(event)
             }
-          };
+          }
         }, null, false, true // nullm, queued, plainText
-    );
-  };
+    )
+  }
 
   /**
    * Sends given event with arguments to the server.
@@ -98,15 +98,15 @@ class SocketIoClient {
    */
   send(name, args) {
     if (!this.connected) {
-      console.log('Leanplum: Socket is not connected.');
-      return;
+      console.log('Leanplum: Socket is not connected.')
+      return
     }
     this.socket.send('5:::' + JSON.stringify({
           'name': name,
-          'args': args,
-        }));
-  };
+          'args': args
+        }))
+  }
 
 }
 
-module.exports = SocketIoClient;
+module.exports = SocketIoClient

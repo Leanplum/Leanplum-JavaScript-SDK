@@ -1,5 +1,5 @@
-let _requestQueue = [];
-let _networkTimeoutSeconds = 10;
+let _requestQueue = []
+let _networkTimeoutSeconds = 10
 
 /**
  * Ajax functions from:
@@ -26,50 +26,50 @@ class Request {
    * @param {number} seconds The timeout in seconds.
    */
   static setNetworkTimeout(seconds) {
-    _networkTimeoutSeconds = seconds;
-  };
+    _networkTimeoutSeconds = seconds
+  }
 
   static ajax(method, url, data, success, error, queued, plainText) {
     if (queued) {
       if (Request._runningRequest) {
         // eslint-disable-next-line prefer-rest-params
-        return Request._enqueueRequest(arguments);
+        return Request._enqueueRequest(arguments)
       }
-      Request._runningRequest = true;
+      Request._runningRequest = true
     }
 
     if (typeof(XDomainRequest) !== 'undefined') {
       if (location.protocol === 'http:' && url.indexOf('https:') == 0) {
-        url = 'http:' + url.substring(6);
+        url = 'http:' + url.substring(6)
       }
       // eslint-disable-next-line prefer-rest-params
-      return Request._ajaxIE8.apply(null, arguments);
+      return Request._ajaxIE8.apply(null, arguments)
     }
 
-    let handled = false;
+    let handled = false
 
-    let xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest()
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         if (handled) {
-          return;
+          return
         }
-        handled = true;
+        handled = true
 
-        let response;
-        let ranCallback = false;
+        let response
+        let ranCallback = false
         if (plainText) {
-          response = xhr.responseText;
+          response = xhr.responseText
         } else {
           try {
-            response = JSON.parse(xhr.responseText);
+            response = JSON.parse(xhr.responseText)
           } catch (e) {
             setTimeout(function () {
               if (error) {
-                error(null, xhr);
+                error(null, xhr)
               }
-            }, 0);
-            ranCallback = true;
+            }, 0)
+            ranCallback = true
           }
         }
 
@@ -77,93 +77,93 @@ class Request {
           if (xhr.status >= 200 && xhr.status < 300) {
             setTimeout(function () {
               if (success) {
-                success(response, xhr);
+                success(response, xhr)
               }
-            }, 0);
+            }, 0)
           } else {
             setTimeout(function () {
               if (error) {
-                error(response, xhr);
+                error(response, xhr)
               }
-            }, 0);
+            }, 0)
           }
         }
 
         if (queued) {
-          Request._runningRequest = false;
-          Request._dequeueRequest();
+          Request._runningRequest = false
+          Request._dequeueRequest()
         }
       }
-    };
-    xhr.open(method, url, true);
-    xhr.setRequestHeader('Content-Type', 'text/plain'); // Avoid pre-flight.
-    xhr.send(data);
+    }
+    xhr.open(method, url, true)
+    xhr.setRequestHeader('Content-Type', 'text/plain') // Avoid pre-flight.
+    xhr.send(data)
     setTimeout(function () {
       if (!handled) {
-        xhr.abort();
+        xhr.abort()
       }
-    }, _networkTimeoutSeconds * 1000);
-  };
+    }, _networkTimeoutSeconds * 1000)
+  }
 
   static _ajaxIE8(method, url, data, success, error, queued, plainText) {
-    let xdr = new XDomainRequest();
+    let xdr = new XDomainRequest()
     xdr.onload = function () {
-      let response;
-      let ranCallback = false;
+      let response
+      let ranCallback = false
       if (plainText) {
-        response = xdr.responseText;
+        response = xdr.responseText
       } else {
         try {
-          response = JSON.parse(xdr.responseText);
+          response = JSON.parse(xdr.responseText)
         } catch (e) {
           setTimeout(function () {
             if (error) {
-              error(null, xdr);
+              error(null, xdr)
             }
-          }, 0);
-          ranCallback = true;
+          }, 0)
+          ranCallback = true
         }
       }
       if (!ranCallback) {
         setTimeout(function () {
           if (success) {
-            success(response, xdr);
+            success(response, xdr)
           }
-        }, 0);
+        }, 0)
       }
       if (queued) {
-        Request._runningRequest = false;
-        Request._dequeueRequest();
+        Request._runningRequest = false
+        Request._dequeueRequest()
       }
-    };
+    }
     xdr.onerror = xdr.ontimeout = function () {
       setTimeout(function () {
         if (error) {
-          error(null, xdr);
+          error(null, xdr)
         }
-      }, 0);
+      }, 0)
       if (queued) {
-        Request._runningRequest = false;
-        Request._dequeueRequest();
+        Request._runningRequest = false
+        Request._dequeueRequest()
       }
-    };
+    }
     xdr.onprogress = function () {
-    };
-    xdr.open(method, url);
-    xdr.timeout = _networkTimeoutSeconds * 1000;
-    xdr.send(data);
-  };
+    }
+    xdr.open(method, url)
+    xdr.timeout = _networkTimeoutSeconds * 1000
+    xdr.send(data)
+  }
 
   static _enqueueRequest(args) {
-    _requestQueue.push(args);
-  };
+    _requestQueue.push(args)
+  }
 
   static _dequeueRequest() {
-    let args = _requestQueue.shift();
+    let args = _requestQueue.shift()
     if (args) {
-      Request.ajax.apply(null, args);
+      Request.ajax.apply(null, args)
     }
-  };
+  }
 }
 
-module.exports = Request;
+module.exports = Request
