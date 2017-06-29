@@ -15,12 +15,13 @@
  *  limitations under the License
  *
  */
+
 import Constants from './Constants'
 
 /**
  * Leanplum ArgsBuilder, use to construct request payload.
  */
-class ArgsBuilder {
+export default class ArgsBuilder {
   /**
    * Create a new empty request argument.
    */
@@ -36,13 +37,14 @@ class ArgsBuilder {
    * @return {ArgsBuilder} Returns an object of ArgsBuilder.
    */
   add(key, value) {
-    if (typeof(value) === 'undefined') {
+    if (typeof value === 'undefined') {
       return this
     }
     if (this.argString) {
       this.argString += '&'
     }
-    this.argString += key + '=' + encodeURIComponent(value)
+    let encodedUriComponent = encodeURIComponent(value)
+    this.argString += `${key} = ${encodedUriComponent}`
     this.argValues[key] = value
     return this
   }
@@ -50,7 +52,7 @@ class ArgsBuilder {
   /**
    * Cache the given body.
    * @param  {String} body A given body.
-   * @return {ArgsBuilder/String} Returns Argsbuilder if body given, else the
+   * @return {ArgsBuilder/String} Returns ArgsBuilder if body given, else the
    *                              body.
    */
   body(body) {
@@ -89,6 +91,3 @@ class ArgsBuilder {
     return this.argValues
   }
 }
-
-
-module.exports = ArgsBuilder

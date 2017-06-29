@@ -49,7 +49,7 @@ const dataBrowser = [{
   string: navigator.vendor,
   subString: 'Camino',
   identity: 'Camino'
-}, { // for newer Netscapes (6+)
+}, { // for newer Netscape (6+)
   string: navigator.userAgent,
   subString: 'Netscape',
   identity: 'Netscape'
@@ -63,7 +63,7 @@ const dataBrowser = [{
   subString: 'Gecko',
   identity: 'Mozilla',
   versionSearch: 'rv'
-}, { // for older Netscapes (4-)
+}, { // for older Netscape (4-)
   string: navigator.userAgent,
   subString: 'Mozilla',
   identity: 'Netscape',
@@ -89,39 +89,54 @@ const dataOS = [{
 }]
 
 // Browser detection. Source: http://www.quirksmode.org/js/detect.html
-class BrowserDetector {
+/**
+ * Helper class to detect which browser client is using.
+ */
+export default class BrowserDetector {
+  /**
+   * Initializes the object with current browser settings.
+   */
   constructor() {
-    this.browser = this.searchString(dataBrowser) ||
-        'An unknown browser'
-    this.version = this.searchVersion(navigator.userAgent) ||
-        this.searchVersion(navigator.appVersion) || 'an unknown version'
-    this.OS = this.searchString(dataOS) || 'an unknown OS'
+    this.browser = this._searchString(dataBrowser) || 'Unknown Browser'
+    this.version = this._searchVersion(navigator.userAgent)
+        || this._searchVersion(navigator.appVersion) || 'Unknown Version'
+    this.OS = this._searchString(dataOS) || 'Unknown OS'
   }
 
-  searchString(data) {
+  /**
+   * Matches the client's system to the predefined system list.
+   * @param {object} data The data object to scan.
+   * @return {string} The found identity string.
+   */
+  _searchString(data) {
     for (let i = 0; i < data.length; i++) {
       let dataString = data[i].string
       let dataProp = data[i].prop
       this.versionSearchString = data[i].versionSearch || data[i].identity
       if (dataString) {
-        if (dataString.indexOf(data[i].subString) != -1)
+        if (dataString.indexOf(data[i].subString) !== -1) {
           return data[i].identity
-      } else if (dataProp)
+        }
+      } else if (dataProp) {
         return data[i].identity
+      }
     }
   }
 
-  searchVersion(dataString) {
+  /**
+   * Finds the current version of the given system.
+   * @param {object} dataString The data object to scan.
+   * @return {number} The found number.
+   * @private
+   */
+  _searchVersion(dataString) {
     if (!dataString) {
-      return
+      return -1
     }
     let index = dataString.indexOf(this.versionSearchString)
-    if (index == -1) {
-      return
+    if (index === -1) {
+      return -1
     }
-    return parseFloat(dataString.substring(index +
-        this.versionSearchString.length + 1))
+    return parseFloat(dataString.substring(index + this.versionSearchString.length + 1))
   }
 }
-
-module.exports = BrowserDetector
