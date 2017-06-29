@@ -20,7 +20,7 @@ var variables = {
     showBadges: true
   },
   showAds: true
-};
+}
  
 // Insert your API keys here.
 if (isDevelopmentMode) {

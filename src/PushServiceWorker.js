@@ -16,25 +16,25 @@
  *  limitations under the License
  *
  */
-const ACTION_NAME_KEY = '__name__';
-const OPEN_URL_ACTION = 'Open URL';
-const ARG_URL = 'URL';
+const ACTION_NAME_KEY = '__name__'
+const OPEN_URL_ACTION = 'Open URL'
+const ARG_URL = 'URL'
 
-let openActions = {};
+let openActions = {}
 
 self.addEventListener('push', function (event) {
-  let jsonString = event.data && event.data.text() ? event.data.text() : null;
+  let jsonString = event.data && event.data.text() ? event.data.text() : null
 
   if (!jsonString) {
-    console.log('Leanplum: Push received without payload, skipping display.');
-    return;
+    console.log('Leanplum: Push received without payload, skipping display.')
+    return
   }
 
-  let options = JSON.parse(jsonString);
+  let options = JSON.parse(jsonString)
   if (!options || !options.title || !options.tag) {
     console.log('Leanplum: No options, title or tag/id received, skipping ' +
-        'display.');
-    return;
+        'display.')
+    return
   }
 
   // Extract open action url. We only support open url action for now.
@@ -42,35 +42,35 @@ self.addEventListener('push', function (event) {
       options.data.openAction.hasOwnProperty(ACTION_NAME_KEY) &&
       options.data.openAction[ACTION_NAME_KEY] === OPEN_URL_ACTION &&
       options.data.openAction.hasOwnProperty(ARG_URL)) {
-    openActions[options.tag] = options.data.openAction[ARG_URL];
+    openActions[options.tag] = options.data.openAction[ARG_URL]
   }
 
   // Extract title and delete from options.
-  let title = options.title;
-  delete options.title;
+  let title = options.title
+  delete options.title
 
-  event.waitUntil(self.registration.showNotification(title, options));
-});
+  event.waitUntil(self.registration.showNotification(title, options))
+})
 
 self.addEventListener('notificationclick', function (event) {
-  console.log('Leanplum: [Service Worker] Notification click received.');
+  console.log('Leanplum: [Service Worker] Notification click received.')
 
-  event.notification.close();
+  event.notification.close()
 
   if (!event.notification || !event.notification.tag) {
     console.log('Leanplum: No notification or tag/id received, skipping open ' +
-        'action.');
-    return;
+        'action.')
+    return
   }
 
-  let notificationId = event.notification.tag;
-  let openActionUrl = openActions[notificationId];
+  let notificationId = event.notification.tag
+  let openActionUrl = openActions[notificationId]
   if (!openActionUrl) {
-    console.log('Leanplum: [Service Worker] No action defined, doing nothing.');
-    return;
+    console.log('Leanplum: [Service Worker] No action defined, doing nothing.')
+    return
   }
 
-  delete openActions.notificationId;
+  delete openActions.notificationId
 
-  event.waitUntil(clients.openWindow(openActionUrl));
-});
+  event.waitUntil(clients.openWindow(openActionUrl))
+})
