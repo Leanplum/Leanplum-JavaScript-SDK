@@ -5,7 +5,7 @@
     "build": "./node_modules/.bin/grunt build",
     "test": "./node_modules/.bin/grunt test"
   },
-  "license": "MIT",
+  "license": "apache2",
   "dependencies": {
     "babel-eslint": "^7.2.3",
     "underscore": "^1.8.3"
@@ -38,9 +38,9 @@
     "uglifyjs-webpack-plugin": "^0.4.3",
     "webpack": "^2.3.3"
   },
-  "name": "leanplum-javascript-sdk",
+  "name": "leanplum-sdk",
   "description": "This is the JavaScript SDK for Leanplum, allowing developers to access and integrate the functionality of Leanplum with applications and devices through JavaScript and HTML5. Leanplum is an application development platform that provides mobile A/B testing, messaging functionality, personalization, and more features for applications. ## Installation Add leanplum.js to your project: ```javascript <script type=\"text/javascript\" src=\"leanplum.js\"></script> ``` ## Usage Initialize Leanplum.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "main": "dist/leanplum.min.js",
   "directories": {
     "test": "test"
