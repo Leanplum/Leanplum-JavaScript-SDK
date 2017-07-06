@@ -35,7 +35,7 @@ module.exports = {
     REGISTER_DEVICE: 'registerDevice',
   },
 
-  SDK_VERSION: '1.2.1',
+  SDK_VERSION: '1.2.2',
 
   CLIENT: 'js',
 
