@@ -56,6 +56,9 @@ function pushListener(event) {
 
   // noinspection JSCheckFunctionSignatures
   let options = JSON.parse(jsonString)
+
+  /** @namespace options.title The title of the push notification. **/
+  /** @namespace options.tag The id of the push notification **/
   if (!options || !options.title || !options.tag) {
     console.log('Leanplum: No options, title or tag/id received, skipping ' +
         'display.')
@@ -63,6 +66,7 @@ function pushListener(event) {
   }
 
   // Extract open action url. We only support open url action for now.
+  /** @namespace options.data.openAction The openAction of the push notification. **/
   if (options.data && options.data.openAction &&
       options.data.openAction.hasOwnProperty(ACTION_NAME_KEY) &&
       options.data.openAction[ACTION_NAME_KEY] === OPEN_URL_ACTION &&
@@ -73,6 +77,8 @@ function pushListener(event) {
   // Extract title and delete from options.
   let title = options.title
   Reflect.deleteProperty(options, 'title')
+  /** @namespace self.registration **/
+  /** @namespace self.registration.showNotification **/
   event.waitUntil(self.registration.showNotification(title, options))
 }
 
@@ -102,6 +108,7 @@ function notificationClickListener(event) {
 
   Reflect.deleteProperty(openActions, 'notificationId')
 
+  /** @namespace clients.openWindow **/
   event.waitUntil(clients.openWindow(openActionUrl))
 }
 

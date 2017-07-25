@@ -98,8 +98,8 @@ export default class BrowserDetector {
    */
   constructor() {
     this.browser = this._searchString(dataBrowser) || 'Unknown Browser'
-    this.version = this._searchVersion(navigator.userAgent)
-        || this._searchVersion(navigator.appVersion) || 'Unknown Version'
+    this.version = this._searchVersion(navigator.userAgent) ||
+        this._searchVersion(navigator.appVersion) || 'Unknown Version'
     this.OS = this._searchString(dataOS) || 'Unknown OS'
   }
 
