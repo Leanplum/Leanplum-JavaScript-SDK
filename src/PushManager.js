@@ -16,8 +16,9 @@
  *
  */
 
-import _ from './underscore'
 import Constants from './Constants'
+
+import isEqual from 'lodash/isEqual'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
     'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
@@ -35,11 +36,9 @@ let serviceWorkerRegistration = null
 export default class PushManager {
   /**
    * Creates a new PushManager object.
-   * @param  {object} leanplum Reference to the main class to
-   *                           avoid circle import.
    */
-  constructor(leanplum) {
-    _leanplum = leanplum
+  static init() {
+    /** @namespace navigator.serviceWorker The service worker object of the browser. **/
     if (navigator && navigator.serviceWorker &&
         'serviceWorker' in navigator && 'PushManager' in window) {
       isSupported = true
@@ -50,7 +49,7 @@ export default class PushManager {
    * Whether or not web push is supported in the browser.
    * @return {Boolean} True if supported, else false.
    */
-  isWebPushSupported() {
+  static isWebPushSupported() {
     return isSupported
   }
 
@@ -65,11 +64,13 @@ export default class PushManager {
       })
     }
     return this._getServiceWorkerRegistration()
-        .then((registration) => {
+        .then(function(registration) {
           return new Promise((resolve) => {
             if (!registration) {
               resolve(false)
             } else {
+              /** @namespace registration.pushManager The push manager object of the browser. **/
+              /** @namespace registration.pushManager.getSubscription **/
               registration.pushManager.getSubscription()
                   .then(function(subscription) {
                     isSubscribed = subscription !== null
@@ -90,7 +91,7 @@ export default class PushManager {
    * @param  {Function} callback         The callback to be called with result.
    * @return {object} nothing
    */
-  register(serviceWorkerUrl, callback) {
+  static register(serviceWorkerUrl, callback) {
     if (!isSupported) {
       console.log('Leanplum: Push messaging is not supported.')
       return callback(false)
@@ -121,9 +122,10 @@ export default class PushManager {
    * Subscribe the user(browser) to push.
    * @return {Promise} Resolves if subscription successful, otherwise rejects.
    */
-  subscribeUser() {
+  static subscribeUser() {
     const applicationServerKey = this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
-    return new Promise((resolve, reject) => {
+    return new Promise(function(resolve, reject) {
+      /** @namespace serviceWorkerRegistration.pushManager.subscribe Subscribe to push. **/
       return serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey
@@ -147,11 +149,13 @@ export default class PushManager {
    * Unsubscribe the user(browser) from push.
    * @return {Promise} Resolves if unsubscribed, otherwise rejects.
    */
-  unsubscribeUser() {
+  static unsubscribeUser() {
     return new Promise((resolve, reject) => {
       serviceWorkerRegistration.pushManager.getSubscription()
           .then(function(subscription) {
             if (subscription) {
+              /** @namespace serviceWorkerRegistration.pushManager.unsubscribe Unsubscribe to
+               *  push. **/
               return subscription.unsubscribe()
             }
             return reject()
@@ -173,11 +177,13 @@ export default class PushManager {
    * Retrieves the service worker registration object from browser.
    * @return {object} Returns the registration or null.
    */
-  _getServiceWorkerRegistration() {
+  static _getServiceWorkerRegistration() {
     return new Promise((resolve) => {
       if (serviceWorkerRegistration) {
         resolve(serviceWorkerRegistration)
       } else {
+        /** @namespace navigator.serviceWorker.getRegistration Retrieves the  push registration
+         * from the browser. **/
         navigator.serviceWorker.getRegistration().then((registration) => {
           resolve(registration)
         })
@@ -188,9 +194,9 @@ export default class PushManager {
   /**
    * Encodes a base64 url string to an uint8 arrary.
    * @param  {string} base64String [description]
-   * @return {array}              [description]
+   * @return {Uint8Array}              [description]
    */
-  _urlB64ToUint8Array(base64String) {
+  static _urlB64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
     const base64 = (base64String + padding)
         .replace(/-/g, '+')
@@ -208,13 +214,15 @@ export default class PushManager {
   /**
    * [_prepareSubscription description]
    * @param  {object} subscription The raw subscription from browser.
-   * @return {object} The subscription objec to be sent to server.
+   * @param  {function} subscription.getKey The subscription key.
+   * @param  {string} subscription.endpoint The subscription key.
+   * @return {object} The subscription object to be sent to server.
    */
   static _prepareSubscription(subscription) {
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
-    let keyAscii = btoa(String.fromCharCode.apply(null, new Uint8Array(key)))
-    let authAscii = btoa(String.fromCharCode.apply(null, new Uint8Array(auth)))
+    let keyAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(key)))
+    let authAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(auth)))
     return {
       endpoint: subscription.endpoint,
       key: keyAscii,
@@ -224,15 +232,15 @@ export default class PushManager {
 
   /**
    * Send a new subscription object to the Leanplum server.
-   * @param  {[type]} subscription The subscription.
+   * @param {object} subscription The subscription.
    */
-  _updateNewSubscriptionOnServer(subscription) {
+  static _updateNewSubscriptionOnServer(subscription) {
     if (subscription) {
       let preparedSubscription = this._prepareSubscription(subscription)
       let preparedSubscriptionString = JSON.stringify(preparedSubscription)
       let existingSubscriptionString = _leanplum._getFromLocalStorage(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
-      if (!_.isEqual(existingSubscriptionString, preparedSubscriptionString)) {
+      if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
         _leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
             preparedSubscriptionString)
         _leanplum._setSubscription(preparedSubscriptionString)

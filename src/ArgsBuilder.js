@@ -33,7 +33,7 @@ export default class ArgsBuilder {
   /**
    * Add given key, value to the payload.
    * @param {string} key The key for the value.
-   * @param {string} value The value for given key.
+   * @param {string|boolean} value The value for given key.
    * @return {ArgsBuilder} Returns an object of ArgsBuilder.
    */
   add(key, value) {
@@ -51,8 +51,8 @@ export default class ArgsBuilder {
 
   /**
    * Cache the given body.
-   * @param  {String} body A given body.
-   * @return {ArgsBuilder/String} Returns ArgsBuilder if body given, else the
+   * @param  {String} [body] A given body.
+   * @return {ArgsBuilder|String} Returns ArgsBuilder if body given, else the
    *                              body.
    */
   body(body) {
