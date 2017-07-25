@@ -95,7 +95,7 @@ export default class SocketIoClient {
   /**
    * Sends given event with arguments to the server.
    * @param  {string} name Name of the event.
-   * @param  {any} args Arguments to send.
+   * @param  {*} args Arguments to send.
    */
   send(name, args) {
     if (!this.connected) {
@@ -108,5 +108,4 @@ export default class SocketIoClient {
     })
     this.socket.send(`5:::${argsJson}`)
   }
-
 }

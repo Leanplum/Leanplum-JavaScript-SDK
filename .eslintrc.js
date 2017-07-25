@@ -30,6 +30,12 @@ module.exports = {
   'globals': {
     'window': true,
     'navigator': true,
-    'btoa': true
+    'btoa': true,
+    'location': true,
+    'XMLHttpRequest': true,
+    'XDomainRequest': true,
+    'WebSocket': true,
+    'localStorage': true,
+    'alert': true
   }
 }

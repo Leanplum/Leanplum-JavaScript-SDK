@@ -20,8 +20,8 @@ import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import SocketIoClient from './SocketIoClient'
 import Request from './Request'
+import isEqual from 'lodash/isEqual'
 import PushManager from './PushManager'
-import _ from './underscore.js'
 
 let _variablesChangedHandlers = []
 let _variants = []
@@ -43,7 +43,7 @@ let _browserDetector = new BrowserDetector()
  * You may not distribute this source code without prior written permission
  * from Leanplum.
  */
-class Leanplum {
+export default class Leanplum {
   // ***************************************************************************
   // Public Methods
   // ***************************************************************************
@@ -115,15 +115,14 @@ class Leanplum {
     _batchCooldown = cooldownSeconds
   }
 
-  static getVariables(variables) {
-    return Leanplum._merged !== undefined ? Leanplum._merged :
-        Leanplum._variables
+  static getVariables() {
+    return Leanplum._merged !== undefined ? Leanplum._merged : Leanplum._variables
   }
 
-  static getVariable(args) {
+  static getVariable(...args) {
     let current = Leanplum.getVariables()
-    for (let i = 0; i < arguments.length; i++) {
-      current = current[arguments.i]
+    for (let i = 0; i < args.length; i++) {
+      current = current[args[i]]
     }
     return current
   }
@@ -162,16 +161,16 @@ class Leanplum {
 
   static start(userId, userAttributes, callback) {
     // Overloads.
-    if (typeof(userId) == 'function') {
+    if (typeof userId === 'function') {
       callback = userId
       userAttributes = {}
       userId = null
-    } else if (typeof(userId) == 'object' && userId !== null &&
+    } else if (typeof userId === 'object' && userId !== null &&
         userId !== undefined) {
       callback = userAttributes
       userAttributes = userId
       userId = null
-    } else if (typeof(userAttributes) == 'function') {
+    } else if (typeof userAttributes === 'function') {
       callback = userAttributes
       userAttributes = {}
     }
@@ -180,7 +179,6 @@ class Leanplum {
       Leanplum.addStartResponseHandler(callback)
     }
 
-    // TODO: Add referer.
     let args = new ArgsBuilder()
         .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
         .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
@@ -188,12 +186,12 @@ class Leanplum {
         .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
         .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
         .add(Constants.PARAMS.SYSTEM_NAME, Leanplum._systemName || _browserDetector.OS)
-        .add(Constants.PARAMS.SYSTEM_VERSION, '' + (Leanplum._systemVersion || ''))
+        .add(Constants.PARAMS.SYSTEM_VERSION, (Leanplum._systemVersion || '').toString())
         .add(Constants.PARAMS.BROWSER_NAME, _browserDetector.browser)
-        .add(Constants.PARAMS.BROWSER_VERSION, '' + _browserDetector.version)
+        .add(Constants.PARAMS.BROWSER_VERSION, _browserDetector.version.toString())
         .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName || (_browserDetector.browser +
-            ' ' + _browserDetector.version))
+        .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName ||
+            `${_browserDetector.browser} ${_browserDetector.version}`)
         .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
         .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
 
@@ -201,7 +199,7 @@ class Leanplum {
     Leanplum._request(Constants.METHODS.START, args, {
       queued: true,
       sendNow: true,
-      response: function (response) {
+      function(response) {
         Leanplum._hasStarted = true
         let startResponse = Leanplum._getLastResponse(response)
         if (Leanplum._isResponseSuccess(startResponse)) {
@@ -210,8 +208,8 @@ class Leanplum {
           if (Leanplum._devMode) {
             let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
-              console.log('A newer version of Leanplum, ' + latestVersion +
-                  ', is available. ' + 'Go to leanplum.com to download it.')
+              console.log(`A newer version of Leanplum, ${latestVersion}, is available. Go to` +
+                  'leanplum.com to download it.')
             }
             if (WebSocket) {
               Leanplum._socketIOConnect()
@@ -238,17 +236,20 @@ class Leanplum {
 
   static startFromCache(userId, userAttributes, callback) {
     // Overloads.
-    if (typeof(userId) == 'function') {
+    if (typeof userId === 'function') {
       callback = userId
+      // noinspection JSUnusedAssignment
       userAttributes = {}
       userId = null
-    } else if (typeof(userId) == 'object' && userId !== null &&
+    } else if (typeof userId === 'object' && userId !== null &&
         userId !== undefined) {
       callback = userAttributes
+      // noinspection JSUnusedAssignment
       userAttributes = userId
       userId = null
-    } else if (typeof(userAttributes) == 'function') {
+    } else if (typeof userAttributes === 'function') {
       callback = userAttributes
+      // noinspection JSUnusedAssignment
       userAttributes = {}
     }
     Leanplum._userId = userId
@@ -310,10 +311,10 @@ class Leanplum {
 
   static setUserAttributes(userId, userAttributes) {
     if (userAttributes === undefined) {
-      if (typeof userId == 'object') {
+      if (typeof userId === 'object') {
         userAttributes = userId
         userId = undefined
-      } else if (typeof userId != 'string') {
+      } else if (typeof userId !== 'string') {
         console.log('Leanplum: setUserAttributes expects a string or an ' +
             'object')
         return
@@ -337,15 +338,15 @@ class Leanplum {
     // object && !null && !undefined -> params
     // string -> info, params
     // *, object && !null && !undefined -> value, params
-    if (typeof(value) == 'object' && value !== null && value !== undefined) {
+    if (typeof value === 'object' && value !== null && value !== undefined) {
       params = value
       info = undefined
       value = undefined
-    } else if (typeof(value) == 'string') {
+    } else if (typeof value === 'string') {
       params = info
       info = value
       value = undefined
-    } else if (typeof(info) == 'object' && info !== null &&
+    } else if (typeof info === 'object' && info !== null &&
         info !== undefined) {
       params = info
       info = undefined
@@ -364,7 +365,7 @@ class Leanplum {
     // Overloads.
     // string|null|undefined, * -> info, params
     // object && !null && !undefined -> params
-    if (typeof(info) == 'object' && info !== null && info !== undefined) {
+    if (typeof info === 'object' && info !== null && info !== undefined) {
       params = info
       info = undefined
     }
@@ -383,10 +384,7 @@ class Leanplum {
    * @return {Boolean} True if supported, else false.
    */
   static isWebPushSupported() {
-    if (_pushManager) {
-      return _pushManager.isWebPushSupported()
-    }
-    return false
+    return PushManager.isWebPushSupported()
   }
 
   /**
@@ -394,26 +392,24 @@ class Leanplum {
    * @return {Promise} Resolves if true, rejects if false.
    */
   static isWebPushSubscribed() {
-    return _pushManager.isWebPushSubscribed()
+    return PushManager.isWebPushSubscribed()
   }
 
   /**
-   * Register the browser for webpush.
-   * @param  {[type]}   serviceWorkerUrl The url on your server that hosts the
+   * Register the browser for web push.
+   * @param  {string}   serviceWorkerUrl The url on your server that hosts the
    *                                     /sw.min.js service worker js file.
-   * @param  {Function} callback         A callback with the registration
-   *                                     result.
    * @return {Promise}                   Resolves if registration successful,
    *                                     otherwise fails.
    */
   static registerForWebPush(serviceWorkerUrl) {
     return new Promise((resolve, reject) => {
-      if (_pushManager && _pushManager.isWebPushSupported()) {
-        return _pushManager.register(serviceWorkerUrl, (isSubscribed) => {
+      if (PushManager.isWebPushSupported()) {
+        return PushManager.register(serviceWorkerUrl, (isSubscribed) => {
           if (isSubscribed) {
             return resolve(true)
           }
-          return _pushManager.subscribeUser()
+          return PushManager.subscribeUser()
         })
       } else {
         return reject('Leanplum: WebPush is not supported.')
@@ -422,11 +418,11 @@ class Leanplum {
   }
 
   /**
-   * Unregisters the browser form webpush.
+   * Unregisters the browser form web push.
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
   static unregisterFromWebPush() {
-    return _pushManager.unsubscribeUser()
+    return PushManager.unsubscribeUser()
   }
 
   /**
@@ -449,11 +445,10 @@ class Leanplum {
   // ***************************************************************************
   // Private Methods
   // ***************************************************************************
-
   static _socketIOConnect() {
     let client = new SocketIoClient()
     let authSent = false
-    client.onopen = function () {
+    client.onopen = function() {
       if (!authSent) {
         console.log('Leanplum: Connected to development server.')
         let args = {}
@@ -463,47 +458,54 @@ class Leanplum {
         authSent = true
       }
     }
-    client.onerror = function (event) {
+    client.onerror = function(event) {
       console.log('Leanplum: Socket error', event)
     }
-    client.onmessage = function (event, args) {
-      if (event == 'updateVars') {
+    /**
+     *
+     * @param event
+     * @param args
+     * @param args[].email
+     */
+    client.onmessage = function(event, args) {
+      if (event === 'updateVars') {
         Leanplum._request(Constants.METHODS.GET_VARS,
             new ArgsBuilder()
                 .add(Constants.PARAMS.INCLUDE_DEFAULTS, false), {
               queued: false,
               sendNow: true,
-              response: function (response) {
+              function(response) {
                 let getVarsResponse = Leanplum._getLastResponse(response)
                 let values = getVarsResponse[Constants.KEYS.VARS]
                 let variants = getVarsResponse[Constants.KEYS.VARIANTS]
                 let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
-                if (!_.isEqual(values, Leanplum._diffs)) {
+                if (!isEqual(values, Leanplum._diffs)) {
                   Leanplum._setContent(values, variants, actionMetadata)
                 }
               }
             }
         )
       } else if (event == 'getVariables') {
-        Leanplum._sendVariables();
+        Leanplum._sendVariables()
         client.send('getContentResponse', {
           'updated': true
         })
-      } else if (event == 'getActions') {
+      } else if (event === 'getActions') {
         // Unsupported in JavaScript SDK.
         client.send('getContentResponse', {
           'updated': false
         })
-      } else if (event == 'registerDevice') {
-        alert('Your device has been registered to ' + args[0]['email'] + '.')
+      } else if (event === 'registerDevice') {
+        // eslint-disable-next-line no-alert
+        alert(`Your device has been registered to ${args[0].email}.`)
       }
     }
-    client.onclose = function () {
+    client.onclose = function() {
       console.log('Leanplum: Disconnected to development server.')
       authSent = false
     }
     client.connect(_socketHost)
-    setInterval(function () {
+    setInterval(function() {
       if (!client.connected && !client.connecting) {
         client.connect(_socketHost)
       }
@@ -525,22 +527,24 @@ class Leanplum {
   }
 
   static _mergeHelper(vars, diff) {
-    if (typeof diff == 'number' || typeof diff == 'boolean' ||
-        typeof diff == 'string') {
+    if (typeof diff === 'number' || typeof diff === 'boolean' ||
+        typeof diff === 'string') {
       return diff
     }
     if (diff === null || diff === undefined) {
       return vars
     }
 
-    let objIterator = function (obj) {
-      return function (f) {
+    let objIterator = function(obj) {
+      return function(f) {
         if (obj instanceof Array) {
           for (let i = 0; i < obj.length; i++) {
             f(obj[i])
           }
         } else {
           for (let attr in obj) {
+            // This seems to be best practice: https://github.com/eslint/eslint/issues/7071
+            // eslint-disable-next-line prefer-reflect
             if ({}.hasOwnProperty.call(obj, attr)) {
               f(attr)
             }
@@ -551,27 +555,29 @@ class Leanplum {
     let varsIterator = objIterator(vars)
     let diffIterator = objIterator(diff)
 
-    // Infer that the diffs is an array if the vars value doesn't exist to tell
-    // us the type.
+    // Infer that the diffs is an array if the vars value doesn't exist to tell us the type.
     let isArray = false
-    if (vars == null) {
+    if (vars === null) {
       if (!(diff instanceof Array)) {
         isArray = null
-        for (let attr in diff) {
+        for (let attribute in diff) {
+          if (!diff.hasOwnProperty(attribute)) {
+            continue
+          }
           if (isArray === null) {
             isArray = true
           }
-          if (!(typeof attr == 'string')) {
+          if (!(typeof attribute === 'string')) {
             isArray = false
             break
           }
-          if (attr.length < 3 || attr.charAt(0) != '[' ||
-              attr.charAt(attr.length - 1) != ']') {
+          if (attribute.length < 3 || attribute.charAt(0) !== '[' ||
+              attribute.charAt(attribute.length - 1) !== ']') {
             isArray = false
             break
           }
-          let varSubscript = attr.substring(1, attr.length - 1)
-          if (!('' + parseInt(varSubscript)) == varSubscript) {
+          let varSubscript = attribute.substring(1, attribute.length - 1)
+          if (!parseInt(varSubscript).toString() === varSubscript) {
             isArray = false
             break
           }
@@ -582,10 +588,10 @@ class Leanplum {
     // Merge arrays.
     if (vars instanceof Array || isArray) {
       let merged = []
-      varsIterator(function (attr) {
+      varsIterator(function(attr) {
         merged.push(attr)
       })
-      diffIterator(function (varSubscript) {
+      diffIterator(function(varSubscript) {
         let subscript =
             parseInt(varSubscript.substring(1, varSubscript.length - 1))
         let diffValue = diff[varSubscript]
@@ -599,13 +605,13 @@ class Leanplum {
 
     // Merge dictionaries.
     let merged = {}
-    varsIterator(function (attr) {
+    varsIterator(function(attr) {
       if (diff[attr] === null || diff[attr] === undefined) {
         merged[attr] = vars[attr]
       }
     })
-    diffIterator(function (attr) {
-      merged[attr] = Leanplum._mergeHelper(vars != null ? vars[attr] : null,
+    diffIterator(function(attr) {
+      merged[attr] = Leanplum._mergeHelper(vars !== null ? vars[attr] : null,
           diff[attr])
     })
     return merged
@@ -624,14 +630,14 @@ class Leanplum {
     try {
       Leanplum._setContent(
           JSON.parse(Leanplum._getFromLocalStorage(
-                  Constants.DEFAULT_KEYS.VARIABLES) || null),
+              Constants.DEFAULT_KEYS.VARIABLES) || null),
           JSON.parse(Leanplum._getFromLocalStorage(
-                  Constants.DEFAULT_KEYS.VARIANTS) || null),
+              Constants.DEFAULT_KEYS.VARIANTS) || null),
           JSON.parse(Leanplum._getFromLocalStorage(
-                  Constants.DEFAULT_KEYS.ACTION_METADATA) || null))
+              Constants.DEFAULT_KEYS.ACTION_METADATA) || null))
       _token = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.TOKEN)
     } catch (e) {
-      console.log('Leanplum: Invalid diffs: ' + e)
+      console.log(`Leanplum: Invalid diffs: ${e}`)
     }
   }
 
@@ -663,13 +669,25 @@ class Leanplum {
       try {
         let requestArgs = JSON.parse(Leanplum._getFromLocalStorage(itemKey))
         requestData.push(requestArgs)
-      } catch (e) {
+      } catch (ignored) { // eslint-disable-next-line no-empty
       }
       Leanplum._removeFromLocalStorage(itemKey)
     }
     return requestData
   }
 
+  /**
+   *
+   * @param action
+   * @param params
+   * @param options
+   * @param options.success
+   * @param options.error
+   * @param options.response
+   * @param options.queued
+   * @param options.sendNow
+   * @private
+   */
   static _request(action, params, options) {
     options = options || {}
     params = params || new ArgsBuilder()
@@ -705,7 +723,7 @@ class Leanplum {
         .add(Constants.PARAMS.ACTION, action)
         .add(Constants.PARAMS.VERSION_NAME, Leanplum._versionName)
         .add(Constants.PARAMS.DEV_MODE, Leanplum._devMode)
-        .add(Constants.PARAMS.TIME, '' + (new Date().getTime() / 1000))
+        .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString())
     let success = options.success || options.response
     let error = options.error || options.response
 
@@ -719,15 +737,14 @@ class Leanplum {
     }
 
     if (params.body()) {
-      Request.ajax('POST', _apiPath + '?' + argsBuilder.build(),
+      Request.ajax('POST', `${_apiPath}?${argsBuilder.build()}`,
           params.body(), success, error, options.queued)
       return
     }
 
-    let sendNow = (Leanplum._devMode || options.sendNow ||
-    !_batchEnabled)
+    let sendNow = Leanplum._devMode || options.sendNow || !_batchEnabled
 
-    let sendUnsentRequests = function () {
+    let sendUnsentRequests = function() {
       let requestsToSend = Leanplum._popUnsentRequests()
       if (requestsToSend.length > 0) {
         let requestData = JSON.stringify({
@@ -737,10 +754,10 @@ class Leanplum {
             .attachApiKeys(Leanplum._appId, Leanplum._clientKey)
             .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
             .add(Constants.PARAMS.ACTION, Constants.METHODS.MULTI)
-            .add(Constants.PARAMS.TIME, '' + (new Date().getTime() / 1000))
+            .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString().toString())
             .build()
-        Request.ajax('POST', _apiPath + '?' + multiRequestArgs, requestData,
-            success, error, options.queued)
+        Request.ajax('POST', `${_apiPath}?${multiRequestArgs}`, requestData, success, error,
+            options.queued)
       }
     }
 
@@ -751,15 +768,13 @@ class Leanplum {
           now - Leanplum._lastRequestTime >= _batchCooldown) {
         sendNow = true
         Leanplum._lastRequestTime = now
-      } else {
-        if (!Leanplum._cooldownTimeout) {
-          Leanplum._cooldownTimeout = setTimeout(function () {
-            Leanplum._cooldownTimeout = null
-            Leanplum._lastRequestTime = new Date().getTime() / 1000
-            sendUnsentRequests()
-          }, (_batchCooldown -
-              (now - Leanplum._lastRequestTime)) * 1000)
-        }
+      } else if (!Leanplum._cooldownTimeout) {
+        Leanplum._cooldownTimeout = setTimeout(function() {
+          Leanplum._cooldownTimeout = null
+          Leanplum._lastRequestTime = new Date().getTime() / 1000
+          sendUnsentRequests()
+        }, (_batchCooldown -
+            (now - Leanplum._lastRequestTime)) * 1000)
       }
     }
 
@@ -772,17 +787,17 @@ class Leanplum {
   // //////////////// Response parsing //////////////////
 
   static _numResponses(response) {
-    if (!response || !response['response']) {
+    if (!response || !response.response) {
       return 0
     }
-    return response['response'].length
+    return response.response.length
   }
 
   static _getResponseAt(response, index) {
-    if (!response || !response['response']) {
+    if (!response || !response.response) {
       return null
     }
-    return response['response'][index]
+    return response.response[index]
   }
 
   static _getLastResponse(response) {
@@ -798,18 +813,18 @@ class Leanplum {
     if (!response) {
       return false
     }
-    return response['success'] ? true : false
+    return !!response.success
   }
 
   static _getResponseError(response) {
     if (!response) {
       return null
     }
-    let error = response['error']
+    let error = response.error
     if (!error) {
       return null
     }
-    return error['message']
+    return error.message
   }
 
   static _getFromLocalStorage(key) {
@@ -834,7 +849,7 @@ class Leanplum {
 
   static _removeFromLocalStorage(key) {
     if (_localStorageEnabled === false) {
-      delete _alternateLocalStorage[key]
+      Reflect.deleteProperty(_alternateLocalStorage, key)
       return
     }
     try {
@@ -845,7 +860,3 @@ class Leanplum {
     }
   }
 }
-
-let _pushManager = new PushManager(Leanplum)
-
-module.exports = Leanplum
