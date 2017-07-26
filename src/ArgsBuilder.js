@@ -44,7 +44,7 @@ export default class ArgsBuilder {
       this.argString += '&'
     }
     let encodedUriComponent = encodeURIComponent(value)
-    this.argString += `${key} = ${encodedUriComponent}`
+    this.argString += `${key}=${encodedUriComponent}`
     this.argValues[key] = value
     return this
   }
