@@ -199,7 +199,7 @@ export default class Leanplum {
     Leanplum._request(Constants.METHODS.START, args, {
       queued: true,
       sendNow: true,
-      function(response) {
+      response: function(response) {
         Leanplum._hasStarted = true
         let startResponse = Leanplum._getLastResponse(response)
         if (Leanplum._isResponseSuccess(startResponse)) {
@@ -474,7 +474,7 @@ export default class Leanplum {
                 .add(Constants.PARAMS.INCLUDE_DEFAULTS, false), {
               queued: false,
               sendNow: true,
-              function(response) {
+              response: function(response) {
                 let getVarsResponse = Leanplum._getLastResponse(response)
                 let values = getVarsResponse[Constants.KEYS.VARS]
                 let variants = getVarsResponse[Constants.KEYS.VARIANTS]
