@@ -20,7 +20,7 @@ var variables = {
     showBadges: true
   },
   showAds: true
-}
+};
  
 // Insert your API keys here.
 if (isDevelopmentMode) {
@@ -47,6 +47,9 @@ yarn install
 - `yarn run lint` - Lints all files.
 - `yarn run build` - Builds a distribution version of the library.
 - `yarn run test` - Runs the unit tests.
+
+### Testing
+Run tests: `mocha -r mock-local-storage -r test/specs/helpers/setup.js -r test/specs/helpers/chai.js test/specs/testLeanplum.js`
 
 ## Contributing
 1. Fork it!
