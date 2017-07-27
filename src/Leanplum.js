@@ -22,6 +22,7 @@ import SocketIoClient from './SocketIoClient'
 import Request from './Request'
 import isEqual from 'lodash/isEqual'
 import PushManager from './PushManager'
+import LocalStorageManager from './LocalStorageManager'
 
 let _variablesChangedHandlers = []
 let _variants = []
@@ -32,8 +33,6 @@ let _batchEnabled = true
 let _batchCooldown = 5
 let _apiPath = 'https://www.leanplum.com/api'
 let _socketHost = 'dev.leanplum.com'
-let _localStorageEnabled
-let _alternateLocalStorage = {}
 let _browserDetector = new BrowserDetector()
 
 /**
@@ -329,7 +328,7 @@ export default class Leanplum {
         })
     if (userId) {
       Leanplum._userId = userId
-      Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._userId)
+      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._userId)
     }
   }
 
@@ -527,8 +526,7 @@ export default class Leanplum {
   }
 
   static _mergeHelper(vars, diff) {
-    if (typeof diff === 'number' || typeof diff === 'boolean' ||
-        typeof diff === 'string') {
+    if (typeof diff === 'number' || typeof diff === 'boolean' || typeof diff === 'string') {
       return diff
     }
     if (diff === null || diff === undefined) {
@@ -629,49 +627,49 @@ export default class Leanplum {
   static _loadDiffs() {
     try {
       Leanplum._setContent(
-          JSON.parse(Leanplum._getFromLocalStorage(
+          JSON.parse(LocalStorageManager.getFromLocalStorage(
               Constants.DEFAULT_KEYS.VARIABLES) || null),
-          JSON.parse(Leanplum._getFromLocalStorage(
+          JSON.parse(LocalStorageManager.getFromLocalStorage(
               Constants.DEFAULT_KEYS.VARIANTS) || null),
-          JSON.parse(Leanplum._getFromLocalStorage(
+          JSON.parse(LocalStorageManager.getFromLocalStorage(
               Constants.DEFAULT_KEYS.ACTION_METADATA) || null))
-      _token = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.TOKEN)
+      _token = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.TOKEN)
     } catch (e) {
       console.log(`Leanplum: Invalid diffs: ${e}`)
     }
   }
 
   static _saveDiffs() {
-    Leanplum._saveToLocalStorage(
+    LocalStorageManager.saveToLocalStorage(
         Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(Leanplum._diffs || {}))
-    Leanplum._saveToLocalStorage(
+    LocalStorageManager.saveToLocalStorage(
         Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(_variants || [])
     )
-    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
         JSON.stringify(_actionMetadata || {}))
-    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, _token)
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, _token)
   }
 
   static _saveRequestForLater(args) {
-    let count = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0
+    let count = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0
     let itemKey = Constants.DEFAULT_KEYS.ITEM + count
-    Leanplum._saveToLocalStorage(itemKey, JSON.stringify(args))
+    LocalStorageManager.saveToLocalStorage(itemKey, JSON.stringify(args))
     count++
-    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.COUNT, count)
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.COUNT, count)
   }
 
   static _popUnsentRequests() {
     let requestData = []
-    let count = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0
-    Leanplum._removeFromLocalStorage(Constants.DEFAULT_KEYS.COUNT)
+    let count = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0
+    LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.COUNT)
     for (let i = 0; i < count; i++) {
       let itemKey = Constants.DEFAULT_KEYS.ITEM + i
       try {
-        let requestArgs = JSON.parse(Leanplum._getFromLocalStorage(itemKey))
+        let requestArgs = JSON.parse(LocalStorageManager.getFromLocalStorage(itemKey))
         requestData.push(requestArgs)
       } catch (ignored) { // eslint-disable-next-line no-empty
       }
-      Leanplum._removeFromLocalStorage(itemKey)
+      LocalStorageManager.removeFromLocalStorage(itemKey)
     }
     return requestData
   }
@@ -695,7 +693,7 @@ export default class Leanplum {
     // Get or create device ID and user ID.
     if (!Leanplum._deviceId) {
       Leanplum._deviceId =
-          Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID)
+          LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID)
     }
     if (!Leanplum._deviceId) {
       let id = ''
@@ -705,15 +703,15 @@ export default class Leanplum {
         id += possible.charAt(Math.floor(Math.random() * possible.length))
       }
       Leanplum._deviceId = id
-      Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID, id)
+      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID, id)
     }
     if (!Leanplum._userId) {
-      Leanplum._userId = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.USER_ID)
+      Leanplum._userId = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.USER_ID)
       if (!Leanplum._userId) {
         Leanplum._userId = Leanplum._deviceId
       }
     }
-    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._userId)
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._userId)
 
     let argsBuilder = params
         .attachApiKeys(Leanplum._appId, Leanplum._clientKey)
@@ -825,38 +823,5 @@ export default class Leanplum {
       return null
     }
     return error.message
-  }
-
-  static _getFromLocalStorage(key) {
-    if (_localStorageEnabled === false) {
-      return _alternateLocalStorage[key]
-    }
-    return localStorage[key]
-  }
-
-  static _saveToLocalStorage(key, value) {
-    if (_localStorageEnabled === false) {
-      _alternateLocalStorage[key] = value
-      return
-    }
-    try {
-      localStorage[key] = value
-    } catch (e) {
-      _localStorageEnabled = false
-      Leanplum._saveToLocalStorage(key, value)
-    }
-  }
-
-  static _removeFromLocalStorage(key) {
-    if (_localStorageEnabled === false) {
-      Reflect.deleteProperty(_alternateLocalStorage, key)
-      return
-    }
-    try {
-      localStorage.removeItem(key)
-    } catch (e) {
-      _localStorageEnabled = false
-      Leanplum._removeFromLocalStorage(key)
-    }
   }
 }

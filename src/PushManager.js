@@ -19,14 +19,12 @@
 import Constants from './Constants'
 
 import isEqual from 'lodash/isEqual'
+import LocalStorageManager from './LocalStorageManager'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
     'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
     'nfCt-3vK0Ci68'
 
-let self
-let _leanplum
-let isSupported = false
 let isSubscribed = false
 let serviceWorkerRegistration = null
 
@@ -35,32 +33,22 @@ let serviceWorkerRegistration = null
  */
 export default class PushManager {
   /**
-   * Creates a new PushManager object.
-   */
-  static init() {
-    /** @namespace navigator.serviceWorker The service worker object of the browser. **/
-    if (navigator && navigator.serviceWorker &&
-        'serviceWorker' in navigator && 'PushManager' in window) {
-      isSupported = true
-    }
-  }
-
-  /**
    * Whether or not web push is supported in the browser.
    * @return {Boolean} True if supported, else false.
    */
   static isWebPushSupported() {
-    return isSupported
+    return navigator && navigator.serviceWorker && 'serviceWorker' in navigator &&
+        'PushManager' in window
   }
 
   /**
    * Whether or not the browser is subscribed to web push notifications.
    * @return {Promise} True if subscribed, else false.
    */
-  isWebPushSubscribed() {
-    if (!isSupported) {
-      return new Promise((resolve, reject) => {
-        reject('Leanplum: Push messaging is not supported.')
+  static isWebPushSubscribed() {
+    if (!this.isWebPushSupported()) {
+      return new Promise((resolve) => {
+        resolve(false)
       })
     }
     return this._getServiceWorkerRegistration()
@@ -75,7 +63,7 @@ export default class PushManager {
                   .then(function(subscription) {
                     isSubscribed = subscription !== null
                     if (isSubscribed) {
-                      self._updateNewSubscriptionOnServer(subscription)
+                      PushManager._updateNewSubscriptionOnServer(subscription)
                     }
                     resolve(isSubscribed)
                   })
@@ -92,7 +80,7 @@ export default class PushManager {
    * @return {object} nothing
    */
   static register(serviceWorkerUrl, callback) {
-    if (!isSupported) {
+    if (!this.isWebPushSupported()) {
       console.log('Leanplum: Push messaging is not supported.')
       return callback(false)
     }
@@ -240,10 +228,10 @@ export default class PushManager {
     if (subscription) {
       let preparedSubscription = this._prepareSubscription(subscription)
       let preparedSubscriptionString = JSON.stringify(preparedSubscription)
-      let existingSubscriptionString = _leanplum._getFromLocalStorage(
+      let existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
       if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
-        _leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
+        LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
             preparedSubscriptionString)
         _leanplum._setSubscription(preparedSubscriptionString)
       }

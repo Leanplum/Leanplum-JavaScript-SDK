@@ -56,9 +56,9 @@ function getAction(request) {
  */
 function interceptRequest(callback) {
   xhr = sinon.useFakeXMLHttpRequest()
-  xhr.onCreate = function (req) {
+  xhr.onCreate = function(req) {
     // Wait for request to populate correctly.
-    setTimeout(function () {
+    setTimeout(function() {
       callback(req)
     }, 0)
   }
@@ -303,7 +303,7 @@ Object.keys(testModes).forEach((mode) => {
           }, JSON.stringify(successResponse))
         })
 
-        setTimeout(function () {
+        setTimeout(function() {
           assert.equal(count, testModes[mode] === testModes.DEV ? 2 : 1)
           done()
         }, 10)
@@ -379,6 +379,31 @@ Object.keys(testModes).forEach((mode) => {
           return done()
         })
         Leanplum.start()
+      })
+    })
+
+    describe('Web push.', () => {
+      it('test isWebPushSupported', (done) => {
+        assert(!Leanplum.isWebPushSupported())
+        done()
+      })
+
+      it('test isWebPushSubscribed', async () => {
+        let subscribed
+        try {
+          subscribed = await Leanplum.isWebPushSubscribed()
+        } catch (e) {
+          console.log(e)
+        }
+        assert(!subscribed)
+      })
+
+      it('test isWebPushSupported', async () => {
+        try {
+          await Leanplum.registerForWebPush()
+        } catch (e) {
+          assert(e)
+        }
       })
     })
   })
