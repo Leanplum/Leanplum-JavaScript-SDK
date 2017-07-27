@@ -376,7 +376,6 @@ Object.keys(testModes).forEach((mode) => {
           }, JSON.stringify(startResponse))
         })
         Leanplum.addStartResponseHandler(() => {
-          console.log('asdf')
           return done()
         })
         Leanplum.start()

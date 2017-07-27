@@ -221,7 +221,9 @@ export default class PushManager {
   static _prepareSubscription(subscription) {
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
+    // noinspection ES6ModulesDependencies
     let keyAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(key)))
+    // noinspection ES6ModulesDependencies
     let authAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(auth)))
     return {
       endpoint: subscription.endpoint,
