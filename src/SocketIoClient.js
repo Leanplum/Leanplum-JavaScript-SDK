@@ -16,7 +16,7 @@
  *
  */
 
-import Request from './Request'
+import Request from './Network'
 
 /**
  * Socket.io 1.0 client class.

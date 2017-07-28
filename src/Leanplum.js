@@ -19,7 +19,7 @@ import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import SocketIoClient from './SocketIoClient'
-import Request from './Request'
+import Request from './Network'
 import isEqual from 'lodash/isEqual'
 import PushManager from './PushManager'
 import LocalStorageManager from './LocalStorageManager'
@@ -345,8 +345,7 @@ export default class Leanplum {
       params = info
       info = value
       value = undefined
-    } else if (typeof info === 'object' && info !== null &&
-        info !== undefined) {
+    } else if (typeof info === 'object' && info !== null && info !== undefined) {
       params = info
       info = undefined
     }
