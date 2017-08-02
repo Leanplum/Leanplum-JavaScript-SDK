@@ -23,6 +23,7 @@ import Request from './Network'
 import isEqual from 'lodash/isEqual'
 import PushManager from './PushManager'
 import LocalStorageManager from './LocalStorageManager'
+import VarCache from './VarCache'
 
 let _variablesChangedHandlers = []
 let _variants = []
@@ -106,7 +107,7 @@ export default class Leanplum {
   }
 
   static setVariables(variables) {
-    Leanplum._variables = variables
+    VarCache.setVariables(variables)
   }
 
   static setRequestBatching(batchEnabled, cooldownSeconds) {
@@ -115,7 +116,7 @@ export default class Leanplum {
   }
 
   static getVariables() {
-    return Leanplum._merged !== undefined ? Leanplum._merged : Leanplum._variables
+    return VarCache.getVariables()
   }
 
   static getVariable(...args) {
@@ -176,6 +177,12 @@ export default class Leanplum {
     Leanplum._userId = userId
     if (callback) {
       Leanplum.addStartResponseHandler(callback)
+    }
+
+    VarCache.onUpdate = function(){
+      for (let i = 0; i < _variablesChangedHandlers.length; i++) {
+        _variablesChangedHandlers[i]()
+      }
     }
 
     let args = new ArgsBuilder()
@@ -512,143 +519,6 @@ export default class Leanplum {
   }
 
   // Leanplum utility methods.
-
-  static _setContent(diffs, variants, actionMetadata) {
-    Leanplum._diffs = diffs
-    _variants = variants
-    _actionMetadata = actionMetadata
-    Leanplum._hasReceivedDiffs = true
-    Leanplum._merged = Leanplum._mergeHelper(Leanplum._variables, diffs)
-    Leanplum._saveDiffs()
-    for (let i = 0; i < _variablesChangedHandlers.length; i++) {
-      _variablesChangedHandlers[i]()
-    }
-  }
-
-  static _mergeHelper(vars, diff) {
-    if (typeof diff === 'number' || typeof diff === 'boolean' || typeof diff === 'string') {
-      return diff
-    }
-    if (diff === null || diff === undefined) {
-      return vars
-    }
-
-    let objIterator = function(obj) {
-      return function(f) {
-        if (obj instanceof Array) {
-          for (let i = 0; i < obj.length; i++) {
-            f(obj[i])
-          }
-        } else {
-          for (let attr in obj) {
-            // This seems to be best practice: https://github.com/eslint/eslint/issues/7071
-            // eslint-disable-next-line prefer-reflect
-            if ({}.hasOwnProperty.call(obj, attr)) {
-              f(attr)
-            }
-          }
-        }
-      }
-    }
-    let varsIterator = objIterator(vars)
-    let diffIterator = objIterator(diff)
-
-    // Infer that the diffs is an array if the vars value doesn't exist to tell us the type.
-    let isArray = false
-    if (vars === null) {
-      if (!(diff instanceof Array)) {
-        isArray = null
-        for (let attribute in diff) {
-          if (!diff.hasOwnProperty(attribute)) {
-            continue
-          }
-          if (isArray === null) {
-            isArray = true
-          }
-          if (!(typeof attribute === 'string')) {
-            isArray = false
-            break
-          }
-          if (attribute.length < 3 || attribute.charAt(0) !== '[' ||
-              attribute.charAt(attribute.length - 1) !== ']') {
-            isArray = false
-            break
-          }
-          let varSubscript = attribute.substring(1, attribute.length - 1)
-          if (!parseInt(varSubscript).toString() === varSubscript) {
-            isArray = false
-            break
-          }
-        }
-      }
-    }
-
-    // Merge arrays.
-    if (vars instanceof Array || isArray) {
-      let merged = []
-      varsIterator(function(attr) {
-        merged.push(attr)
-      })
-      diffIterator(function(varSubscript) {
-        let subscript =
-            parseInt(varSubscript.substring(1, varSubscript.length - 1))
-        let diffValue = diff[varSubscript]
-        while (subscript >= merged.length) {
-          merged.push(null)
-        }
-        merged[subscript] = Leanplum._mergeHelper(merged[subscript], diffValue)
-      })
-      return merged
-    }
-
-    // Merge dictionaries.
-    let merged = {}
-    varsIterator(function(attr) {
-      if (diff[attr] === null || diff[attr] === undefined) {
-        merged[attr] = vars[attr]
-      }
-    })
-    diffIterator(function(attr) {
-      merged[attr] = Leanplum._mergeHelper(vars !== null ? vars[attr] : null,
-          diff[attr])
-    })
-    return merged
-  }
-
-  static _sendVariables() {
-    let body = {}
-    body[Constants.PARAMS.VARIABLES] = Leanplum._variables
-    Leanplum._request(Constants.METHODS.SET_VARS,
-        new ArgsBuilder().body(JSON.stringify(body)), {
-          sendNow: true
-        })
-  }
-
-  static _loadDiffs() {
-    try {
-      Leanplum._setContent(
-          JSON.parse(LocalStorageManager.getFromLocalStorage(
-              Constants.DEFAULT_KEYS.VARIABLES) || null),
-          JSON.parse(LocalStorageManager.getFromLocalStorage(
-              Constants.DEFAULT_KEYS.VARIANTS) || null),
-          JSON.parse(LocalStorageManager.getFromLocalStorage(
-              Constants.DEFAULT_KEYS.ACTION_METADATA) || null))
-      _token = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.TOKEN)
-    } catch (e) {
-      console.log(`Leanplum: Invalid diffs: ${e}`)
-    }
-  }
-
-  static _saveDiffs() {
-    LocalStorageManager.saveToLocalStorage(
-        Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(Leanplum._diffs || {}))
-    LocalStorageManager.saveToLocalStorage(
-        Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(_variants || [])
-    )
-    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
-        JSON.stringify(_actionMetadata || {}))
-    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, _token)
-  }
 
   static _saveRequestForLater(args) {
     let count = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0
