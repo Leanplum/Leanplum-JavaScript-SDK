@@ -43,7 +43,6 @@ class PushManager {
     if (navigator && navigator.serviceWorker &&
         'serviceWorker' in navigator && 'PushManager' in window) {
       isSupported = true;
-      self.register();
     }
   }
 
