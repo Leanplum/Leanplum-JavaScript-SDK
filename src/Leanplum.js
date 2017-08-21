@@ -485,7 +485,7 @@ class Leanplum {
             }
         );
       } else if (event == 'getVariables') {
-        Leanplum.sendVariables();
+        Leanplum._sendVariables();
         client.send('getContentResponse', {
           'updated': true,
         });
