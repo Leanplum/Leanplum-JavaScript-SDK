@@ -483,7 +483,7 @@ export default class Leanplum {
               }
             }
         )
-      } else if (event == 'getVariables') {
+      } else if (event === 'getVariables') {
         Leanplum._sendVariables()
         client.send('getContentResponse', {
           'updated': true
