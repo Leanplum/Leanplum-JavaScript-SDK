@@ -46,12 +46,12 @@ export default class PushManager {
    * @return {Promise} True if subscribed, else false.
    */
   static isWebPushSubscribed() {
-    if (!this.isWebPushSupported()) {
+    if (!PushManager.isWebPushSupported()) {
       return new Promise((resolve) => {
         resolve(false)
       })
     }
-    return this._getServiceWorkerRegistration()
+    return PushManager.getServiceWorkerRegistration()
         .then(function(registration) {
           return new Promise((resolve) => {
             if (!registration) {
@@ -63,7 +63,7 @@ export default class PushManager {
                   .then(function(subscription) {
                     isSubscribed = subscription !== null
                     if (isSubscribed) {
-                      PushManager._updateNewSubscriptionOnServer(subscription)
+                      PushManager.updateNewSubscriptionOnServer(subscription)
                     }
                     resolve(isSubscribed)
                   })
@@ -80,7 +80,7 @@ export default class PushManager {
    * @return {object} nothing
    */
   static register(serviceWorkerUrl, callback) {
-    if (!this.isWebPushSupported()) {
+    if (!PushManager.isWebPushSupported()) {
       console.log('Leanplum: Push messaging is not supported.')
       return callback(false)
     }
@@ -94,7 +94,7 @@ export default class PushManager {
               .then(function(subscription) {
                 isSubscribed = !(subscription === null)
                 if (isSubscribed) {
-                  self._updateNewSubscriptionOnServer(subscription)
+                  PushManager.updateNewSubscriptionOnServer(subscription)
                 }
                 if (callback) {
                   return callback(isSubscribed)
@@ -111,7 +111,7 @@ export default class PushManager {
    * @return {Promise} Resolves if subscription successful, otherwise rejects.
    */
   static subscribeUser() {
-    const applicationServerKey = this._urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
+    const applicationServerKey = PushManager.urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
     return new Promise(function(resolve, reject) {
       /** @namespace serviceWorkerRegistration.pushManager.subscribe Subscribe to push. **/
       return serviceWorkerRegistration.pushManager.subscribe({
@@ -120,7 +120,7 @@ export default class PushManager {
       })
           .then(function(subscription) {
             if (subscription) {
-              self._updateNewSubscriptionOnServer(subscription)
+              PushManager.updateNewSubscriptionOnServer(subscription)
               isSubscribed = true
               return resolve(isSubscribed)
             }
@@ -139,25 +139,33 @@ export default class PushManager {
    */
   static unsubscribeUser() {
     return new Promise((resolve, reject) => {
-      serviceWorkerRegistration.pushManager.getSubscription()
-          .then(function(subscription) {
-            if (subscription) {
-              /** @namespace serviceWorkerRegistration.pushManager.unsubscribe Unsubscribe to
-               *  push. **/
-              return subscription.unsubscribe()
-            }
-            return reject()
-          })
-          .catch(function(error) {
-            reject(`Leanplum: Error unsubscribing: ${error}`)
-          })
-          .then(function(success) {
-            if (success) {
-              isSubscribed = false
-              return resolve()
-            }
-            return reject()
-          })
+      PushManager.isWebPushSubscribed().then((subscribed) => {
+        if (!subscribed) {
+          return resolve()
+        }
+
+        serviceWorkerRegistration.pushManager.getSubscription()
+            .then(function(subscription) {
+              if (subscription) {
+                /** @namespace serviceWorkerRegistration.pushManager.unsubscribe Unsubscribe to
+                 *  push. **/
+                return subscription.unsubscribe()
+              }
+              return reject()
+            })
+            .catch(function(error) {
+              reject(`Leanplum: Error unsubscribing: ${error}`)
+            })
+            .then(function(success) {
+              if (success) {
+                isSubscribed = false
+                return resolve()
+              }
+              return reject()
+            })
+      }, (error) => {
+        return reject()
+      })
     })
   }
 
@@ -165,7 +173,7 @@ export default class PushManager {
    * Retrieves the service worker registration object from browser.
    * @return {object} Returns the registration or null.
    */
-  static _getServiceWorkerRegistration() {
+  static getServiceWorkerRegistration() {
     return new Promise((resolve) => {
       if (serviceWorkerRegistration) {
         resolve(serviceWorkerRegistration)
@@ -173,6 +181,7 @@ export default class PushManager {
         /** @namespace navigator.serviceWorker.getRegistration Retrieves the  push registration
          * from the browser. **/
         navigator.serviceWorker.getRegistration().then((registration) => {
+          serviceWorkerRegistration = registration
           resolve(registration)
         })
       }
@@ -184,7 +193,7 @@ export default class PushManager {
    * @param  {string} base64String [description]
    * @return {Uint8Array}              [description]
    */
-  static _urlB64ToUint8Array(base64String) {
+  static urlB64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
     const base64 = (base64String + padding)
         .replace(/-/g, '+')
@@ -200,13 +209,13 @@ export default class PushManager {
   }
 
   /**
-   * [_prepareSubscription description]
+   * [prepareSubscription description]
    * @param  {object} subscription The raw subscription from browser.
    * @param  {function} subscription.getKey The subscription key.
    * @param  {string} subscription.endpoint The subscription key.
    * @return {object} The subscription object to be sent to server.
    */
-  static _prepareSubscription(subscription) {
+  static prepareSubscription(subscription) {
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
     // noinspection ES6ModulesDependencies
@@ -224,16 +233,16 @@ export default class PushManager {
    * Send a new subscription object to the Leanplum server.
    * @param {object} subscription The subscription.
    */
-  static _updateNewSubscriptionOnServer(subscription) {
+  static updateNewSubscriptionOnServer(subscription) {
     if (subscription) {
-      let preparedSubscription = this._prepareSubscription(subscription)
+      let preparedSubscription = PushManager.prepareSubscription(subscription)
       let preparedSubscriptionString = JSON.stringify(preparedSubscription)
       let existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
       if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
         LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
             preparedSubscriptionString)
-        _leanplum._setSubscription(preparedSubscriptionString)
+        Leanplum._setSubscription(preparedSubscriptionString)
       }
     }
   }

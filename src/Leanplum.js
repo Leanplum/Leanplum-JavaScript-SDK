@@ -420,6 +420,7 @@ export default class Leanplum {
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
   static unregisterFromWebPush() {
+    console.log("LP: UNREGister")
     return PushManager.unsubscribeUser()
   }
 
