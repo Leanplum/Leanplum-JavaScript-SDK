@@ -63,5 +63,10 @@ yarn install
 - `grunt test`
 - `git flow release finish "NEW_VERSION"`
 
+# Test Coverage
+Run:
+`npm i -g nyc`
+`nyc mocha -r mock-local-storage -r test/specs/helpers/setup.js -r test/specs/helpers/chai.js test/specs/testLeanplum.js`
+
 ## License
 See LICENSE file.
