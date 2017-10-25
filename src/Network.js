@@ -1,6 +1,3 @@
-let _requestQueue = []
-let _networkTimeoutSeconds = 10
-
 /**
  * Ajax functions from:
  *
@@ -20,13 +17,17 @@ let _networkTimeoutSeconds = 10
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-export default class Request {
+
+let requestQueue = []
+let networkTimeoutSeconds = 10
+
+export default class Network {
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
   static setNetworkTimeout(seconds) {
-    _networkTimeoutSeconds = seconds
+    networkTimeoutSeconds = seconds
   }
 
   /**
@@ -42,11 +43,11 @@ export default class Request {
    */
   static ajax(method, url, data, success, error, queued, plainText) {
     if (queued) {
-      if (Request._runningRequest) {
+      if (Network.runningRequest) {
         // eslint-disable-next-line prefer-rest-params
-        return Request._enqueueRequest(arguments)
+        return Network.enqueueRequest(arguments)
       }
-      Request._runningRequest = true
+      Network.runningRequest = true
     }
 
     /** @namespace XDomainRequest **/
@@ -56,7 +57,7 @@ export default class Request {
         url = `http:${url.substring(6)}`
       }
       // eslint-disable-next-line prefer-rest-params
-      return Reflect.apply(Request._ajaxIE8, null, arguments)
+      return Reflect.apply(Network.ajaxIE8, null, arguments)
     }
 
     let handled = false
@@ -103,8 +104,8 @@ export default class Request {
         }
 
         if (queued) {
-          Request._runningRequest = false
-          Request._dequeueRequest()
+          Network.runningRequest = false
+          Network.dequeueRequest()
         }
       }
     }
@@ -115,7 +116,7 @@ export default class Request {
       if (!handled) {
         xhr.abort()
       }
-    }, _networkTimeoutSeconds * 1000)
+    }, networkTimeoutSeconds * 1000)
   }
 
   /**
@@ -128,7 +129,7 @@ export default class Request {
    * @param {boolean} queued Whether the request should be queued or immediately sent.
    * @param {boolean} plainText Whether the response should be returned as plain text or json.
    */
-  static _ajaxIE8(method, url, data, success, error, queued, plainText) {
+  static ajaxIE8(method, url, data, success, error, queued, plainText) {
     let xdr = new XDomainRequest()
     xdr.onload = function() {
       let response
@@ -155,8 +156,8 @@ export default class Request {
         }, 0)
       }
       if (queued) {
-        Request._runningRequest = false
-        Request._dequeueRequest()
+        Network.runningRequest = false
+        Network.dequeueRequest()
       }
     }
     xdr.onerror = xdr.ontimeout = function() {
@@ -166,14 +167,14 @@ export default class Request {
         }
       }, 0)
       if (queued) {
-        Request._runningRequest = false
-        Request._dequeueRequest()
+        Network.runningRequest = false
+        Network.dequeueRequest()
       }
     }
     xdr.onprogress = function() {
     }
     xdr.open(method, url)
-    xdr.timeout = _networkTimeoutSeconds * 1000
+    xdr.timeout = networkTimeoutSeconds * 1000
     xdr.send(data)
   }
 
@@ -182,18 +183,18 @@ export default class Request {
    * @param {Arguments} requestArguments The request arguments from the initial method call.
    * @private
    */
-  static _enqueueRequest(requestArguments) {
-    _requestQueue.push(requestArguments)
+  static enqueueRequest(requestArguments) {
+    requestQueue.push(requestArguments)
   }
 
   /**
    * Removes the request from the request queue.
    * @private
    */
-  static _dequeueRequest() {
-    let args = _requestQueue.shift()
+  static dequeueRequest() {
+    let args = requestQueue.shift()
     if (args) {
-      Reflect.apply(Request.ajax, null, args)
+      Reflect.apply(Network.ajax, null, args)
     }
   }
 }

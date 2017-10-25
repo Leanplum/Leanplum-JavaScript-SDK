@@ -19,7 +19,7 @@ import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import SocketIoClient from './SocketIoClient'
-import Request from './Network'
+import Network from './Network'
 import isEqual from 'lodash/isEqual'
 import PushManager from './PushManager'
 import LocalStorageManager from './LocalStorageManager'
@@ -60,7 +60,7 @@ export default class Leanplum {
    * @param {number} seconds The timeout in seconds.
    */
   static setNetworkTimeout(seconds) {
-    Request.setNetworkTimeout(seconds)
+    Network.setNetworkTimeout(seconds)
   }
 
   static setAppIdForDevelopmentMode(appId, accessKey) {
@@ -424,7 +424,6 @@ export default class Leanplum {
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
   static unregisterFromWebPush() {
-    console.log("LP: UNREGister")
     return PushManager.unsubscribeUser()
   }
 
@@ -611,7 +610,7 @@ export default class Leanplum {
     }
 
     if (params.body()) {
-      Request.ajax('POST', `${_apiPath}?${argsBuilder.build()}`,
+      Network.ajax('POST', `${_apiPath}?${argsBuilder.build()}`,
           params.body(), success, error, options.queued)
       return
     }
@@ -630,7 +629,7 @@ export default class Leanplum {
             .add(Constants.PARAMS.ACTION, Constants.METHODS.MULTI)
             .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString().toString())
             .build()
-        Request.ajax('POST', `${_apiPath}?${multiRequestArgs}`, requestData, success, error,
+        Network.ajax('POST', `${_apiPath}?${multiRequestArgs}`, requestData, success, error,
             options.queued)
       }
     }
