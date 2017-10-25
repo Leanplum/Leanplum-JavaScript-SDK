@@ -37,8 +37,8 @@ export default class VarCache {
     VarCache.hasReceivedDiffs = true
     VarCache.merged = VarCache.mergeHelper(VarCache.variables, diffs)
     VarCache.saveDiffs()
-    if (onUpdate) {
-      onUpdate()
+    if (VarCache.onUpdate) {
+      VarCache.onUpdate()
     }
   }
 
