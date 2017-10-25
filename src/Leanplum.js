@@ -26,10 +26,8 @@ import LocalStorageManager from './LocalStorageManager'
 import VarCache from './VarCache'
 
 let _variablesChangedHandlers = []
-let _variants = []
 let _startHandlers = []
 let _actionMetadata = {}
-let _token = ''
 let _batchEnabled = true
 let _batchCooldown = 5
 let _apiPath = 'https://www.leanplum.com/api'
@@ -128,7 +126,7 @@ export default class Leanplum {
   }
 
   static getVariants() {
-    return _variants || []
+    return VarCache.variants || []
   }
 
   static addStartResponseHandler(handler) {
@@ -224,14 +222,14 @@ export default class Leanplum {
             }
           }
 
-          Leanplum._setContent(
+          VarCache.applyDiffs(
               startResponse[Constants.KEYS.VARS],
               startResponse[Constants.KEYS.VARIANTS],
               startResponse[Constants.KEYS.ACTION_METADATA])
-          _token = startResponse[Constants.KEYS.TOKEN]
+          VarCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
           Leanplum._startSuccessful = false
-          Leanplum._loadDiffs()
+          VarCache.loadDiffs()
         }
         for (let i = 0; i < _startHandlers.length; i++) {
           _startHandlers[i](Leanplum._startSuccessful)
@@ -272,7 +270,7 @@ export default class Leanplum {
         console.log('Your browser doesn\'t support WebSockets.')
       }
     }
-    Leanplum._loadDiffs()
+    VarCache.loadDiffs()
     for (let i = 0; i < _startHandlers.length; i++) {
       _startHandlers[i](Leanplum._startSuccessful)
     }
@@ -448,6 +446,15 @@ export default class Leanplum {
     )
   }
 
+  static _sendVariables() {
+    let body = {}
+    body[Constants.PARAMS.VARIABLES] = VarCache.variables
+    Leanplum._request(Constants.METHODS.SET_VARS,
+        new ArgsBuilder().body(JSON.stringify(body)), {
+          sendNow: true
+        })
+  }
+
   // ***************************************************************************
   // Private Methods
   // ***************************************************************************
@@ -485,8 +492,8 @@ export default class Leanplum {
                 let values = getVarsResponse[Constants.KEYS.VARS]
                 let variants = getVarsResponse[Constants.KEYS.VARIANTS]
                 let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
-                if (!isEqual(values, Leanplum._diffs)) {
-                  Leanplum._setContent(values, variants, actionMetadata)
+                if (!isEqual(values, VarCache.diffs)) {
+                  VarCache.applyDiffs(values, variants, actionMetadata)
                 }
               }
             }

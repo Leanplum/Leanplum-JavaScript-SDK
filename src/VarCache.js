@@ -44,7 +44,7 @@ export default class VarCache {
 
   static loadDiffs() {
     try {
-      Leanplum.applyDiffs(
+      VarCache.applyDiffs(
           JSON.parse(LocalStorageManager.getFromLocalStorage(
               Constants.DEFAULT_KEYS.VARIABLES) || null),
           JSON.parse(LocalStorageManager.getFromLocalStorage(
@@ -61,28 +61,19 @@ export default class VarCache {
     LocalStorageManager.saveToLocalStorage(
         Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(VarCache.diffs || {}))
     LocalStorageManager.saveToLocalStorage(
-        Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(_variants || [])
+        Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(VarCache.variants || [])
     )
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
         JSON.stringify(_actionMetadata || {}))
-    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, _token)
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, VarCache.token)
   }
 
   static setVariables(variables) {
-    _variables = variables
+    VarCache.variables = variables
   }
 
   static getVariables() {
-    return _merged !== undefined ? _merged : _variables
-  }
-
-  static sendVariables() {
-    let body = {}
-    body[Constants.PARAMS.VARIABLES] = Leanplum._variables
-    Leanplum._request(Constants.METHODS.SET_VARS,
-        new ArgsBuilder().body(JSON.stringify(body)), {
-          sendNow: true
-        })
+    return VarCache.merged !== undefined ? VarCache.merged : VarCache.variables
   }
 
   static mergeHelper(vars, diff) {
@@ -156,7 +147,7 @@ export default class VarCache {
         while (subscript >= merged.length) {
           merged.push(null)
         }
-        merged[subscript] = Leanplum._mergeHelper(merged[subscript], diffValue)
+        merged[subscript] = VarCache.mergeHelper(merged[subscript], diffValue)
       })
       return merged
     }
@@ -169,7 +160,7 @@ export default class VarCache {
       }
     })
     diffIterator(function(attr) {
-      merged[attr] = Leanplum._mergeHelper(vars !== null ? vars[attr] : null,
+      merged[attr] = VarCache.mergeHelper(vars !== null ? vars[attr] : null,
           diff[attr])
     })
     return merged
