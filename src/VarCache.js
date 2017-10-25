@@ -19,6 +19,7 @@
 import Constants from './Constants'
 import isEqual from 'lodash/isEqual'
 import LocalStorageManager from './LocalStorageManager'
+import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
   static diffs = undefined
@@ -74,6 +75,15 @@ export default class VarCache {
 
   static getVariables() {
     return VarCache.merged !== undefined ? VarCache.merged : VarCache.variables
+  }
+
+  static _sendVariables() {
+    let body = {}
+    body[Constants.PARAMS.VARIABLES] = VarCache.variables
+    LeanplumRequest.request(Constants.METHODS.SET_VARS,
+        new ArgsBuilder().body(JSON.stringify(body)), {
+          sendNow: true
+        })
   }
 
   static mergeHelper(vars, diff) {

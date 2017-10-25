@@ -20,6 +20,7 @@ import Constants from './Constants'
 
 import isEqual from 'lodash/isEqual'
 import LocalStorageManager from './LocalStorageManager'
+import LeanplumRequest from './LeanplumRequest'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
     'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
@@ -242,8 +243,25 @@ export default class PushManager {
       if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
         LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
             preparedSubscriptionString)
-        Leanplum._setSubscription(preparedSubscriptionString)
+        PushManager.setSubscription(preparedSubscriptionString)
       }
     }
+  }
+
+  /**
+   * Send the subscription to the Leanplum server.
+   * @param {String/Object} subscription The subscription string.
+   */
+  static setSubscription(subscription) {
+    if (!subscription) {
+      return
+    }
+    LeanplumRequest.request(Constants.METHODS.SET_DEVICE_ATTRIBUTES,
+        new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION,
+            subscription), {
+          queued: false,
+          sendNow: true
+        }
+    )
   }
 }
