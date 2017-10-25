@@ -64,7 +64,7 @@ export default class VarCache {
         Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(VarCache.variants || [])
     )
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
-        JSON.stringify(_actionMetadata || {}))
+        JSON.stringify(VarCache.actionMetadata || {}))
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, VarCache.token)
   }
 

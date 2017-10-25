@@ -27,7 +27,6 @@ import VarCache from './VarCache'
 
 let _variablesChangedHandlers = []
 let _startHandlers = []
-let _actionMetadata = {}
 let _batchEnabled = true
 let _batchCooldown = 5
 let _apiPath = 'https://www.leanplum.com/api'
