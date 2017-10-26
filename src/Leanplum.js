@@ -36,9 +36,7 @@ let _browserDetector = new BrowserDetector()
  * from Leanplum.
  */
 export default class Leanplum {
-  // ***************************************************************************
-  // Public Methods
-  // ***************************************************************************
+
   static setApiPath(apiPath) {
     if (!LeanplumRequest.apiPath) {
       return
@@ -124,31 +122,19 @@ export default class Leanplum {
   }
 
   static addStartResponseHandler(handler) {
-    InternalState.startHandlers.push(handler)
-    if (InternalState.hasStarted) {
-      handler(InternalState.startSuccessful)
-    }
+    InternalState.addStartResponseHandler(handler)
   }
 
   static addVariablesChangedHandler(handler) {
-    InternalState.variablesChangedHandlers.push(handler)
-    if (InternalState.hasReceivedDiffs) {
-      handler()
-    }
+    InternalState.addVariablesChangedHandler(handler)
   }
 
   static removeStartResponseHandler(handler) {
-    let idx = InternalState.startHandlers.indexOf(handler)
-    if (idx >= 0) {
-      InternalState.startHandlers.splice(idx, 1)
-    }
+    InternalState.removeStartResponseHandler(handler)
   }
 
   static removeVariablesChangedHandler(handler) {
-    let idx = InternalState.variablesChangedHandlers.indexOf(handler)
-    if (idx >= 0) {
-      InternalState.variablesChangedHandlers.splice(idx, 1)
-    }
+    InternalState.removeVariablesChangedHandler(handler)
   }
 
   static start(userId, userAttributes, callback) {
@@ -172,9 +158,7 @@ export default class Leanplum {
     }
 
     VarCache.onUpdate = function(){
-      for (let i = 0; i < InternalState.variablesChangedHandlers.length; i++) {
-        InternalState.variablesChangedHandlers[i]()
-      }
+      InternalState.triggerVariablesChangedHandlers()
     }
 
     let args = new ArgsBuilder()
@@ -221,9 +205,7 @@ export default class Leanplum {
           InternalState.startSuccessful = false
           VarCache.loadDiffs()
         }
-        for (let i = 0; i < InternalState.startHandlers.length; i++) {
-          InternalState.startHandlers[i](InternalState.startSuccessful)
-        }
+        InternalState.triggerStartHandlers()
       }
     })
   }
@@ -257,9 +239,7 @@ export default class Leanplum {
       LeanplumSocket.connect()
     }
     VarCache.loadDiffs()
-    for (let i = 0; i < InternalState.startHandlers.length; i++) {
-      InternalState.startHandlers[i](InternalState.startSuccessful)
-    }
+    InternalState.triggerStartHandlers()
   }
 
   static stop() {
