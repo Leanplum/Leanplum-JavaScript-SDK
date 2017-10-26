@@ -3,7 +3,7 @@
     "start": "./node_modules/.bin/grunt",
     "lint": "./node_modules/.bin/grunt lint",
     "build": "./node_modules/.bin/grunt build",
-    "test": "./node_modules/.bin/grunt test"
+    "test": "./node_modules/.bin/nyc --report=cobertura ./node_modules/.bin/grunt test"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -33,6 +33,7 @@
     "jsdom": "^9.12.0",
     "lodash": "^4.16.6",
     "mock-local-storage": "^1.0.2",
+    "nyc": "^11.2.1",
     "sinon": "^2.1.0",
     "sleep": "^5.1.1",
     "uglifyjs-webpack-plugin": "^0.4.3",
