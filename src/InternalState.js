@@ -20,4 +20,12 @@ import Constants from './Constants'
 
 export default class InternalState {
   static devMode = false
+
+  static variablesChangedHandlers = []
+  static hasReceivedDiffs = false
+
+  static startHandlers = []
+  static hasStarted = false
+  static startSuccessful = false
+
 }

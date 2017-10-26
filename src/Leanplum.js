@@ -19,17 +19,13 @@ import Constants from './Constants'
 import InternalState from './InternalState'
 import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
-import SocketIoClient from './SocketIoClient'
 import isEqual from 'lodash/isEqual'
 import PushManager from './PushManager'
 import LocalStorageManager from './LocalStorageManager'
 import VarCache from './VarCache'
 import LeanplumRequest from './LeanplumRequest'
+import LeanplumSocket from './LeanplumSocket'
 
-let _variablesChangedHandlers = []
-let _startHandlers = []
-
-let _socketHost = 'dev.leanplum.com'
 let _browserDetector = new BrowserDetector()
 
 /**
@@ -75,7 +71,7 @@ export default class Leanplum {
   }
 
   static setSocketHost(host) {
-    _socketHost = host
+    LeanplumSocket.socketHost = host
   }
 
   static setDeviceId(deviceId) {
@@ -128,30 +124,30 @@ export default class Leanplum {
   }
 
   static addStartResponseHandler(handler) {
-    _startHandlers.push(handler)
-    if (Leanplum._hasStarted) {
-      handler(Leanplum._startSuccessful)
+    InternalState.startHandlers.push(handler)
+    if (InternalState.hasStarted) {
+      handler(InternalState.startSuccessful)
     }
   }
 
   static addVariablesChangedHandler(handler) {
-    _variablesChangedHandlers.push(handler)
-    if (VarCache.hasReceivedDiffs) {
+    InternalState.variablesChangedHandlers.push(handler)
+    if (InternalState.hasReceivedDiffs) {
       handler()
     }
   }
 
   static removeStartResponseHandler(handler) {
-    let idx = _startHandlers.indexOf(handler)
+    let idx = InternalState.startHandlers.indexOf(handler)
     if (idx >= 0) {
-      _startHandlers.splice(idx, 1)
+      InternalState.startHandlers.splice(idx, 1)
     }
   }
 
   static removeVariablesChangedHandler(handler) {
-    let idx = _variablesChangedHandlers.indexOf(handler)
+    let idx = InternalState.variablesChangedHandlers.indexOf(handler)
     if (idx >= 0) {
-      _variablesChangedHandlers.splice(idx, 1)
+      InternalState.variablesChangedHandlers.splice(idx, 1)
     }
   }
 
@@ -176,8 +172,8 @@ export default class Leanplum {
     }
 
     VarCache.onUpdate = function(){
-      for (let i = 0; i < _variablesChangedHandlers.length; i++) {
-        _variablesChangedHandlers[i]()
+      for (let i = 0; i < InternalState.variablesChangedHandlers.length; i++) {
+        InternalState.variablesChangedHandlers[i]()
       }
     }
 
@@ -202,22 +198,18 @@ export default class Leanplum {
       queued: true,
       sendNow: true,
       response: function(response) {
-        Leanplum._hasStarted = true
+        InternalState.hasStarted = true
         let startResponse = LeanplumRequest.getLastResponse(response)
         if (LeanplumRequest.isResponseSuccess(startResponse)) {
-          Leanplum._startSuccessful = true
+          InternalState.startSuccessful = true
 
-          if (Leanplum._devMode) {
+          if (InternalState.devMode) {
             let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
               console.log(`A newer version of Leanplum, ${latestVersion}, is available. Go to` +
                   'leanplum.com to download it.')
             }
-            if (WebSocket) {
-              Leanplum._socketIOConnect()
-            } else {
-              console.log('Your browser doesn\'t support WebSockets.')
-            }
+            LeanplumSocket.connect()
           }
 
           VarCache.applyDiffs(
@@ -226,11 +218,11 @@ export default class Leanplum {
               startResponse[Constants.KEYS.ACTION_METADATA])
           VarCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
-          Leanplum._startSuccessful = false
+          InternalState.startSuccessful = false
           VarCache.loadDiffs()
         }
-        for (let i = 0; i < _startHandlers.length; i++) {
-          _startHandlers[i](Leanplum._startSuccessful)
+        for (let i = 0; i < InternalState.startHandlers.length; i++) {
+          InternalState.startHandlers[i](InternalState.startSuccessful)
         }
       }
     })
@@ -259,18 +251,14 @@ export default class Leanplum {
       Leanplum.addStartResponseHandler(callback)
     }
 
-    Leanplum._hasStarted = true
-    Leanplum._startSuccessful = true
+    InternalState.hasStarted = true
+    InternalState.startSuccessful = true
     if (InternalState.devMode) {
-      if (WebSocket) {
-        Leanplum._socketIOConnect()
-      } else {
-        console.log('Your browser doesn\'t support WebSockets.')
-      }
+      LeanplumSocket.connect()
     }
     VarCache.loadDiffs()
-    for (let i = 0; i < _startHandlers.length; i++) {
-      _startHandlers[i](Leanplum._startSuccessful)
+    for (let i = 0; i < InternalState.startHandlers.length; i++) {
+      InternalState.startHandlers[i](InternalState.startSuccessful)
     }
   }
 
@@ -424,75 +412,5 @@ export default class Leanplum {
    */
   static unregisterFromWebPush() {
     return PushManager.unsubscribeUser()
-  }
-
-  // ***************************************************************************
-  // Private Methods
-  // ***************************************************************************
-  static _socketIOConnect() {
-    let client = new SocketIoClient()
-    let authSent = false
-    client.onopen = function() {
-      if (!authSent) {
-        console.log('Leanplum: Connected to development server.')
-        let args = {}
-        args[Constants.PARAMS.APP_ID] = LeanplumRequest.appId
-        args[Constants.PARAMS.DEVICE_ID] = LeanplumRequest.deviceId
-        client.send('auth', args)
-        authSent = true
-      }
-    }
-    client.onerror = function(event) {
-      console.log('Leanplum: Socket error', event)
-    }
-    /**
-     *
-     * @param event
-     * @param args
-     * @param args[].email
-     */
-    client.onmessage = function(event, args) {
-      if (event === 'updateVars') {
-        LeanplumRequest.request(Constants.METHODS.GET_VARS,
-            new ArgsBuilder()
-                .add(Constants.PARAMS.INCLUDE_DEFAULTS, false), {
-              queued: false,
-              sendNow: true,
-              response: function(response) {
-                let getVarsResponse = LeanplumRequest.getLastResponse(response)
-                let values = getVarsResponse[Constants.KEYS.VARS]
-                let variants = getVarsResponse[Constants.KEYS.VARIANTS]
-                let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
-                if (!isEqual(values, VarCache.diffs)) {
-                  VarCache.applyDiffs(values, variants, actionMetadata)
-                }
-              }
-            }
-        )
-      } else if (event === 'getVariables') {
-        Leanplum._sendVariables()
-        client.send('getContentResponse', {
-          'updated': true
-        })
-      } else if (event === 'getActions') {
-        // Unsupported in JavaScript SDK.
-        client.send('getContentResponse', {
-          'updated': false
-        })
-      } else if (event === 'registerDevice') {
-        // eslint-disable-next-line no-alert
-        alert(`Your device has been registered to ${args[0].email}.`)
-      }
-    }
-    client.onclose = function() {
-      console.log('Leanplum: Disconnected to development server.')
-      authSent = false
-    }
-    client.connect(_socketHost)
-    setInterval(function() {
-      if (!client.connected && !client.connecting) {
-        client.connect(_socketHost)
-      }
-    }, 5000)
   }
 }

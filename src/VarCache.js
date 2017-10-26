@@ -17,6 +17,7 @@
  */
 
 import Constants from './Constants'
+import InternalState from './InternalState'
 import isEqual from 'lodash/isEqual'
 import LocalStorageManager from './LocalStorageManager'
 import LeanplumRequest from './LeanplumRequest'
@@ -25,7 +26,6 @@ export default class VarCache {
   static diffs = undefined
   static variables = undefined
   static variants = []
-  static hasReceivedDiffs = false
   static merged = undefined
   static onUpdate = undefined
   static token = ''
@@ -35,7 +35,7 @@ export default class VarCache {
     VarCache.diffs = diffs
     VarCache.variants = variants
     VarCache.actionMetadata = actionMetadata
-    VarCache.hasReceivedDiffs = true
+    InternalState.hasReceivedDiffs = true
     VarCache.merged = VarCache.mergeHelper(VarCache.variables, diffs)
     VarCache.saveDiffs()
     if (VarCache.onUpdate) {
@@ -77,7 +77,7 @@ export default class VarCache {
     return VarCache.merged !== undefined ? VarCache.merged : VarCache.variables
   }
 
-  static _sendVariables() {
+  static sendVariables() {
     let body = {}
     body[Constants.PARAMS.VARIABLES] = VarCache.variables
     LeanplumRequest.request(Constants.METHODS.SET_VARS,
