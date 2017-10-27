@@ -89,10 +89,10 @@ export default class LeanplumSocket {
       console.log('Leanplum: Disconnected to development server.')
       authSent = false
     }
-    client.connect(_socketHost)
+    client.connect(LeanplumSocket.socketHost)
     setInterval(function() {
       if (!client.connected && !client.connecting) {
-        client.connect(_socketHost)
+        client.connect(LeanplumSocket.socketHost)
       }
     }, 5000)
   }

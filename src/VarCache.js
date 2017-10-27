@@ -24,7 +24,7 @@ import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
   static diffs = undefined
-  static variables = undefined
+  static variables = null
   static variants = []
   static merged = undefined
   static onUpdate = undefined
