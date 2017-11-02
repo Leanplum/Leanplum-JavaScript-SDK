@@ -18,7 +18,7 @@
 
 import Constants from './Constants'
 import InternalState from './InternalState'
-import isEqual from 'lodash/isEqual'
+import ArgsBuilder from './ArgsBuilder'
 import LocalStorageManager from './LocalStorageManager'
 import LeanplumRequest from './LeanplumRequest'
 

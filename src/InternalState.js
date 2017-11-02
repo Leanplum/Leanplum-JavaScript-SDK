@@ -16,8 +16,6 @@
  *
  */
 
-import Constants from './Constants'
-
 export default class InternalState {
   static devMode = false
 

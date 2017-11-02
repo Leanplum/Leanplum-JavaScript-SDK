@@ -19,7 +19,6 @@ import Constants from './Constants'
 import InternalState from './InternalState'
 import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
-import isEqual from 'lodash/isEqual'
 import PushManager from './PushManager'
 import LocalStorageManager from './LocalStorageManager'
 import VarCache from './VarCache'
@@ -178,7 +177,8 @@ export default class Leanplum {
         .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
 
     // Issue request.
-    LeanplumRequest.request(Constants.METHODS.START, args, {
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.START, args, {
       queued: true,
       sendNow: true,
       response: function(response) {
@@ -243,34 +243,39 @@ export default class Leanplum {
   }
 
   static stop() {
-    LeanplumRequest.request(Constants.METHODS.STOP, undefined, {
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.STOP, undefined, {
       sendNow: true,
       queued: true
     })
   }
 
   static pauseSession() {
-    LeanplumRequest.request(Constants.METHODS.PAUSE_SESSION, undefined, {
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.PAUSE_SESSION, undefined, {
       sendNow: true,
       queued: true
     })
   }
 
   static resumeSession() {
-    LeanplumRequest.request(Constants.METHODS.RESUME_SESSION, undefined, {
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.RESUME_SESSION, undefined, {
       sendNow: true,
       queued: true
     })
   }
 
   static pauseState() {
-    LeanplumRequest.request(Constants.METHODS.PAUSE_STATE, undefined, {
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.PAUSE_STATE, undefined, {
       queued: true
     })
   }
 
   static resumeState() {
-    LeanplumRequest.request(Constants.METHODS.RESUME_STATE, undefined, {
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.RESUME_STATE, undefined, {
       queued: true
     })
   }
@@ -290,7 +295,8 @@ export default class Leanplum {
         return
       }
     }
-    LeanplumRequest.request(Constants.METHODS.SET_USER_ATTRIBUTES,
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.SET_USER_ATTRIBUTES,
         new ArgsBuilder()
             .add(Constants.PARAMS.USER_ATTRIBUTES,
                 userAttributes ? JSON.stringify(userAttributes) : undefined)
@@ -320,7 +326,8 @@ export default class Leanplum {
       params = info
       info = undefined
     }
-    LeanplumRequest.request(Constants.METHODS.TRACK,
+    // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.TRACK,
         new ArgsBuilder()
             .add(Constants.PARAMS.EVENT, event)
             .add(Constants.PARAMS.VALUE, value || 0.0)
@@ -341,11 +348,11 @@ export default class Leanplum {
 
     LeanplumRequest.request(Constants.METHODS.ADVANCE,
         new ArgsBuilder()
-            .add(Constants.PARAMS.STATE, state)
-            .add(Constants.PARAMS.INFO, info)
-            .add(Constants.PARAMS.PARAMS, JSON.stringify(params)), {
-          queued: true
-        })
+          .add(Constants.PARAMS.STATE, state)
+          .add(Constants.PARAMS.INFO, info)
+          .add(Constants.PARAMS.PARAMS, JSON.stringify(params)), {
+        queued: true
+    })
   }
 
   /**
