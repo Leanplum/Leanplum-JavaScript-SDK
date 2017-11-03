@@ -1,10 +1,16 @@
 ![Leanplum - ](Leanplum.svg)
 
 <p align="center">
-<a href="https://nodei.co/npm/leanplum-sdk/"><img src="https://nodei.co/npm/leanplum-sdk.png?downloads=true&downloadRank=true&stars=true" alt="CocoaPods compatible" /></a>
+<a href="https://nodei.co/npm/leanplum-sdk/"><img src="https://nodei.co/npm/leanplum-sdk.png?downloads=true&downloadRank=true&stars=true"/></a>
 </p>
 <p align="center">
-<img src='https://jenkins.leanplum.com/buildStatus/icon?job=javascript-sdk' alt="Build status">
+    <img src='https://img.shields.io/badge/branch-master-blue.svg'>
+    <img src='https://jenkins.leanplum.com/buildStatus/icon?job=javascript-sdk-master' alt="Build status">
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src='https://img.shields.io/badge/branch-develop-red.svg'>
+    <img src='https://jenkins.leanplum.com/buildStatus/icon?job=javascript-sdk-develop' alt="Build status">
+</p>
+<p align="center">
 <img src="https://badge.fury.io/js/leanplum-sdk.svg"/>
 <a href="https://raw.githubusercontent.com/Leanplum/Leanplum-iOS-SDK/master/LICENSE"><img src="https://img.shields.io/badge/license-apache%202.0-blue.svg?style=flat" alt="License: Apache 2.0" /></a> 
 </p>
