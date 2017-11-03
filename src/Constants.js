@@ -15,7 +15,7 @@
  *  limitations under the License
  *
  */
-module.exports = {
+export default {
   METHODS: {
     START: 'start',
     STOP: 'stop',
@@ -32,7 +32,7 @@ module.exports = {
     SET_USER_ATTRIBUTES: 'setUserAttributes',
     SET_DEVICE_ATTRIBUTES: 'setDeviceAttributes',
     UPLOAD_FILE: 'uploadFile',
-    REGISTER_DEVICE: 'registerDevice',
+    REGISTER_DEVICE: 'registerDevice'
   },
 
   SDK_VERSION: '1.2.4',
@@ -78,7 +78,7 @@ module.exports = {
     VARIABLES: 'vars',
     PARAMS: 'params',
     INCLUDE_DEFAULTS: 'includeDefaults',
-    WEB_PUSH_SUBSCRIPTION: 'webPushSubscription',
+    WEB_PUSH_SUBSCRIPTION: 'webPushSubscription'
   },
 
   KEYS: {
@@ -87,7 +87,7 @@ module.exports = {
     VARS: 'vars',
     VARIANTS: 'variants',
     ACTION_METADATA: 'actionMetadata',
-    TOKEN: 'token',
+    TOKEN: 'token'
   },
 
   DEFAULT_KEYS: {
@@ -99,10 +99,10 @@ module.exports = {
     TOKEN: '__leanplum_token',
     DEVICE_ID: '__leanplum_device_id',
     USER_ID: '__leanplum_user_id',
-    PUSH_SUBSCRIPTION: '__leanplum_push_subscription',
+    PUSH_SUBSCRIPTION: '__leanplum_push_subscription'
   },
 
   VALUES: {
-    DETECT: '(detect)',
-  },
-};
+    DETECT: '(detect)'
+  }
+}

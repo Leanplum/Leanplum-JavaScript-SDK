@@ -15,119 +15,200 @@
  *  limitations under the License
  *
  */
-let _batchEnabled = true;
-let _batchCooldown = 5;
-let _apiPath = 'https://www.leanplum.com/api';
+import Constants from './Constants'
+import ArgsBuilder from './ArgsBuilder'
+import InternalState from './InternalState'
+import Network from './Network'
+import LocalStorageManager from './LocalStorageManager'
 
-class LeanplumRequest {
-  static setBatchEnabled(batchEnabled) {
-    _batchEnabled = batchEnabled;
-  }
+let lastRequestTime = undefined
+let cooldownTimeout = null
 
-  static setBatchCooldown(batchCooldown) {
-    _batchCooldown = batchCooldown;
-  }
+export default class LeanplumRequest {
 
-  static setApiPath(apiPath) {
-    _apiPath = apiPath;
-  }
+  static apiPath = 'https://www.leanplum.com/api'
+  static batchEnabled = true
+  static batchCooldown = 5
 
-  static _request(action, params, options) {
-    options = options || {};
-    params = params || new ArgsBuilder();
+  /**
+   *
+   * @param action
+   * @param params
+   * @param options
+   * @param options.success
+   * @param options.error
+   * @param options.response
+   * @param options.queued
+   * @param options.sendNow
+   * @private
+   */
+  static request(action, params, options) {
+    options = options || {}
+    params = params || new ArgsBuilder()
 
     // Get or create device ID and user ID.
-    if (!Leanplum._deviceId) {
-      Leanplum._deviceId =
-          Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID);
+    if (!LeanplumRequest.deviceId) {
+      LeanplumRequest.deviceId =
+          LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID)
     }
-    if (!Leanplum._deviceId) {
-      let id = '';
+    if (!LeanplumRequest.deviceId) {
+      let id = ''
       let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
-          '0123456789';
+          '0123456789'
       for (let i = 0; i < 16; i++) {
-        id += possible.charAt(Math.floor(Math.random() * possible.length));
+        id += possible.charAt(Math.floor(Math.random() * possible.length))
       }
-      Leanplum._deviceId = id;
-      Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID, id);
+      LeanplumRequest.deviceId = id
+      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID, id)
     }
-    if (!Leanplum._userId) {
-      Leanplum._userId = Leanplum._getFromLocalStorage(Constants.DEFAULT_KEYS.USER_ID);
-      if (!Leanplum._userId) {
-        Leanplum._userId = Leanplum._deviceId;
+    if (!LeanplumRequest.userId) {
+      LeanplumRequest.userId = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.USER_ID)
+      if (!LeanplumRequest.userId) {
+        LeanplumRequest.userId = LeanplumRequest.deviceId
       }
     }
-    Leanplum._saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._userId);
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, LeanplumRequest.userId)
 
     let argsBuilder = params
-        .attachApiKeys(Leanplum._appId, Leanplum._clientKey)
+        .attachApiKeys(LeanplumRequest.appId, LeanplumRequest.clientKey)
         .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
-        .add(Constants.PARAMS.DEVICE_ID, Leanplum._deviceId)
-        .add(Constants.PARAMS.USER_ID, Leanplum._userId)
+        .add(Constants.PARAMS.DEVICE_ID, LeanplumRequest.deviceId)
+        .add(Constants.PARAMS.USER_ID, LeanplumRequest.userId)
         .add(Constants.PARAMS.ACTION, action)
-        .add(Constants.PARAMS.VERSION_NAME, Leanplum._versionName)
-        .add(Constants.PARAMS.DEV_MODE, Leanplum._devMode)
-        .add(Constants.PARAMS.TIME, '' + (new Date().getTime() / 1000));
-    let success = options.success || options.response;
-    let error = options.error || options.response;
+        .add(Constants.PARAMS.VERSION_NAME, LeanplumRequest.versionName)
+        .add(Constants.PARAMS.DEV_MODE, InternalState.devMode)
+        .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString())
+    let success = options.success || options.response
+    let error = options.error || options.response
 
-    if (!Leanplum._appId || !Leanplum._clientKey) {
+    if (!LeanplumRequest.appId || !LeanplumRequest.clientKey) {
       let err = 'Leanplum App ID and client key are not set. Make sure you ' +
           'are calling setAppIdForDevelopmentMode or setAppIdForProductionMode ' +
-          'before issuing API calls.';
-      console.error(err);
-      if (error) error(err);
-      return;
+          'before issuing API calls.'
+      console.error(err)
+      if (error) error(err)
+      return
     }
 
     if (params.body()) {
-      Request.ajax('POST', _apiPath + '?' + argsBuilder.build(),
-          params.body(), success, error, options.queued);
-      return;
+      Network.ajax('POST', `${LeanplumRequest.apiPath}?${argsBuilder.build()}`,
+          params.body(), success, error, options.queued)
+      return
     }
 
-    let sendNow = (Leanplum._devMode || options.sendNow ||
-    !_batchEnabled);
+    let sendNow = InternalState.devMode || options.sendNow || !LeanplumRequest.batchEnabled
 
-    let sendUnsentRequests = function () {
-      let requestsToSend = Leanplum._popUnsentRequests();
+    let sendUnsentRequests = function() {
+      let requestsToSend = LeanplumRequest.popUnsentRequests()
       if (requestsToSend.length > 0) {
         let requestData = JSON.stringify({
-          'data': requestsToSend,
-        });
+          'data': requestsToSend
+        })
         let multiRequestArgs = new ArgsBuilder()
-            .attachApiKeys(Leanplum._appId, Leanplum._clientKey)
+            .attachApiKeys(LeanplumRequest.appId, LeanplumRequest.clientKey)
             .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
             .add(Constants.PARAMS.ACTION, Constants.METHODS.MULTI)
-            .add(Constants.PARAMS.TIME, '' + (new Date().getTime() / 1000))
-            .build();
-        Request.ajax('POST', _apiPath + '?' + multiRequestArgs, requestData,
-            success, error, options.queued);
+            .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString().toString())
+            .build()
+        Network.ajax('POST', `${LeanplumRequest.apiPath}?${multiRequestArgs}`, requestData, success, error,
+            options.queued)
       }
-    };
+    }
 
     // Deal with cooldown.
-    if (!sendNow && _batchCooldown) {
-      let now = new Date().getTime() / 1000;
-      if (!Leanplum._lastRequestTime ||
-          now - Leanplum._lastRequestTime >= _batchCooldown) {
-        sendNow = true;
-        Leanplum._lastRequestTime = now;
-      } else {
-        if (!Leanplum._cooldownTimeout) {
-          Leanplum._cooldownTimeout = setTimeout(function () {
-            Leanplum._cooldownTimeout = null;
-            Leanplum._lastRequestTime = new Date().getTime() / 1000;
-            sendUnsentRequests();
-          }, (_batchCooldown -
-              (now - Leanplum._lastRequestTime)) * 1000);
-        }
+    if (!sendNow && LeanplumRequest.batchCooldown) {
+      let now = new Date().getTime() / 1000
+      if (!lastRequestTime ||
+          now - lastRequestTime >= LeanplumRequest.batchCooldown) {
+        sendNow = true
+        lastRequestTime = now
+      } else if (!cooldownTimeout) {
+        cooldownTimeout = setTimeout(function() {
+          cooldownTimeout = null
+          lastRequestTime = new Date().getTime() / 1000
+          sendUnsentRequests()
+        }, (LeanplumRequest.batchCooldown - (now - lastRequestTime)) * 1000)
       }
     }
 
-    Leanplum._saveRequestForLater(argsBuilder.buildDict());
+    LeanplumRequest.saveRequestForLater(argsBuilder.buildDict())
     if (sendNow) {
-      sendUnsentRequests();
+      sendUnsentRequests()
     }
-  };
+  }
+
+  /**
+   * Sets the network timeout.
+   * @param {number} seconds The timeout in seconds.
+   */
+  static setNetworkTimeout(seconds) {
+    Network.setNetworkTimeout(seconds)
+  }
+
+  static saveRequestForLater(args) {
+    let count = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0
+    let itemKey = Constants.DEFAULT_KEYS.ITEM + count
+    LocalStorageManager.saveToLocalStorage(itemKey, JSON.stringify(args))
+    count++
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.COUNT, count)
+  }
+
+  static popUnsentRequests() {
+    let requestData = []
+    let count = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.COUNT) || 0
+    LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.COUNT)
+    for (let i = 0; i < count; i++) {
+      let itemKey = Constants.DEFAULT_KEYS.ITEM + i
+      try {
+        let requestArgs = JSON.parse(LocalStorageManager.getFromLocalStorage(itemKey))
+        requestData.push(requestArgs)
+      } catch (ignored) { // eslint-disable-next-line no-empty
+      }
+      LocalStorageManager.removeFromLocalStorage(itemKey)
+    }
+    return requestData
+  }
+
+  // //////////////// Response parsing //////////////////
+
+  static numResponses(response) {
+    if (!response || !response.response) {
+      return 0
+    }
+    return response.response.length
+  }
+
+  static getResponseAt(response, index) {
+    if (!response || !response.response) {
+      return null
+    }
+    return response.response[index]
+  }
+
+  static getLastResponse(response) {
+    let count = LeanplumRequest.numResponses(response)
+    if (count > 0) {
+      return LeanplumRequest.getResponseAt(response, count - 1)
+    } else {
+      return null
+    }
+  }
+
+  static isResponseSuccess(response) {
+    if (!response) {
+      return false
+    }
+    return !!response.success
+  }
+
+  static getResponseError(response) {
+    if (!response) {
+      return null
+    }
+    let error = response.error
+    if (!error) {
+      return null
+    }
+    return error.message
+  }
 }
