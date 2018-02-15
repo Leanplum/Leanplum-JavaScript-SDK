@@ -136,6 +136,29 @@ export default class Leanplum {
     InternalState.removeVariablesChangedHandler(handler)
   }
 
+  static forceContentUpdate(callback) {
+    LeanplumRequest.request(Constants.METHODS.GET_VARS,
+      new ArgsBuilder()
+      .add(Constants.PARAMS.INCLUDE_DEFAULTS, false), {
+        queued: false,
+        sendNow: true,
+        response: function (response) {
+          let getVarsResponse = LeanplumRequest.getLastResponse(response);
+          let isSuccess = LeanplumRequest.isResponseSuccess(getVarsResponse);
+          if (isSuccess) {
+            VarCache.applyDiffs(
+              getVarsResponse[Constants.KEYS.VARS],
+              getVarsResponse[Constants.KEYS.VARIANTS],
+              getVarsResponse[Constants.KEYS.ACTION_METADATA])
+          }
+          if (callback) {
+            callback(isSuccess);
+          }
+        },
+      }
+      );
+  }
+
   static start(userId, userAttributes, callback) {
     // Overloads.
     if (typeof userId === 'function') {
