@@ -23,6 +23,7 @@ const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74'
 
 const startResponse = require('./responses/start.json')
 const successResponse = require('./responses/success.json')
+const forceContentUpdateResponse = require('./responses/forceContentUpdate.json')
 const LEANPLUM_PATH = '../../dist/leanplum.js'
 
 global.WebSocket = undefined
@@ -404,6 +405,175 @@ Object.keys(testModes).forEach((mode) => {
         } catch (e) {
           assert(e)
         }
+      })
+    })
+
+    describe('Test forceContentUpdate.', () => {
+      before(() => {
+      })
+
+      after(() => {
+        xhr.restore()
+      })
+
+      beforeEach(() => {
+        Leanplum = require(LEANPLUM_PATH)
+        setAppId(testModes[mode])
+      })
+
+      afterEach(() => {
+        requests = []
+        assert.equal(requests.length, 0)
+        delete require.cache[require.resolve(LEANPLUM_PATH)]
+      })
+
+      it('forceContentUpdate', (done) => {
+        interceptRequest((request) => {
+          assert.isNotNull(request)
+          assert.equal(getAction(request), 'getVars')
+          request.respond(200, {
+            'Content-Type': 'application/json'
+          }, JSON.stringify(successResponse))
+          done()
+        })
+        Leanplum.forceContentUpdate()
+      })
+    })
+
+    describe('Test variable changed callback after forceContentUpdate.', () => {
+      before(() => {
+      })
+
+      after(() => {
+        xhr.restore()
+      })
+
+      beforeEach(() => {
+        Leanplum = require(LEANPLUM_PATH)
+        setAppId(testModes[mode])
+      })
+
+      afterEach(() => {
+        requests = []
+        assert.equal(requests.length, 0)
+        delete require.cache[require.resolve(LEANPLUM_PATH)]
+      })
+
+      it('test setVariable forceContentUpdate', (done) => {
+        interceptRequest((request) => {
+          if (getAction(request) == 'getVars'){
+            request.respond(200, {
+              'Content-Type': 'application/json'
+            }, JSON.stringify(forceContentUpdateResponse))
+          } else {
+              request.respond(200, {
+                'Content-Type': 'application/json'
+              }, JSON.stringify(startResponse))
+            }
+          })
+        Leanplum.setVariables(userAttributes)
+        Leanplum.start()
+        var isVariablesChangedFromStart = true
+        let vars = forceContentUpdateResponse.response[0].vars
+        Leanplum.addVariablesChangedHandler(() => {
+          if(isVariablesChangedFromStart) {
+            isVariablesChangedFromStart = false;
+            assert.equal(Leanplum.getVariables().gender, userAttributes.gender)
+            assert.equal(Leanplum.getVariables().age, userAttributes.age)
+          } else {
+            assert.equal(Leanplum.getVariables().gender, vars.gender)
+            assert.equal(Leanplum.getVariables().age, vars.age)
+            return done()
+          }
+
+          Leanplum.forceContentUpdate();
+        })
+      })
+    })
+
+    describe('Test callback in forceContentUpdate.', () => {
+      before(() => {
+      })
+
+      after(() => {
+        xhr.restore()
+      })
+
+      beforeEach(() => {
+        Leanplum = require(LEANPLUM_PATH)
+        setAppId(testModes[mode])
+      })
+
+      afterEach(() => {
+        requests = []
+        assert.equal(requests.length, 0)
+        delete require.cache[require.resolve(LEANPLUM_PATH)]
+      })
+
+      it('test callback success forceContentUpdate', (done) => {
+        interceptRequest((request) => {
+          if (getAction(request) == 'getVars'){
+            request.respond(200, {
+              'Content-Type': 'application/json'
+            }, JSON.stringify(forceContentUpdateResponse))
+          } else {
+              request.respond(200, {
+                'Content-Type': 'application/json'
+              }, JSON.stringify(startResponse))
+            }
+          })
+        Leanplum.setVariables(userAttributes)
+        Leanplum.start()
+        let vars = forceContentUpdateResponse.response[0].vars
+
+        Leanplum.forceContentUpdate(function(success) {
+            assert.equal(success, true)
+            assert.equal(Leanplum.getVariables().gender, vars.gender)
+            assert.equal(Leanplum.getVariables().age, vars.age)
+            return done()
+        });
+      })
+
+      it('test callback error response forceContentUpdate', (done) => {
+        interceptRequest((request) => {
+          if (getAction(request) == 'getVars'){
+            request.respond(500, {
+              'Content-Type': 'application/json'
+            })
+          } else {
+              request.respond(200, {
+                'Content-Type': 'application/json'
+              }, JSON.stringify(startResponse))
+            }
+          })
+
+        Leanplum.start()
+
+        Leanplum.forceContentUpdate(function(success) {
+            assert.equal(success, false)
+            return done()
+        });
+      })
+
+      it('test callback response success:false forceContentUpdate', (done) => {
+        interceptRequest((request) => {
+          if (getAction(request) == 'getVars'){
+            request.respond(200, {
+              'Content-Type': 'application/json'
+            }, JSON.stringify({"response": [{"success": false}]}))
+          } else {
+              request.respond(200, {
+                'Content-Type': 'application/json'
+              }, JSON.stringify(startResponse))
+            }
+          })
+
+        Leanplum.start()
+
+        Leanplum.forceContentUpdate(function(success) {
+            assert.equal(success, false)
+            return done()
+        });
       })
     })
   })
