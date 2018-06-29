@@ -55,6 +55,14 @@ export default class Leanplum {
     LeanplumRequest.setNetworkTimeout(seconds)
   }
 
+  static setVariantDebugInfoEnabled(variantDebugInfoEnabled) {
+    InternalState.setVariantDebugInfoEnabled(variantDebugInfoEnabled)
+  };
+
+  static getVariantDebugInfo() {
+    return VarCache.getVariantDebugInfo()
+  };
+
   static setAppIdForDevelopmentMode(appId, accessKey) {
     LeanplumRequest.appId = appId
     LeanplumRequest.clientKey = accessKey
@@ -139,7 +147,8 @@ export default class Leanplum {
   static forceContentUpdate(callback) {
     LeanplumRequest.request(Constants.METHODS.GET_VARS,
       new ArgsBuilder()
-      .add(Constants.PARAMS.INCLUDE_DEFAULTS, false), {
+      .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
+      .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, InternalState.variantDebugInfoEnabled), {
         queued: false,
         sendNow: true,
         response: function (response) {
@@ -198,6 +207,7 @@ export default class Leanplum {
             `${_browserDetector.browser} ${_browserDetector.version}`)
         .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
         .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
+        .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, InternalState.variantDebugInfoEnabled);
 
     // Issue request.
     // noinspection Annotator
@@ -222,7 +232,8 @@ export default class Leanplum {
           VarCache.applyDiffs(
               startResponse[Constants.KEYS.VARS],
               startResponse[Constants.KEYS.VARIANTS],
-              startResponse[Constants.KEYS.ACTION_METADATA])
+              startResponse[Constants.KEYS.ACTION_METADATA],
+              startResponse[Constants.KEYS.VARIANT_DEBUG_INFO]);
           VarCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
           InternalState.startSuccessful = false
