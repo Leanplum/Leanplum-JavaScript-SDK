@@ -32,11 +32,10 @@ export default class VarCache {
   static token = ''
   static actionMetadata = {}
 
-  static applyDiffs(diffs, variants, actionMetadata, variantDebugInfo) {
+  static applyDiffs(diffs, variants, actionMetadata) {
     VarCache.diffs = diffs
     VarCache.variants = variants
     VarCache.actionMetadata = actionMetadata
-    VarCache.variantDebugInfo = variantDebugInfo
     InternalState.hasReceivedDiffs = true
     VarCache.merged = VarCache.mergeHelper(VarCache.variables, diffs)
     VarCache.saveDiffs()

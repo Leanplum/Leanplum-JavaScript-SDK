@@ -160,6 +160,7 @@ export default class Leanplum {
               getVarsResponse[Constants.KEYS.VARIANTS],
               getVarsResponse[Constants.KEYS.ACTION_METADATA])
           }
+          VarCache.variantDebugInfo = startResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
           if (callback) {
             callback(isSuccess);
           }
@@ -232,8 +233,8 @@ export default class Leanplum {
           VarCache.applyDiffs(
               startResponse[Constants.KEYS.VARS],
               startResponse[Constants.KEYS.VARIANTS],
-              startResponse[Constants.KEYS.ACTION_METADATA],
-              startResponse[Constants.KEYS.VARIANT_DEBUG_INFO]);
+              startResponse[Constants.KEYS.ACTION_METADATA]);
+          VarCache.variantDebugInfo = startResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
           VarCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
           InternalState.startSuccessful = false
