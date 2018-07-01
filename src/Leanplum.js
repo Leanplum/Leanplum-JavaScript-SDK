@@ -159,8 +159,9 @@ export default class Leanplum {
               getVarsResponse[Constants.KEYS.VARS],
               getVarsResponse[Constants.KEYS.VARIANTS],
               getVarsResponse[Constants.KEYS.ACTION_METADATA])
+            VarCache.variantDebugInfo = getVarsResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
           }
-          VarCache.variantDebugInfo = startResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
+          
           if (callback) {
             callback(isSuccess);
           }
