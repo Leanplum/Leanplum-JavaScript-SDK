@@ -26,6 +26,7 @@ export default class VarCache {
   static diffs = undefined
   static variables = null
   static variants = []
+  static variantDebugInfo = {}
   static merged = undefined
   static onUpdate = undefined
   static token = ''
@@ -53,6 +54,7 @@ export default class VarCache {
           JSON.parse(LocalStorageManager.getFromLocalStorage(
               Constants.DEFAULT_KEYS.ACTION_METADATA) || null))
       VarCache.token = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.TOKEN)
+      VarCache.variantDebugInfo = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO)
     } catch (e) {
       console.log(`Leanplum: Invalid diffs: ${e}`)
     }
@@ -66,6 +68,8 @@ export default class VarCache {
     )
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
         JSON.stringify(VarCache.actionMetadata || {}))
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO,
+        JSON.stringify(VarCache.variantDebugInfo || {}))
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, VarCache.token)
   }
 
@@ -75,6 +79,10 @@ export default class VarCache {
 
   static getVariables() {
     return VarCache.merged !== undefined ? VarCache.merged : VarCache.variables
+  }
+
+  static getVariantDebugInfo() {
+    return VarCache.variantDebugInfo
   }
 
   static sendVariables() {

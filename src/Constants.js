@@ -78,6 +78,7 @@ export default {
     VARIABLES: 'vars',
     PARAMS: 'params',
     INCLUDE_DEFAULTS: 'includeDefaults',
+    INCLUDE_VARIANT_DEBUG_INFO: 'includeVariantDebugInfo',
     WEB_PUSH_SUBSCRIPTION: 'webPushSubscription'
   },
 
@@ -86,6 +87,7 @@ export default {
     LATEST_VERSION: 'latestVersion',
     VARS: 'vars',
     VARIANTS: 'variants',
+    VARIANT_DEBUG_INFO: 'variantDebugInfo',
     ACTION_METADATA: 'actionMetadata',
     TOKEN: 'token'
   },
@@ -95,6 +97,7 @@ export default {
     ITEM: '__leanplum_unsynced_',
     VARIABLES: '__leanplum_variables',
     VARIANTS: '__leanplum_variants',
+    VARIANT_DEBUG_INFO: '__leanplum_variant_debug_info',
     ACTION_METADATA: '__leanplum_action_metadata',
     TOKEN: '__leanplum_token',
     DEVICE_ID: '__leanplum_device_id',
