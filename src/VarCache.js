@@ -183,4 +183,13 @@ export default class VarCache {
     })
     return merged
   }
+
+  static clearUserContent() {
+    VarCache.diffs = undefined
+    VarCache.variables = null
+    VarCache.variants = []
+    VarCache.variantDebugInfo = {}
+    VarCache.merged = undefined
+  }
+
 }

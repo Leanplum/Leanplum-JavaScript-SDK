@@ -436,4 +436,13 @@ export default class Leanplum {
   static unregisterFromWebPush() {
     return PushManager.unsubscribeUser()
   }
+
+  /**
+   * Clears cached values for messages, variables and test assignments.
+   * Use sparingly as if the app is updated, you'll have to deal with potentially
+   * inconsistent state or user experience.
+   */
+  static clearUserContent() {
+    VarCache.clearUserContent()
+  }
 }
