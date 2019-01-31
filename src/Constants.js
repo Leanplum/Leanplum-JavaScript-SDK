@@ -35,7 +35,7 @@ export default {
     REGISTER_DEVICE: 'registerDevice'
   },
 
-  SDK_VERSION: '1.3.0',
+  SDK_VERSION: '1.4.0',
 
   CLIENT: 'js',
 
@@ -89,7 +89,8 @@ export default {
     VARIANTS: 'variants',
     VARIANT_DEBUG_INFO: 'variantDebugInfo',
     ACTION_METADATA: 'actionMetadata',
-    TOKEN: 'token'
+    TOKEN: 'token',
+    MESSAGES: 'messages'
   },
 
   DEFAULT_KEYS: {

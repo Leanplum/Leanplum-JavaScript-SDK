@@ -24,6 +24,7 @@ import LocalStorageManager from './LocalStorageManager'
 import VarCache from './VarCache'
 import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
+import events from './Events'
 
 let _browserDetector = new BrowserDetector()
 
@@ -161,7 +162,6 @@ export default class Leanplum {
               getVarsResponse[Constants.KEYS.ACTION_METADATA])
             VarCache.variantDebugInfo = getVarsResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
           }
-          
           if (callback) {
             callback(isSuccess);
           }
@@ -221,7 +221,6 @@ export default class Leanplum {
         let startResponse = LeanplumRequest.getLastResponse(response)
         if (LeanplumRequest.isResponseSuccess(startResponse)) {
           InternalState.startSuccessful = true
-
           if (InternalState.devMode) {
             let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
@@ -237,6 +236,10 @@ export default class Leanplum {
               startResponse[Constants.KEYS.ACTION_METADATA]);
           VarCache.variantDebugInfo = startResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
           VarCache.token = startResponse[Constants.KEYS.TOKEN]
+
+          events.publish('start/messages', {
+            messages: startResponse[Constants.KEYS.MESSAGES]
+          })
         } else {
           InternalState.startSuccessful = false
           VarCache.loadDiffs()
@@ -444,5 +447,14 @@ export default class Leanplum {
    */
   static clearUserContent() {
     VarCache.clearUserContent()
+  }
+
+  /**
+   * Get pub/sub events manager.
+   *
+   * @Return { publish: (topic, args) => {}, subscribe: (topic, callback) => {} }
+   */
+  static getEvents () {
+    return events
   }
 }
