@@ -22,6 +22,7 @@ import SocketIoClient from './SocketIoClient'
 import VarCache from './VarCache'
 import LeanplumRequest from './LeanplumRequest'
 import isEqual from 'lodash/isEqual'
+import events from './Events'
 
 export default class LeanplumSocket {
 
@@ -85,6 +86,10 @@ export default class LeanplumSocket {
       } else if (event === 'registerDevice') {
         // eslint-disable-next-line no-alert
         alert(`Your device has been registered to ${args[0].email}.`)
+      } else if (event === 'trigger') {
+        events.publish('websocket/trigger', {
+          args
+        })
       }
     }
     client.onclose = function() {
