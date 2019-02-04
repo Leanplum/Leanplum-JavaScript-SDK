@@ -132,6 +132,19 @@ Object.keys(testModes).forEach((mode) => {
         })
         Leanplum.stop()
       })
+
+      it('should return events data on start', (done) => {
+        interceptRequest((request) => {
+          request.respond(200, {
+            'Content-Type': 'application/json'
+          }, JSON.stringify(startResponse))
+        })
+        Leanplum.getEvents().subscribe('start/messages', data => {
+          assert.deepEqual(data.messages, {})
+          done()
+        })
+        Leanplum.start(userId, userAttributes)
+      })
     })
 
     describe('Test action methods.', () => {
