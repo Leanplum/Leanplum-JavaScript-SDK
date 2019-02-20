@@ -137,6 +137,53 @@ export default class LeanplumRequest {
     }
   }
 
+  static generateRequestUrl(action, queryParams) {
+    queryParams = queryParams || new ArgsBuilder()
+
+    // Get or create device ID and user ID.
+    if (!LeanplumRequest.deviceId) {
+      LeanplumRequest.deviceId =
+          LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID)
+    }
+    if (!LeanplumRequest.deviceId) {
+      let id = ''
+      let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
+          '0123456789'
+      for (let i = 0; i < 16; i++) {
+        id += possible.charAt(Math.floor(Math.random() * possible.length))
+      }
+      LeanplumRequest.deviceId = id
+      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID, id)
+    }
+    if (!LeanplumRequest.userId) {
+      LeanplumRequest.userId = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.USER_ID)
+      if (!LeanplumRequest.userId) {
+        LeanplumRequest.userId = LeanplumRequest.deviceId
+      }
+    }
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, LeanplumRequest.userId)
+
+    let argsBuilder = queryParams
+        .attachApiKeys(LeanplumRequest.appId, LeanplumRequest.clientKey)
+        .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
+        .add(Constants.PARAMS.DEVICE_ID, LeanplumRequest.deviceId)
+        .add(Constants.PARAMS.USER_ID, LeanplumRequest.userId)
+        .add(Constants.PARAMS.ACTION, action)
+        .add(Constants.PARAMS.VERSION_NAME, LeanplumRequest.versionName)
+        .add(Constants.PARAMS.DEV_MODE, InternalState.devMode)
+        .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString())
+
+    if (!LeanplumRequest.appId || !LeanplumRequest.clientKey) {
+      let err = 'Leanplum App ID and client key are not set. Make sure you ' +
+          'are calling setAppIdForDevelopmentMode or setAppIdForProductionMode ' +
+          'before issuing API calls.'
+      console.error(err)
+      throw new Error(err)
+    }
+
+    return `${LeanplumRequest.apiPath}?${argsBuilder.build()}`
+  }
+
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.

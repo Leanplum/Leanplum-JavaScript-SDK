@@ -292,6 +292,12 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.setUserAttributes('u1', userAttributes)
       })
 
+      it('getFileUrl', () => {
+        const url = Leanplum.getFileUrl('testImage.png')
+        assert.equal(url.includes('action=downloadFile'), true)
+        assert.equal(url.includes('filename=testImage.png'), true)
+      })
+
       it('setRequestBatching', (done) => {
         Leanplum.setRequestBatching(true, 5)
         let count = 0

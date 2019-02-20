@@ -348,6 +348,15 @@ export default class Leanplum {
     }
   }
 
+  static getFileUrl(fileName) {
+    // noinspection Annotator
+    return LeanplumRequest
+        .generateRequestUrl(
+          Constants.METHODS.DOWNLOAD_FILE,
+          new ArgsBuilder().add(Constants.PARAMS.FILENAME, fileName)
+        )
+  }
+
   static track(event, value, info, params) {
     // Overloads.
     // object && !null && !undefined -> params
