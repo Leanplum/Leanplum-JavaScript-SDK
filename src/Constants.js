@@ -79,7 +79,8 @@ export default {
     PARAMS: 'params',
     INCLUDE_DEFAULTS: 'includeDefaults',
     INCLUDE_VARIANT_DEBUG_INFO: 'includeVariantDebugInfo',
-    WEB_PUSH_SUBSCRIPTION: 'webPushSubscription'
+    WEB_PUSH_SUBSCRIPTION: 'webPushSubscription',
+    MESSAGE_ID: 'messageId'
   },
 
   KEYS: {

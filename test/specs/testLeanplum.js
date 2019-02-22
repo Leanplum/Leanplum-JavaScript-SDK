@@ -224,6 +224,20 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.setUserAttributes(userId, userAttributes)
       })
 
+      it('trackMessage', (done) => {
+        interceptRequest((request) => {
+          assert.isNotNull(request)
+          let json = JSON.parse(request.requestBody).data[0]
+          assert.equal(getAction(request), 'track')
+          assert.equal(json.messageId, '123')
+          request.respond(200, {
+            'Content-Type': 'application/json'
+          }, JSON.stringify(successResponse))
+          done()
+        })
+        Leanplum.trackMessage('Accept', '123')
+      })
+
       it('track', (done) => {
         interceptRequest((request) => {
           assert.isNotNull(request)

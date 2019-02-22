@@ -357,6 +357,16 @@ export default class Leanplum {
         )
   }
 
+  static trackMessage(event, messageId) {
+      // noinspection Annotator
+      LeanplumRequest.request(Constants.METHODS.TRACK,
+          new ArgsBuilder()
+              .add(Constants.PARAMS.EVENT, event)
+              .add(Constants.PARAMS.MESSAGE_ID, messageId), {
+              queued: true
+          })
+  }
+
   static track(event, value, info, params) {
     // Overloads.
     // object && !null && !undefined -> params
