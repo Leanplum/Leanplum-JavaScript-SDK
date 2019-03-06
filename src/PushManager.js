@@ -90,17 +90,44 @@ export default class PushManager {
         .then(function(registration) {
           serviceWorkerRegistration = registration
 
-          // Set the initial subscription value
-          serviceWorkerRegistration.pushManager.getSubscription()
+          let serviceWorker
+          if (registration.installing) {
+            serviceWorker = registration.installing
+          } else if (registration.waiting) {
+            serviceWorker = registration.waiting
+          } else if (registration.active) {
+            serviceWorker = registration.active
+          }
+
+          if (!serviceWorker) {
+            return
+          }
+
+          const subscribe = () => {
+            // Set the initial subscription value
+            serviceWorkerRegistration.pushManager.getSubscription()
               .then(function(subscription) {
                 isSubscribed = !(subscription === null)
                 if (isSubscribed) {
-                  PushManager.updateNewSubscriptionOnServer(subscription)
+                    PushManager.updateNewSubscriptionOnServer(subscription)
                 }
                 if (callback) {
-                  return callback(isSubscribed)
+                    return callback(isSubscribed)
                 }
               })
+          }
+
+          if (serviceWorker.state === 'activated') {
+            return subscribe()
+          }
+
+          serviceWorker.addEventListener('statechange', (event) => {
+            if (event.target.state !== 'activated') {
+              return
+            }
+
+            subscribe()
+          })
         })
         .catch(function(error) {
           console.log('Leanplum: Service Worker Error: ', error)
