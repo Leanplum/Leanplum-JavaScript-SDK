@@ -384,6 +384,12 @@ export default class Leanplum {
       params = info
       info = undefined
     }
+
+    events.publish('track', {
+      event,
+      params
+    })
+
     // noinspection Annotator
       LeanplumRequest.request(Constants.METHODS.TRACK,
         new ArgsBuilder()
