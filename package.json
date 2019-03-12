@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Leanplum/Leanplum-JavaScript-SDK.git"
+    "url": "git+https://github.com/iflix/Leanplum-JavaScript-SDK.git"
   },
   "keywords": [
     "leanplum",
@@ -60,7 +60,7 @@
   ],
   "author": "Leanplum Inc.",
   "bugs": {
-    "url": "https://github.com/Leanplum/Leanplum-JavaScript-SDK/issues"
+    "url": "https://github.com/iflix/Leanplum-JavaScript-SDK/issues"
   },
-  "homepage": "https://github.com/Leanplum/Leanplum-JavaScript-SDK#readme"
+  "homepage": "https://github.com/iflix/Leanplum-JavaScript-SDK#readme"
 }
