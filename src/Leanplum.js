@@ -20,6 +20,7 @@ import InternalState from './InternalState'
 import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import PushManager from './PushManager'
+import ActionManager from './ActionManager'
 import LocalStorageManager from './LocalStorageManager'
 import VarCache from './VarCache'
 import LeanplumRequest from './LeanplumRequest'
@@ -238,7 +239,7 @@ export default class Leanplum {
           VarCache.token = startResponse[Constants.KEYS.TOKEN]
 
           events.publish('start/messages', {
-            messages: startResponse[Constants.KEYS.MESSAGES]
+            messages: Leanplum.getFilteredResults(startResponse[Constants.KEYS.MESSAGES], 'start')
           })
         } else {
           InternalState.startSuccessful = false
@@ -248,7 +249,26 @@ export default class Leanplum {
       }
     })
   }
-
+  /**
+   * return an array of filtered message
+   * @param messages {Object} the message response from lp server
+   * @param trigger {String} the trigger we want to check against
+   * @param verb {String} necessary for some event
+   * @param noun {String} necessary for some event
+   * @param params {Object} {  necessary for some event
+   *  from?:string,
+   *  to?:string,
+   *  paramValue?:String,
+   *  paramName?:String,
+   * }
+   * @returns {Array}
+   */
+  static getFilteredResults(messages={}, trigger='', verb='', noun='', params={}) {
+    if(messages === null) {
+      return []
+    }
+    return ActionManager.filterMessages(messages, trigger, verb, noun, params)
+  }
   static startFromCache(userId, userAttributes, callback) {
     // Overloads.
     if (typeof userId === 'function') {
@@ -358,13 +378,16 @@ export default class Leanplum {
   }
 
   static trackMessage(event, messageId) {
-      // noinspection Annotator
-      LeanplumRequest.request(Constants.METHODS.TRACK,
-          new ArgsBuilder()
-              .add(Constants.PARAMS.EVENT, event)
-              .add(Constants.PARAMS.MESSAGE_ID, messageId), {
-              queued: true
-          })
+    if(event === '') {
+      VarCache.addMessageView(messageId) // track view track event is '' aka 'View'
+    }
+    // noinspection Annotator
+    LeanplumRequest.request(Constants.METHODS.TRACK,
+        new ArgsBuilder()
+            .add(Constants.PARAMS.EVENT, event)
+            .add(Constants.PARAMS.MESSAGE_ID, messageId), {
+            queued: true
+        })
   }
 
   static track(event, value, info, params) {

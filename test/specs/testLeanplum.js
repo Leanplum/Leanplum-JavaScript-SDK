@@ -24,6 +24,8 @@ const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74'
 const startResponse = require('./responses/start.json')
 const successResponse = require('./responses/success.json')
 const forceContentUpdateResponse = require('./responses/forceContentUpdate.json')
+const messages = require('./responses/messages.json')
+const badLimitMessages = require('./responses/badLimitsMessages')
 const LEANPLUM_PATH = '../../dist/leanplum.js'
 
 global.WebSocket = undefined
@@ -594,6 +596,38 @@ Object.keys(testModes).forEach((mode) => {
             assert.equal(success, false)
             return done()
         });
+      })
+    })
+    describe('Test filtering messages @filterMessages', () => {
+      it('should return an empty  array if no event is defined', () => {
+        const filteredMessages = Leanplum.getFilteredResults(messages)
+        expect(filteredMessages).to.be.an('array')
+        expect(filteredMessages).to.be.empty
+      })
+      it('should return an empty array if messages is empty', () =>{
+        const filteredMessages = Leanplum.getFilteredResults([])
+        expect(filteredMessages).to.be.an('array')
+        expect(filteredMessages).to.be.empty
+      })
+      it('should return an empty array if messages is null', () =>{
+        const filteredMessages = Leanplum.getFilteredResults(null)
+        expect(filteredMessages).to.be.an('array')
+        expect(filteredMessages).to.be.empty
+      })
+      it('should return an array of messages if event is defined and match a message trigger', () => {
+        const filteredMessages = Leanplum.getFilteredResults(messages,'start')
+        expect(filteredMessages).to.be.an('array')
+        assert.isAbove(filteredMessages.length,0)
+
+      })
+      it('should not generate error if trigger verb is wrongly defined', () => {
+        const filteredMessages = Leanplum.getFilteredResults(messages,'start','unknown')
+        expect(filteredMessages).to.be.an('array')
+      })
+      it('should not generate error if limit verb is wrongly defined', () => {
+        const filteredMessages = Leanplum.getFilteredResults(badLimitMessages,'start')
+        console.log('fm',filteredMessages)
+        expect(filteredMessages).to.be.an('array')
       })
     })
   })

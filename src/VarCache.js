@@ -31,6 +31,8 @@ export default class VarCache {
   static onUpdate = undefined
   static token = ''
   static actionMetadata = {}
+  static messagesView = undefined
+  static messagesViewPerSession = []
 
   static applyDiffs(diffs, variants, actionMetadata) {
     VarCache.diffs = diffs
@@ -73,6 +75,51 @@ export default class VarCache {
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, VarCache.token)
   }
 
+  /**
+   * record view message in local storage and  in memory (aka session)
+   * @param messageId
+   */
+  static addMessageView(messageId){
+    const messageView = VarCache.getMessagesView()[messageId]
+    if (messageView === undefined){
+      VarCache.messagesView[messageId] = []
+    }
+    const messageViewPerSession =VarCache.messagesViewPerSession[messageId] || []
+
+    const now = Date.now()
+    messageViewPerSession.push({t:now})
+    VarCache.messagesView[messageId].push({t:now})
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.MESSAGE_VIEW,JSON.stringify(
+      VarCache.messagesView || {}))
+  }
+
+
+
+  /**
+   * get an object containing all the messageViews with messageId as key, per session or from start
+   * @param session {Boolean}
+   * @returns {Object}
+   */
+  static getMessagesView(session){
+    if(session){
+      return VarCache.messagesViewPerSession
+    }
+    if(VarCache.messagesView === undefined){
+      VarCache.messagesView = JSON.parse(
+        LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.MESSAGE_VIEW) || '{}')
+    }
+    return VarCache.messagesView
+  }
+
+  /**
+   * get all view for a given message either form the start or per session
+   * @param messageId
+   * @param session {Boolean}
+   * @returns {*|Array}
+   */
+  static getMessageView(messageId, session){
+    return VarCache.getMessagesView(session)[messageId] || []
+  }
   static setVariables(variables) {
     VarCache.variables = variables
   }

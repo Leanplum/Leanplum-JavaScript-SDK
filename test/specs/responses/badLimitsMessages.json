@@ -1,0 +1,76 @@
+[{
+  "countdown": 86400,
+  "action": "Alert",
+  "whenTriggers": {
+    "children": [
+      {
+        "subject": "start",
+        "objects": [],
+        "verb": "",
+        "secondaryVerb": "="
+      },
+      {
+        "subject": "state",
+        "objects": [
+          "test",
+          "2"
+        ],
+        "verb": "triggersWithParameter",
+        "noun": "my.com.iflix.auth.login.AuthActivity",
+        "secondaryVerb": "="
+      },
+      {
+        "subject": "userAttribute",
+        "objects": [
+          "2",
+          "value"
+        ],
+        "verb": "changesFromTo",
+        "noun": "email",
+        "secondaryVerb": "="
+      },
+      {
+        "subject": "event",
+        "objects": [
+          "test",
+          "2"
+        ],
+        "verb": "triggersWithParameter",
+        "noun": ".m5256783649439744",
+        "secondaryVerb": "="
+      },
+      {
+        "subject": "resume",
+        "objects": [],
+        "verb": "",
+        "secondaryVerb": "="
+      }
+    ],
+    "verb": "OR"
+  },
+  "startTime": 1552220640000,
+  "parentCampaignId": null,
+  "vars": {
+    "Dismiss action": {
+      "__name__": "Open URL"
+    },
+    "__name__": "Alert",
+    "Title": "simple alert",
+    "Dismiss text": "open new alert with limit"
+  },
+  "endTime": 1553516640000,
+  "hasImpressionCriteria": false,
+  "priority": 1,
+  "whenLimits": {
+    "children": [
+      {
+        "subject": "times",
+        "objects": [],
+        "verb": "donotexist",
+        "noun": "100",
+        "secondaryVerb": "="
+      }
+    ],
+    "verb": "AND"
+  }
+}]

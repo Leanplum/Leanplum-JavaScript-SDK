@@ -35,7 +35,7 @@ export default {
     REGISTER_DEVICE: 'registerDevice'
   },
 
-  SDK_VERSION: '1.6.0-iflix',
+  SDK_VERSION: '1.7.0-iflix',
 
   CLIENT: 'js',
 
@@ -104,10 +104,11 @@ export default {
     TOKEN: '__leanplum_token',
     DEVICE_ID: '__leanplum_device_id',
     USER_ID: '__leanplum_user_id',
-    PUSH_SUBSCRIPTION: '__leanplum_push_subscription'
+    PUSH_SUBSCRIPTION: '__leanplum_push_subscription',
+    MESSAGE_VIEW: '__leanplum_messages_view',
   },
 
   VALUES: {
     DETECT: '(detect)'
-  }
+  },
 }
