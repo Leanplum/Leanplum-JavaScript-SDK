@@ -620,13 +620,18 @@ Object.keys(testModes).forEach((mode) => {
         assert.isAbove(filteredMessages.length,0)
 
       })
+      it('should return an array of messages if event is defined and match at least one message trigger', () => {
+        const filteredMessages = Leanplum.getFilteredResults(messages,['dummy','resume'])
+        expect(filteredMessages).to.be.an('array')
+        assert.isAbove(filteredMessages.length,0)
+
+      })
       it('should not generate error if trigger verb is wrongly defined', () => {
         const filteredMessages = Leanplum.getFilteredResults(messages,'start','unknown')
         expect(filteredMessages).to.be.an('array')
       })
       it('should not generate error if limit verb is wrongly defined', () => {
         const filteredMessages = Leanplum.getFilteredResults(badLimitMessages,'start')
-        console.log('fm',filteredMessages)
         expect(filteredMessages).to.be.an('array')
       })
     })

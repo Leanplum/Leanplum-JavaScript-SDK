@@ -2,6 +2,9 @@ module.exports = {
   'extends': 'google',
   'parserOptions': {
     'ecmaVersion': 7,
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    },
     'sourceType': 'module'
   },
   'env': {
@@ -17,7 +20,7 @@ module.exports = {
       'error',
       'single'
     ],
-    'eqeqeq': 'off',
+    'eqeqeq': ['error','always',{'null': 'ignore'}],
     'max-len': [2, 100, 2], // specify the maximum length of a line in your program (off by default)
     'comma-dangle': 0,
     'space-before-function-paren': ['error', 'never'],
@@ -25,7 +28,10 @@ module.exports = {
       'error',
       'as-needed'
     ],
-    'operator-linebreak': ['error', 'after']
+    'operator-linebreak': ['error', 'after'],
+    'no-var': 2,
+    'space-before-blocks': 1,
+    'require-jsdoc': 2,
   },
   'globals': {
     'window': true,

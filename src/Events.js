@@ -17,7 +17,7 @@ export default (function(){
       if(!topics.hasOwnProperty.call(topics, topic)) return
 
       topics[topic].forEach(function(item) {
-      		item(info != undefined ? info : {})
+        item(info != undefined ? info : {})
       })
     }
   }

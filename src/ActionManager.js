@@ -1,17 +1,19 @@
 /**
  * Handles In-app message filtering
  */
-import VarCache from "./VarCache";
+import VarCache from './VarCache'
 
 /** private
  * return true if message pass one trigger/verb condition
- * @param params {Object}
- * @param message
- * @returns {Boolean}
+ * if no trigger, return false as in android
+ * @param {object} params
+ * // @param {object} message
+ * // @param {object?} message.whenTriggers
+ * @return {function({object}):{boolean}}
  */
 const filterByTriggers = (params={}) => (message) => {
   const triggers = message.whenTriggers && message.whenTriggers.children
-  if(!params.triggers || !triggers){
+  if(!params.triggers || !triggers) {
     return false
   }
 
@@ -19,48 +21,42 @@ const filterByTriggers = (params={}) => (message) => {
     params.triggers.includes(trigger.subject))
   )
 
-  if (!filteredByTriggers.length){
+  if (!filteredByTriggers.length) {
     return false
   }
   const verbFilter = filterByVerbs(params)
-  if(!verbFilter){
+  if(!verbFilter) {
     return false
   }
   filteredByTriggers = filteredByTriggers.filter(verbFilter)
 
-  if(!filteredByTriggers.length){
-    return false
-  }
-
-  return true
+  return filteredByTriggers.length
 }
 
 /** private
  * return true if trigger pass verb/noun/objects condition
- * @param params {Object}
- * @param trigger {Object}
- * @returns {Boolean}
+ * @param {object} params
+ * // @param {object} trigger
+ * // @param {string} trigger.verb
+ * @return {function({object}):{boolean}}
  */
 const filterByVerbs = (params) => (trigger) => {
   if(trigger.verb === '') {
     return true
   }
   const evaluator = triggerVerbEvaluators[trigger.verb]
-  if( !evaluator(trigger, params.noun, params.objects)) {
-    return false
-  }
-  return true
+  return evaluator(trigger, params.noun, params.objects)
 }
 
-/** prrivate
+/** private
  * return true if message pass all limits
- * @param now {Date.now()}
- * @param message {Object}
- * @returns {Boolean}
+ * @param {number} now
+ * // @param {Object} message
+ * @return {function({object}):{boolean}}
  */
-const filterByLimits  = (now) => (message) => {
+const filterByLimits = (now) => (message) => {
   const limits = message.whenLimits && message.whenLimits.children
-  if(!limits || limits.length < 1){
+  if(!limits || limits.length < 1) {
     return true
   }
   return limits.every((limit) => {
@@ -74,22 +70,25 @@ const filterByLimits  = (now) => (message) => {
 }
 
 /** private
- * return the amount of ocurence of messageView since 'since'
- * @param since {Number}
- * @param messageView {Array}
- * @returns {function(*, *): *}
+ * return the amount of occurence of messageView since 'since'
+ * @param {number} since
+ * // @param {Object} messageView
+ * // @param {Object} messageView.t
+ * @return {function({number}, {object}): {number}}
  */
-const countMessageViewsByLimit = (since) => (iterator,messageView) => {
-  if(messageView.t > since){
+const countMessageViewsByLimit = (since) => (iterator, messageView) => {
+  if(messageView.t > since) {
     iterator+=1
   }
   return iterator
 }
 /** private
  * return true if no limits are defined or if now is in the range
- * @param now {Date.now()}
- * @param limitTime {Object}
- * @returns {Boolean}
+ * @param {number} now
+ * // @param {object} limitTime
+ * // @param {object?} limitTime.startTime
+ * // @param {object?} limitTime.endTime
+ * @return {function( {object}):{Boolean}}
  */
 const filterByLimitTimes = (now) => (limitTime) => {
   return (!limitTime.startTime || limitTime.startTime < now) &&
@@ -123,70 +122,71 @@ const limitVerbEvaluators = {
   limitUser: (messageId, maxView) => {
     return VarCache.getMessageView(messageId).length < maxView
   },
-  limitMonth: (messageId, maxView,amount,now) => {
+  limitMonth: (messageId, maxView, amount, now) => {
     const since = now - amount * 30 * 24 * 60 * 60 * 1000
     return VarCache.getMessageView(messageId)
-      .reduce( countMessageViewsByLimit(since),0) < maxView
+      .reduce( countMessageViewsByLimit(since), 0) < maxView
   },
-  limitWeek: (messageId, maxView,amount,now) => {
+  limitWeek: (messageId, maxView, amount, now) => {
     const since = now - amount * 7 * 24 * 60 * 60 * 1000
     return VarCache.getMessageView(messageId)
-      .reduce( countMessageViewsByLimit(since),0) < maxView
+      .reduce( countMessageViewsByLimit(since), 0) < maxView
   },
-  limitDay: (messageId, maxView,amount,now) => {
+  limitDay: (messageId, maxView, amount, now) => {
     const since = now - amount * 24 * 60 * 60 * 1000
     return VarCache.getMessageView(messageId)
-      .reduce( countMessageViewsByLimit(since),0) < maxView
+      .reduce( countMessageViewsByLimit(since), 0) < maxView
   },
-  limitHour: (messageId, maxView,amount,now) => {
+  limitHour: (messageId, maxView, amount, now) => {
     const since = now - amount * 60 * 60 * 1000
     return VarCache.getMessageView(messageId)
-      .reduce( countMessageViewsByLimit(since),0) < maxView
+      .reduce( countMessageViewsByLimit(since), 0) < maxView
   },
-  limitMinute: (messageId, maxView,amount,now) => {
+  limitMinute: (messageId, maxView, amount, now) => {
     const since = now - amount * 60 * 1000
     return VarCache.getMessageView(messageId)
-      .reduce( countMessageViewsByLimit(since),0) < maxView
+      .reduce( countMessageViewsByLimit(since), 0) < maxView
   },
-  limitSecond: (messageId, maxView,amount,now) => {
+  limitSecond: (messageId, maxView, amount, now) => {
     const since = now - amount * 1000
     return VarCache.getMessageView(messageId)
-      .reduce( countMessageViewsByLimit(since),0) < maxView
+      .reduce( countMessageViewsByLimit(since), 0) < maxView
   },
   limitSession: (messageId, maxView) => {
-    return VarCache.getMessageView(messageId,true).length < maxView
+    return VarCache.getMessageView(messageId, true).length < maxView
   },
 }
-
+/**
+ * Provide filtering logic for messages
+ */
 export default class ActionManager {
 
   /** public
    * return an array of filtered message
-   * @param messages {Object}
-   * @param trigger {String}
-   * @param verb {String}
-   * @param noun {String}
-   * @param params {{
-   *  from?:string,
-   *  to?:string,
-   *  paramValue?:String,
-   *  paramName?:String,
-   * }}
-   * @returns {Array}
+   * @param {object} messages
+   * @param {string | string[] | ?} triggers
+   * @param {string?} verb
+   * @param {string?} noun
+   * @param {object?} params
+   * @param {string?} params.from
+   * @param {string?} params.to
+   * @param {string?} params.paramValue
+   * @param {string?} params.paramName
+   * @return {array}
    */
-  static filterMessages(messages, trigger='', verb=null, noun='', params={}) {
-
+  static filterMessages(messages, triggers='', verb, noun, params) {
+    if(!Array.isArray(triggers)) {
+      triggers = [triggers]
+    }
     const now = Date.now()
-
     let filteredMessages = Object.entries(messages)
-      .map(([id, message]) => ({ id, ...message }))
-
+      .map(([id, message]) => ({id, ...message}))
     filteredMessages = filteredMessages
       .filter(filterByTriggers(
         {
-          triggers:[trigger]
+          triggers: triggers
         }
-        ))
+      ))
       .filter(filterByLimits(now))
       .filter(filterByLimitTimes(now))
     return filteredMessages

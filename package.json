@@ -44,7 +44,7 @@
   },
   "name": "leanplum-sdk",
   "description": "This is the JavaScript SDK for Leanplum, allowing developers to access and integrate the functionality of Leanplum with applications and devices through JavaScript and HTML5. Leanplum is an application development platform that provides mobile A/B testing, messaging functionality, personalization, and more features for applications. ## Installation Add leanplum.js to your project: ```javascript <script type=\"text/javascript\" src=\"leanplum.js\"></script> ``` ## Usage Initialize Leanplum.",
-  "version": "1.7.0-iflix",
+  "version": "1.7.1-iflix",
   "main": "dist/leanplum.min.js",
   "directories": {
     "test": "test"

@@ -239,7 +239,10 @@ export default class Leanplum {
           VarCache.token = startResponse[Constants.KEYS.TOKEN]
 
           events.publish('start/messages', {
-            messages: Leanplum.getFilteredResults(startResponse[Constants.KEYS.MESSAGES], 'start')
+            messages: Leanplum.getFilteredResults(
+                startResponse[Constants.KEYS.MESSAGES],
+                ['start', 'resume']
+            )
           })
         } else {
           InternalState.startSuccessful = false
@@ -251,23 +254,22 @@ export default class Leanplum {
   }
   /**
    * return an array of filtered message
-   * @param messages {Object} the message response from lp server
-   * @param trigger {String} the trigger we want to check against
-   * @param verb {String} necessary for some event
-   * @param noun {String} necessary for some event
-   * @param params {Object} {  necessary for some event
-   *  from?:string,
-   *  to?:string,
-   *  paramValue?:String,
-   *  paramName?:String,
-   * }
-   * @returns {Array}
+   * @param {Object} messages - the message response from lp server
+   * @param {String | String[] | ?} triggers - the trigger(s) we want to check against
+   * @param {String?} verb - additional parameter
+   * @param  {String?} noun - additional parameter
+   * @param  {Object?} params - necessary for some event
+   * @param  {number?} params.from - necessary for some event
+   * @param  {number?} params.to - necessary for some event
+   * @param  {string?} params.paramValue - necessary for some event
+   * @param  {string?} params.Name - necessary for some event
+   * @return {Array}
    */
-  static getFilteredResults(messages={}, trigger='', verb='', noun='', params={}) {
+  static getFilteredResults(messages={}, triggers='', verb='', noun='', params={}) {
     if(messages === null) {
       return []
     }
-    return ActionManager.filterMessages(messages, trigger, verb, noun, params)
+    return ActionManager.filterMessages(messages, triggers, verb, noun, params)
   }
   static startFromCache(userId, userAttributes, callback) {
     // Overloads.
@@ -502,7 +504,7 @@ export default class Leanplum {
    *
    * @Return { publish: (topic, args) => {}, subscribe: (topic, callback) => {} }
    */
-  static getEvents () {
+  static getEvents() {
     return events
   }
 }
