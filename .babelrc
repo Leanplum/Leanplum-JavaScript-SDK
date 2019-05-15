@@ -1,14 +1,9 @@
 {
   "presets": [
-    [
-      "es2015"
-    ]
+    "@babel/preset-env",
+    "@babel/preset-typescript"
   ],
   "plugins": [
-    "add-module-exports",
-    "transform-es2015-modules-umd",
-    "transform-class-properties",
-    "transform-es2015-spread",
-    "transform-object-rest-spread"
+    "@babel/plugin-proposal-class-properties"
   ]
 }

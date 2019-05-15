@@ -11,9 +11,12 @@ module.exports = {
   },
   module: {
     rules: [{
-      test: /\.js$/,
+      test: /\.(js|ts)$/,
       exclude: /node_modules/,
       loader: 'babel-loader'
     }]
+  },
+  resolve: {
+    extensions: ['.js', '.ts', '.json']
   }
 }
