@@ -70,6 +70,9 @@ yarn install
 Run tests: `mocha -r mock-local-storage -r test/specs/helpers/setup.js -r test/specs/helpers/chai.js test/specs/testLeanplum.js`
 
 ## Contributing
+Please follow the guidelines under https://github.com/Leanplum/Leanplum-JavaScript-SDK/blob/master/CONTRIBUTING.md
+
+Once you have done that, in general:
 1. Fork it!
 2. Create your feature branch: `git checkout -b feature/my-new-feature`
 3. Commit your changes: `git commit -am 'Add some feature'`
