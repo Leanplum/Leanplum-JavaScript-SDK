@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "module": "umd",
+    "target": "es2015",
+    "allowJs": true
+  }
+}

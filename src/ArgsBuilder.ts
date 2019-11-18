@@ -22,6 +22,10 @@ import Constants from './Constants'
  * Leanplum ArgsBuilder, use to construct request payload.
  */
 export default class ArgsBuilder {
+  argString: string
+  argValues: Object
+  _body: string
+
   /**
    * Create a new empty request argument.
    */

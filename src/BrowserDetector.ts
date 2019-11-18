@@ -30,7 +30,7 @@ const dataBrowser = [{
   identity: 'Safari',
   versionSearch: 'Version'
 }, {
-  prop: window.opera,
+  prop: (window as any).opera,
   identity: 'Opera',
   versionSearch: 'Version'
 }, {
@@ -93,6 +93,11 @@ const dataOS = [{
  * Helper class to detect which browser client is using.
  */
 export default class BrowserDetector {
+  browser: string
+  version: number | string
+  OS: string
+  versionSearchString: string
+
   /**
    * Initializes the object with current browser settings.
    */

@@ -18,10 +18,15 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+declare var XDomainRequest
+
 let requestQueue = []
 let networkTimeoutSeconds = 10
 
 export default class Network {
+
+  static runningRequest: boolean = false
+
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
@@ -41,7 +46,7 @@ export default class Network {
    * @param {boolean} [plainText] Whether the response should be returned as plain text or json.
    * @return {*}
    */
-  static ajax(method, url, data, success, error, queued, plainText) {
+  static ajax(method, url, data, success, error, queued, plainText?) {
     if (queued) {
       if (Network.runningRequest) {
         // eslint-disable-next-line prefer-rest-params

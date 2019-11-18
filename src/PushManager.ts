@@ -174,7 +174,7 @@ export default class PushManager {
    * Retrieves the service worker registration object from browser.
    * @return {object} Returns the registration or null.
    */
-  static getServiceWorkerRegistration() {
+  static getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
     return new Promise((resolve) => {
       if (serviceWorkerRegistration) {
         resolve(serviceWorkerRegistration)

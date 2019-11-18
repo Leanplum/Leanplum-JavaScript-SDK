@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-  entry: './src/Leanplum.js',
+  entry: './src/Leanplum.ts',
   devtool: 'inline-source-map',
   output: {
     path: path.resolve(__dirname, './dist'),
@@ -9,11 +9,14 @@ module.exports = {
     library: 'Leanplum',
     libraryTarget: 'umd'
   },
+  resolve: {
+    extensions: [ '.ts', '.js' ],
+  },
   module: {
     rules: [{
-      test: /\.js$/,
+      test: /\.ts$/,
       exclude: /node_modules/,
-      loader: 'babel-loader'
+      loader: 'ts-loader'
     }]
   }
 }

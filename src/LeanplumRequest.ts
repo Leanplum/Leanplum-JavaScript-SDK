@@ -30,6 +30,13 @@ export default class LeanplumRequest {
   static batchEnabled = true
   static batchCooldown = 5
 
+
+  static deviceId: string
+  static userId: string
+  static appId: string
+  static clientKey: string
+  static versionName: string
+
   /**
    *
    * @param action

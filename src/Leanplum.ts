@@ -35,6 +35,11 @@ let _browserDetector = new BrowserDetector()
  * from Leanplum.
  */
 export default class Leanplum {
+  static _email: string
+  static _deviceName: string
+  static _deviceModel: string
+  static _systemName: string
+  static _systemVersion: string
 
   static setApiPath(apiPath) {
     if (!LeanplumRequest.apiPath) {
@@ -320,7 +325,7 @@ export default class Leanplum {
     Leanplum.setUserAttributes(userId)
   }
 
-  static setUserAttributes(userId, userAttributes) {
+  static setUserAttributes(userId, userAttributes?) {
     if (userAttributes === undefined) {
       if (typeof userId === 'object') {
         userAttributes = userId

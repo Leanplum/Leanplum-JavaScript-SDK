@@ -143,11 +143,6 @@ export default class VarCache {
             isArray = false
             break
           }
-          let varSubscript = attribute.substring(1, attribute.length - 1)
-          if (!parseInt(varSubscript).toString() === varSubscript) {
-            isArray = false
-            break
-          }
         }
       }
     }

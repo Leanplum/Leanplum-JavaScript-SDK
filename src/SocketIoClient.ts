@@ -22,6 +22,15 @@ import Request from './Network'
  * Socket.io 1.0 client class.
  */
 export default class SocketIoClient {
+  connected: boolean = false
+  connecting: boolean = false
+  socket: WebSocket | undefined
+
+  onopen: Function | undefined
+  onclose: Function | undefined
+  onmessage: Function | undefined
+  onerror: Function | undefined
+
   /**
    * Initializes a new SocketIoClient, not connected by default.
    */

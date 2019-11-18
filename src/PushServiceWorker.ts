@@ -36,6 +36,9 @@
 
 /* global self, clients */
 
+declare var clients
+declare var registration
+
 const ACTION_NAME_KEY = '__name__'
 const OPEN_URL_ACTION = 'Open URL'
 const ARG_URL = 'URL'
