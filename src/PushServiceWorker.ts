@@ -79,7 +79,7 @@ function pushListener(event) {
 
   // Extract title and delete from options.
   let title = options.title
-  Reflect.deleteProperty(options, 'title')
+  delete options.title;
   /** @namespace self.registration **/
   /** @namespace self.registration.showNotification **/
   event.waitUntil(self.registration.showNotification(title, options))
@@ -109,7 +109,7 @@ function notificationClickListener(event) {
     return
   }
 
-  Reflect.deleteProperty(openActions, 'notificationId')
+  delete openActions[notificationId];
 
   /** @namespace clients.openWindow **/
   event.waitUntil(clients.openWindow(openActionUrl))

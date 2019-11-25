@@ -195,7 +195,7 @@ export default class PushManager {
    * @return {Uint8Array}              [description]
    */
   static urlB64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const padding = new Array((4 - base64String.length % 4) % 4).join('=')
     const base64 = (base64String + padding)
         .replace(/-/g, '+')
         .replace(/_/g, '/')
@@ -217,12 +217,13 @@ export default class PushManager {
    * @return {object} The subscription object to be sent to server.
    */
   static prepareSubscription(subscription) {
+    let apply = Function.prototype.apply;
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
     // noinspection ES6ModulesDependencies
-    let keyAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(key)))
+    let keyAscii = btoa(apply.call(String.fromCharCode, null, new Uint8Array(key)))
     // noinspection ES6ModulesDependencies
-    let authAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(auth)))
+    let authAscii = btoa(apply.call(String.fromCharCode, null, new Uint8Array(auth)))
     return {
       endpoint: subscription.endpoint,
       key: keyAscii,

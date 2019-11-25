@@ -20,6 +20,7 @@
 
 declare var XDomainRequest
 
+const apply = Function.prototype.apply;
 let requestQueue = []
 let networkTimeoutSeconds = 10
 
@@ -62,7 +63,7 @@ export default class Network {
         url = `http:${url.substring(6)}`
       }
       // eslint-disable-next-line prefer-rest-params
-      return Reflect.apply(Network.ajaxIE8, null, arguments)
+      return apply.call(Network.ajaxIE8, null, arguments)
     }
 
     let handled = false
@@ -199,7 +200,7 @@ export default class Network {
   static dequeueRequest() {
     let args = requestQueue.shift()
     if (args) {
-      Reflect.apply(Network.ajax, null, args)
+      apply.call(Network.ajax, null, args)
     }
   }
 }
