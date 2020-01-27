@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-  entry: './src/Leanplum.ts',
+  entry: './src/bundles/leanplum.full.ts',
   devtool: 'inline-source-map',
   mode: 'production',
   output: {
