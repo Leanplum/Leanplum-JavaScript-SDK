@@ -1,12 +1,15 @@
 const path = require('path')
 
 module.exports = {
-  entry: './src/bundles/leanplum.full.ts',
+  entry: {
+    leanplum: './src/bundles/leanplum.full.ts',
+    'sw/sw': './src/PushServiceWorker.ts'
+  },
   devtool: 'inline-source-map',
   mode: 'production',
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'leanplum.js',
+    filename: '[name].js',
     library: 'Leanplum',
     libraryTarget: 'umd'
   },

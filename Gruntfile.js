@@ -20,13 +20,8 @@ module.exports = function (grunt) {
       }, webpackConfig)
     },
     babel: {
-        //TODO
-      options: {
-        sourceMap: true
-      },
       dist: {
         files: {
-          'dist/sw/sw.ts': 'src/PushServiceWorker.ts',
           'test/e2e/js/index.js': 'test/e2e/js/index.es6.js'
         }
       }
