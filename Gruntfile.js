@@ -19,13 +19,6 @@ module.exports = function (grunt) {
         watch: true
       }, webpackConfig)
     },
-    babel: {
-      dist: {
-        files: {
-          'test/e2e/js/index.js': 'test/e2e/js/index.es6.js'
-        }
-      }
-    },
     uglify: {
       my_target: {
         files: {
