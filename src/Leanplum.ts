@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,13 +27,6 @@ import LeanplumSocket from './LeanplumSocket'
 
 let _browserDetector = new BrowserDetector()
 
-/**
- * @preserve Leanplum Javascript SDK.
- * Copyright 2016, Leanplum, Inc. All rights reserved.
- *
- * You may not distribute this source code without prior written permission
- * from Leanplum.
- */
 export default class Leanplum {
   static _email: string
   static _deviceName: string
