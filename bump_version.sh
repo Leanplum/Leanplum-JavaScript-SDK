@@ -25,4 +25,4 @@ replace() {
 }
 
 replace package.json "version\": \"$1\"" "version\": \"$2\""
-replace src/Constants.js "SDK_VERSION: '$1'" "SDK_VERSION: '$2'"
+replace src/Constants.ts "SDK_VERSION: '$1'" "SDK_VERSION: '$2'"
