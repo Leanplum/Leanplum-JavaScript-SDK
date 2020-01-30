@@ -22,7 +22,7 @@ declare var XDomainRequest
 
 const apply = Function.prototype.apply;
 let requestQueue = []
-let networkTimeoutSeconds = 10
+let networkTimeoutSeconds: number = 10
 
 export default class Network {
 
@@ -32,7 +32,7 @@ export default class Network {
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  static setNetworkTimeout(seconds) {
+  static setNetworkTimeout(seconds: number) {
     networkTimeoutSeconds = seconds
   }
 

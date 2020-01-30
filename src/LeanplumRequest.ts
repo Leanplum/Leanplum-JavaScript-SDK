@@ -26,9 +26,9 @@ let cooldownTimeout = null
 
 export default class LeanplumRequest {
 
-  static apiPath = 'https://www.leanplum.com/api'
-  static batchEnabled = true
-  static batchCooldown = 5
+  static apiPath: string = 'https://www.leanplum.com/api'
+  static batchEnabled: boolean = true
+  static batchCooldown: number = 5
 
 
   static deviceId: string

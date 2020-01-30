@@ -46,7 +46,7 @@ export default class PushManager {
    * Whether or not the browser is subscribed to web push notifications.
    * @return {Promise} True if subscribed, else false.
    */
-  static isWebPushSubscribed() {
+  static isWebPushSubscribed(): Promise<boolean> {
     if (!PushManager.isWebPushSupported()) {
       return new Promise((resolve) => {
         resolve(false)
@@ -138,7 +138,7 @@ export default class PushManager {
    * Unsubscribe the user(browser) from push.
    * @return {Promise} Resolves if unsubscribed, otherwise rejects.
    */
-  static unsubscribeUser() {
+  static unsubscribeUser(): Promise<string> {
     return new Promise((resolve, reject) => {
       PushManager.isWebPushSubscribed().then((subscribed) => {
         if (!subscribed) {

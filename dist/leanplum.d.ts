@@ -15,51 +15,57 @@
  *  limitations under the License
  **/
 
+type StatusHandler = (success: boolean) => void;
+type SimpleHandler = () => void;
+type UserAttributes = any;
 export default class Leanplum {
         static _email: string;
         static _deviceName: string;
         static _deviceModel: string;
         static _systemName: string;
         static _systemVersion: string;
-        static setApiPath(apiPath: any): void;
-        static setEmail(email: any): void;
+        static setApiPath(apiPath: string): void;
+        static setEmail(email: string): void;
         /**
             * Sets the network timeout.
             * @param {number} seconds The timeout in seconds.
             */
-        static setNetworkTimeout(seconds: any): void;
-        static setVariantDebugInfoEnabled(variantDebugInfoEnabled: any): void;
+        static setNetworkTimeout(seconds: number): void;
+        static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean): void;
         static getVariantDebugInfo(): {};
-        static setAppIdForDevelopmentMode(appId: any, accessKey: any): void;
-        static setAppIdForProductionMode(appId: any, accessKey: any): void;
-        static setSocketHost(host: any): void;
-        static setDeviceId(deviceId: any): void;
-        static setAppVersion(versionName: any): void;
-        static setDeviceName(deviceName: any): void;
-        static setDeviceModel(deviceModel: any): void;
-        static setSystemName(systemName: any): void;
-        static setSystemVersion(systemVersion: any): void;
-        static setVariables(variables: any): void;
-        static setRequestBatching(batchEnabled: any, cooldownSeconds: any): void;
+        static setAppIdForDevelopmentMode(appId: string, accessKey: string): void;
+        static setAppIdForProductionMode(appId: string, accessKey: string): void;
+        static setSocketHost(host: string): void;
+        static setDeviceId(deviceId: string): void;
+        static setAppVersion(versionName: string): void;
+        static setDeviceName(deviceName: string): void;
+        static setDeviceModel(deviceModel: string): void;
+        static setSystemName(systemName: string): void;
+        static setSystemVersion(systemVersion: string): void;
+        static setVariables(variables: Object): void;
+        static setRequestBatching(batchEnabled: boolean, cooldownSeconds: number): void;
         static getVariables(): any;
-        static getVariable(...args: any[]): any;
+        static getVariable(...args: string[]): any;
         static getVariants(): any[];
-        static addStartResponseHandler(handler: any): void;
-        static addVariablesChangedHandler(handler: any): void;
-        static removeStartResponseHandler(handler: any): void;
-        static removeVariablesChangedHandler(handler: any): void;
-        static forceContentUpdate(callback: any): void;
-        static start(userId: any, userAttributes: any, callback: any): void;
-        static startFromCache(userId: any, userAttributes: any, callback: any): void;
+        static addStartResponseHandler(handler: StatusHandler): void;
+        static addVariablesChangedHandler(handler: SimpleHandler): void;
+        static removeStartResponseHandler(handler: StatusHandler): void;
+        static removeVariablesChangedHandler(handler: SimpleHandler): void;
+        static forceContentUpdate(callback: StatusHandler): void;
+        static start(userId: string, callback: StatusHandler): void;
+        static start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
+        static startFromCache(userId: string, callback: StatusHandler): void;
+        static startFromCache(userAttributes?: UserAttributes, callback?: StatusHandler): void;
         static stop(): void;
         static pauseSession(): void;
         static resumeSession(): void;
         static pauseState(): void;
         static resumeState(): void;
-        static setUserId(userId: any): void;
-        static setUserAttributes(userId: any, userAttributes?: any): void;
-        static track(event: any, value: any, info: any, params: any): void;
-        static advanceTo(state: any, info: any, params: any): void;
+        static setUserId(userId: string): void;
+        static setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
+        static track(event: string, value: number, params: Object): void;
+        static track(event: string, params: Object): void;
+        static advanceTo(state: string, params?: Object): void;
         /**
             * Determines if web push is supported in the browser.
             * @return {Boolean} True if supported, else false.
@@ -69,7 +75,7 @@ export default class Leanplum {
             * Determines if web push is subscribed.
             * @return {Promise} Resolves if true, rejects if false.
             */
-        static isWebPushSubscribed(): Promise<unknown>;
+        static isWebPushSubscribed(): Promise<boolean>;
         /**
             * Register the browser for web push.
             * @param  {string}   serviceWorkerUrl The url on your server that hosts the
@@ -77,12 +83,12 @@ export default class Leanplum {
             * @return {Promise}                   Resolves if registration successful,
             *                                     otherwise fails.
             */
-        static registerForWebPush(serviceWorkerUrl: any): Promise<unknown>;
+        static registerForWebPush(serviceWorkerUrl: string): Promise<boolean>;
         /**
             * Unregisters the browser form web push.
             * @return {Promise}            Resolves on success, otherwise rejects.
             */
-        static unregisterFromWebPush(): Promise<unknown>;
+        static unregisterFromWebPush(): Promise<string>;
         /**
             * Clears cached values for messages, variables and test assignments.
             * Use sparingly as if the app is updated, you'll have to deal with potentially
@@ -90,4 +96,5 @@ export default class Leanplum {
             */
         static clearUserContent(): void;
 }
+export {};
 

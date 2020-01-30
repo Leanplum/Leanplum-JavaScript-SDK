@@ -25,7 +25,7 @@ export default class InternalState {
   static startHandlers = []
   static hasStarted = false
   static startSuccessful = false
-  static variantDebugInfoEnabled = false
+  static variantDebugInfoEnabled: boolean = false
 
   static addStartResponseHandler(handler) {
     InternalState.startHandlers.push(handler)
@@ -67,7 +67,7 @@ export default class InternalState {
       }
   }
 
-    static setVariantDebugInfoEnabled(variantDebugInfoEnabled) {
+    static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
     InternalState.variantDebugInfoEnabled = variantDebugInfoEnabled
   }
 

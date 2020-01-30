@@ -24,7 +24,7 @@ import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
   static diffs = undefined
-  static variables = null
+  static variables: Object = null
   static variants = []
   static variantDebugInfo = {}
   static merged = undefined
@@ -73,7 +73,7 @@ export default class VarCache {
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, VarCache.token)
   }
 
-  static setVariables(variables) {
+  static setVariables(variables: Object) {
     VarCache.variables = variables
   }
 
