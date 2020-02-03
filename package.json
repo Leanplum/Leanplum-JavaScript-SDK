@@ -6,11 +6,8 @@
     "test": "grunt test"
   },
   "license": "Apache-2.0",
-  "dependencies": {
-    "@types/node": "^13.5.0",
-    "underscore": "^1.8.3"
-  },
   "devDependencies": {
+    "@types/node": "^13.5.0",
     "chai": "^3.5.0",
     "dts-bundle": "^0.7.3",
     "eslint": "^3.19.0",
