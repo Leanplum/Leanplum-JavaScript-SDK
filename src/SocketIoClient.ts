@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,6 +22,15 @@ import Request from './Network'
  * Socket.io 1.0 client class.
  */
 export default class SocketIoClient {
+  connected: boolean = false
+  connecting: boolean = false
+  socket: WebSocket | undefined
+
+  onopen: Function | undefined
+  onclose: Function | undefined
+  onmessage: Function | undefined
+  onerror: Function | undefined
+
   /**
    * Initializes a new SocketIoClient, not connected by default.
    */

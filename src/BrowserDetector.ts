@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ const dataBrowser = [{
   identity: 'Safari',
   versionSearch: 'Version'
 }, {
-  prop: window.opera,
+  prop: (window as any).opera,
   identity: 'Opera',
   versionSearch: 'Version'
 }, {
@@ -93,6 +93,11 @@ const dataOS = [{
  * Helper class to detect which browser client is using.
  */
 export default class BrowserDetector {
+  browser: string
+  version: number | string
+  OS: string
+  versionSearchString: string
+
   /**
    * Initializes the object with current browser settings.
    */

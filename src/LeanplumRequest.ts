@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,9 +26,16 @@ let cooldownTimeout = null
 
 export default class LeanplumRequest {
 
-  static apiPath = 'https://www.leanplum.com/api'
-  static batchEnabled = true
-  static batchCooldown = 5
+  static apiPath: string = 'https://www.leanplum.com/api'
+  static batchEnabled: boolean = true
+  static batchCooldown: number = 5
+
+
+  static deviceId: string
+  static userId: string
+  static appId: string
+  static clientKey: string
+  static versionName: string
 
   /**
    *

@@ -5,7 +5,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify')
   grunt.loadNpmTasks('grunt-mocha-test')
   grunt.loadNpmTasks('grunt-webpack')
-  grunt.loadNpmTasks('grunt-babel')
 
   grunt.initConfig({
     eslint: {
@@ -19,17 +18,6 @@ module.exports = function (grunt) {
       dev: Object.assign({
         watch: true
       }, webpackConfig)
-    },
-    babel: {
-      options: {
-        sourceMap: true
-      },
-      dist: {
-        files: {
-          'dist/sw/sw.js': 'src/PushServiceWorker.js',
-          'test/e2e/js/index.js': 'test/e2e/js/index.es6.js'
-        }
-      }
     },
     uglify: {
       my_target: {
@@ -65,7 +53,7 @@ module.exports = function (grunt) {
   })
 
   grunt.registerTask('lint', ['eslint'])
-  grunt.registerTask('build', ['webpack:prod', 'babel', 'uglify'])
+  grunt.registerTask('build', ['webpack:prod', 'uglify'])
   grunt.registerTask('test', ['mochaTest'])
   grunt.registerTask('default', ['webpack:dev'])
 }

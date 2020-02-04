@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # LPM | Author: Ben Marten
-# Copyright (c) 2017 Leanplum Inc. All rights reserved.
+# Copyright (c) 2020 Leanplum Inc. All rights reserved.
 # Bumps the version in the constants file to a desired version.
 #
 
@@ -25,4 +25,4 @@ replace() {
 }
 
 replace package.json "version\": \"$1\"" "version\": \"$2\""
-replace src/Constants.js "SDK_VERSION: '$1'" "SDK_VERSION: '$2'"
+replace src/Constants.ts "SDK_VERSION: '$1'" "SDK_VERSION: '$2'"

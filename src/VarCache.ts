@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
   static diffs = undefined
-  static variables = null
+  static variables: Object = null
   static variants = []
   static variantDebugInfo = {}
   static merged = undefined
@@ -73,7 +73,7 @@ export default class VarCache {
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, VarCache.token)
   }
 
-  static setVariables(variables) {
+  static setVariables(variables: Object) {
     VarCache.variables = variables
   }
 
@@ -140,11 +140,6 @@ export default class VarCache {
           }
           if (attribute.length < 3 || attribute.charAt(0) !== '[' ||
               attribute.charAt(attribute.length - 1) !== ']') {
-            isArray = false
-            break
-          }
-          let varSubscript = attribute.substring(1, attribute.length - 1)
-          if (!parseInt(varSubscript).toString() === varSubscript) {
             isArray = false
             break
           }

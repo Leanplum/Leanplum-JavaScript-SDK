@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,23 +27,25 @@ import LeanplumSocket from './LeanplumSocket'
 
 let _browserDetector = new BrowserDetector()
 
-/**
- * @preserve Leanplum Javascript SDK.
- * Copyright 2016, Leanplum, Inc. All rights reserved.
- *
- * You may not distribute this source code without prior written permission
- * from Leanplum.
- */
-export default class Leanplum {
+type StatusHandler = (success: boolean) => void;
+type SimpleHandler = () => void;
+type UserAttributes = any;
 
-  static setApiPath(apiPath) {
+export default class Leanplum {
+  static _email: string
+  static _deviceName: string
+  static _deviceModel: string
+  static _systemName: string
+  static _systemVersion: string
+
+  static setApiPath(apiPath: string) {
     if (!LeanplumRequest.apiPath) {
       return
     }
     LeanplumRequest.apiPath = apiPath
   }
 
-  static setEmail(email) {
+  static setEmail(email: string) {
     Leanplum._email = email
   }
 
@@ -51,11 +53,11 @@ export default class Leanplum {
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  static setNetworkTimeout(seconds) {
+  static setNetworkTimeout(seconds: number) {
     LeanplumRequest.setNetworkTimeout(seconds)
   }
 
-  static setVariantDebugInfoEnabled(variantDebugInfoEnabled) {
+  static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
     InternalState.setVariantDebugInfoEnabled(variantDebugInfoEnabled)
   };
 
@@ -63,51 +65,51 @@ export default class Leanplum {
     return VarCache.getVariantDebugInfo()
   };
 
-  static setAppIdForDevelopmentMode(appId, accessKey) {
+  static setAppIdForDevelopmentMode(appId: string, accessKey: string) {
     LeanplumRequest.appId = appId
     LeanplumRequest.clientKey = accessKey
     InternalState.devMode = true
   }
 
-  static setAppIdForProductionMode(appId, accessKey) {
+  static setAppIdForProductionMode(appId: string, accessKey: string) {
     LeanplumRequest.appId = appId
     LeanplumRequest.clientKey = accessKey
     InternalState.devMode = false
   }
 
-  static setSocketHost(host) {
+  static setSocketHost(host: string) {
     LeanplumSocket.socketHost = host
   }
 
-  static setDeviceId(deviceId) {
+  static setDeviceId(deviceId: string) {
     LeanplumRequest.deviceId = deviceId
   }
 
-  static setAppVersion(versionName) {
+  static setAppVersion(versionName: string) {
     LeanplumRequest.versionName = versionName
   }
 
-  static setDeviceName(deviceName) {
+  static setDeviceName(deviceName: string) {
     Leanplum._deviceName = deviceName
   }
 
-  static setDeviceModel(deviceModel) {
+  static setDeviceModel(deviceModel: string) {
     Leanplum._deviceModel = deviceModel
   }
 
-  static setSystemName(systemName) {
+  static setSystemName(systemName: string) {
     Leanplum._systemName = systemName
   }
 
-  static setSystemVersion(systemVersion) {
+  static setSystemVersion(systemVersion: string) {
     Leanplum._systemVersion = systemVersion
   }
 
-  static setVariables(variables) {
+  static setVariables(variables: Object) {
     VarCache.setVariables(variables)
   }
 
-  static setRequestBatching(batchEnabled, cooldownSeconds) {
+  static setRequestBatching(batchEnabled: boolean, cooldownSeconds: number) {
     LeanplumRequest.batchEnabled = batchEnabled
     LeanplumRequest.batchCooldown = cooldownSeconds
   }
@@ -116,7 +118,7 @@ export default class Leanplum {
     return VarCache.getVariables()
   }
 
-  static getVariable(...args) {
+  static getVariable(...args: string[]) {
     let current = Leanplum.getVariables()
     for (let i = 0; i < args.length; i++) {
       current = current[args[i]]
@@ -128,23 +130,23 @@ export default class Leanplum {
     return VarCache.variants || []
   }
 
-  static addStartResponseHandler(handler) {
+  static addStartResponseHandler(handler: StatusHandler) {
     InternalState.addStartResponseHandler(handler)
   }
 
-  static addVariablesChangedHandler(handler) {
+  static addVariablesChangedHandler(handler: SimpleHandler) {
     InternalState.addVariablesChangedHandler(handler)
   }
 
-  static removeStartResponseHandler(handler) {
+  static removeStartResponseHandler(handler: StatusHandler) {
     InternalState.removeStartResponseHandler(handler)
   }
 
-  static removeVariablesChangedHandler(handler) {
+  static removeVariablesChangedHandler(handler: SimpleHandler) {
     InternalState.removeVariablesChangedHandler(handler)
   }
 
-  static forceContentUpdate(callback) {
+  static forceContentUpdate(callback: StatusHandler) {
     LeanplumRequest.request(Constants.METHODS.GET_VARS,
       new ArgsBuilder()
       .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
@@ -170,14 +172,14 @@ export default class Leanplum {
       );
   }
 
-  static start(userId, userAttributes, callback) {
-    // Overloads.
+  static start(userId: string, callback: StatusHandler): void;
+  static start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
+  static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void {
     if (typeof userId === 'function') {
       callback = userId
       userAttributes = {}
       userId = null
-    } else if (typeof userId === 'object' && userId !== null &&
-        userId !== undefined) {
+    } else if (typeof userId === 'object' && userId !== null && userId !== undefined) {
       callback = userAttributes
       userAttributes = userId
       userId = null
@@ -246,22 +248,19 @@ export default class Leanplum {
     })
   }
 
-  static startFromCache(userId, userAttributes, callback) {
-    // Overloads.
+  static startFromCache(userId: string, callback: StatusHandler): void;
+  static startFromCache(userAttributes?: UserAttributes, callback?: StatusHandler): void;
+  static startFromCache(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void {
     if (typeof userId === 'function') {
       callback = userId
-      // noinspection JSUnusedAssignment
       userAttributes = {}
       userId = null
-    } else if (typeof userId === 'object' && userId !== null &&
-        userId !== undefined) {
+    } else if (typeof userId === 'object' && userId !== null && userId !== undefined) {
       callback = userAttributes
-      // noinspection JSUnusedAssignment
       userAttributes = userId
       userId = null
     } else if (typeof userAttributes === 'function') {
       callback = userAttributes
-      // noinspection JSUnusedAssignment
       userAttributes = {}
     }
     LeanplumRequest.userId = userId
@@ -316,11 +315,11 @@ export default class Leanplum {
     })
   }
 
-  static setUserId(userId) {
+  static setUserId(userId: string) {
     Leanplum.setUserAttributes(userId)
   }
 
-  static setUserAttributes(userId, userAttributes) {
+  static setUserAttributes(userId: string, userAttributes?: UserAttributes) {
     if (userAttributes === undefined) {
       if (typeof userId === 'object') {
         userAttributes = userId
@@ -345,11 +344,9 @@ export default class Leanplum {
     }
   }
 
-  static track(event, value, info, params) {
-    // Overloads.
-    // object && !null && !undefined -> params
-    // string -> info, params
-    // *, object && !null && !undefined -> value, params
+  static track(event: string, value: number, params: Object): void;
+  static track(event: string, params: Object): void;
+  static track(event: string, value?: number, info?: string, params?: Object): void {
     if (typeof value === 'object' && value !== null && value !== undefined) {
       params = value
       info = undefined
@@ -373,10 +370,8 @@ export default class Leanplum {
         })
   }
 
-  static advanceTo(state, info, params) {
-    // Overloads.
-    // string|null|undefined, * -> info, params
-    // object && !null && !undefined -> params
+  static advanceTo(state: string, params?: Object): void;
+  static advanceTo(state: string, info?: string, params?: Object): void {
     if (typeof info === 'object' && info !== null && info !== undefined) {
       params = info
       info = undefined
@@ -395,7 +390,7 @@ export default class Leanplum {
    * Determines if web push is supported in the browser.
    * @return {Boolean} True if supported, else false.
    */
-  static isWebPushSupported() {
+  static isWebPushSupported(): boolean {
     return PushManager.isWebPushSupported()
   }
 
@@ -403,7 +398,7 @@ export default class Leanplum {
    * Determines if web push is subscribed.
    * @return {Promise} Resolves if true, rejects if false.
    */
-  static isWebPushSubscribed() {
+  static isWebPushSubscribed(): Promise<boolean> {
     return PushManager.isWebPushSubscribed()
   }
 
@@ -414,7 +409,7 @@ export default class Leanplum {
    * @return {Promise}                   Resolves if registration successful,
    *                                     otherwise fails.
    */
-  static registerForWebPush(serviceWorkerUrl) {
+  static registerForWebPush(serviceWorkerUrl: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       if (PushManager.isWebPushSupported()) {
         return PushManager.register(serviceWorkerUrl, (isSubscribed) => {
@@ -433,7 +428,7 @@ export default class Leanplum {
    * Unregisters the browser form web push.
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
-  static unregisterFromWebPush() {
+  static unregisterFromWebPush(): Promise<string> {
     return PushManager.unsubscribeUser()
   }
 
@@ -442,7 +437,7 @@ export default class Leanplum {
    * Use sparingly as if the app is updated, you'll have to deal with potentially
    * inconsistent state or user experience.
    */
-  static clearUserContent() {
+  static clearUserContent(): void {
     VarCache.clearUserContent()
   }
 }

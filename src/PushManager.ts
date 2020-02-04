@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ export default class PushManager {
    * Whether or not the browser is subscribed to web push notifications.
    * @return {Promise} True if subscribed, else false.
    */
-  static isWebPushSubscribed() {
+  static isWebPushSubscribed(): Promise<boolean> {
     if (!PushManager.isWebPushSupported()) {
       return new Promise((resolve) => {
         resolve(false)
@@ -138,7 +138,7 @@ export default class PushManager {
    * Unsubscribe the user(browser) from push.
    * @return {Promise} Resolves if unsubscribed, otherwise rejects.
    */
-  static unsubscribeUser() {
+  static unsubscribeUser(): Promise<string> {
     return new Promise((resolve, reject) => {
       PushManager.isWebPushSubscribed().then((subscribed) => {
         if (!subscribed) {
@@ -174,7 +174,7 @@ export default class PushManager {
    * Retrieves the service worker registration object from browser.
    * @return {object} Returns the registration or null.
    */
-  static getServiceWorkerRegistration() {
+  static getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
     return new Promise((resolve) => {
       if (serviceWorkerRegistration) {
         resolve(serviceWorkerRegistration)
@@ -217,12 +217,13 @@ export default class PushManager {
    * @return {object} The subscription object to be sent to server.
    */
   static prepareSubscription(subscription) {
+    let apply = Function.prototype.apply;
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
     // noinspection ES6ModulesDependencies
-    let keyAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(key)))
+    let keyAscii = btoa(apply.call(String.fromCharCode, null, new Uint8Array(key)))
     // noinspection ES6ModulesDependencies
-    let authAscii = btoa(Reflect.apply(String.fromCharCode, null, new Uint8Array(auth)))
+    let authAscii = btoa(apply.call(String.fromCharCode, null, new Uint8Array(auth)))
     return {
       endpoint: subscription.endpoint,
       key: keyAscii,

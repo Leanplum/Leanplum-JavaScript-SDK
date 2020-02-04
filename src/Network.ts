@@ -18,15 +18,21 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+declare var XDomainRequest
+
+const apply = Function.prototype.apply;
 let requestQueue = []
-let networkTimeoutSeconds = 10
+let networkTimeoutSeconds: number = 10
 
 export default class Network {
+
+  static runningRequest: boolean = false
+
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  static setNetworkTimeout(seconds) {
+  static setNetworkTimeout(seconds: number) {
     networkTimeoutSeconds = seconds
   }
 
@@ -41,7 +47,7 @@ export default class Network {
    * @param {boolean} [plainText] Whether the response should be returned as plain text or json.
    * @return {*}
    */
-  static ajax(method, url, data, success, error, queued, plainText) {
+  static ajax(method, url, data, success, error, queued, plainText?) {
     if (queued) {
       if (Network.runningRequest) {
         // eslint-disable-next-line prefer-rest-params
@@ -57,7 +63,7 @@ export default class Network {
         url = `http:${url.substring(6)}`
       }
       // eslint-disable-next-line prefer-rest-params
-      return Reflect.apply(Network.ajaxIE8, null, arguments)
+      return apply.call(Network.ajaxIE8, null, arguments)
     }
 
     let handled = false
@@ -194,7 +200,7 @@ export default class Network {
   static dequeueRequest() {
     let args = requestQueue.shift()
     if (args) {
-      Reflect.apply(Network.ajax, null, args)
+      apply.call(Network.ajax, null, args)
     }
   }
 }

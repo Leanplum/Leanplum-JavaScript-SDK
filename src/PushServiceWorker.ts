@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -35,6 +35,9 @@
  */
 
 /* global self, clients */
+
+declare var clients
+declare var registration
 
 const ACTION_NAME_KEY = '__name__'
 const OPEN_URL_ACTION = 'Open URL'
@@ -76,7 +79,7 @@ function pushListener(event) {
 
   // Extract title and delete from options.
   let title = options.title
-  Reflect.deleteProperty(options, 'title')
+  delete options.title;
   /** @namespace self.registration **/
   /** @namespace self.registration.showNotification **/
   event.waitUntil(self.registration.showNotification(title, options))
@@ -106,7 +109,7 @@ function notificationClickListener(event) {
     return
   }
 
-  Reflect.deleteProperty(openActions, 'notificationId')
+  delete openActions[notificationId];
 
   /** @namespace clients.openWindow **/
   event.waitUntil(clients.openWindow(openActionUrl))

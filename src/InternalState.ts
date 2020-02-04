@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2017 Leanplum Inc. All rights reserved.
+ *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ export default class InternalState {
   static startHandlers = []
   static hasStarted = false
   static startSuccessful = false
-  static variantDebugInfoEnabled = false
+  static variantDebugInfoEnabled: boolean = false
 
   static addStartResponseHandler(handler) {
     InternalState.startHandlers.push(handler)
@@ -67,7 +67,7 @@ export default class InternalState {
       }
   }
 
-    static setVariantDebugInfoEnabled(variantDebugInfoEnabled) {
+    static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
     InternalState.variantDebugInfoEnabled = variantDebugInfoEnabled
   }
 
