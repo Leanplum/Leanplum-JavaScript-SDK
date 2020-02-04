@@ -39,7 +39,7 @@ module.exports = function (grunt) {
             'test/specs/helpers/chai.js'
           ]
         },
-        src: ['test/specs/testLeanplum.js', 'test/specs/testVarCache.js']
+        src: ['test/specs/testLeanplum.js']
       }
     },
     watch: {
