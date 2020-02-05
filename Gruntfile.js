@@ -27,33 +27,17 @@ module.exports = function (grunt) {
         }
       }
     },
-    mochaTest: {
-      test: {
-        options: {
-          reporter: 'spec',
-          quiet: false,
-          clearRequireCache: false,
-          noFail: false,
-          require: ['mock-local-storage',
-            'test/specs/helpers/setup.js',
-            'test/specs/helpers/chai.js'
-          ]
-        },
-        src: ['test/specs/testLeanplum.js']
-      }
-    },
     watch: {
       js: {
         files: [
           'lib/leanplum.js'
         ],
-        tasks: ['lint', 'build', 'test']
+        tasks: ['lint', 'build']
       }
     }
   })
 
   grunt.registerTask('lint', ['eslint'])
   grunt.registerTask('build', ['webpack:prod', 'uglify'])
-  grunt.registerTask('test', ['mochaTest'])
   grunt.registerTask('default', ['webpack:dev'])
 }
