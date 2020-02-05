@@ -43,7 +43,7 @@ export default class Leanplum {
         static setSystemName(systemName: string): void;
         static setSystemVersion(systemVersion: string): void;
         static setVariables(variables: Object): void;
-        static setRequestBatching(batchEnabled: boolean, cooldownSeconds: number): void;
+        static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number): void;
         static getVariables(): any;
         static getVariable(...args: string[]): any;
         static getVariants(): any[];
@@ -51,11 +51,13 @@ export default class Leanplum {
         static addVariablesChangedHandler(handler: SimpleHandler): void;
         static removeStartResponseHandler(handler: StatusHandler): void;
         static removeVariablesChangedHandler(handler: SimpleHandler): void;
-        static forceContentUpdate(callback: StatusHandler): void;
+        static forceContentUpdate(callback?: StatusHandler): void;
         static start(userId: string, callback: StatusHandler): void;
         static start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
+        static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
         static startFromCache(userId: string, callback: StatusHandler): void;
         static startFromCache(userAttributes?: UserAttributes, callback?: StatusHandler): void;
+        static startFromCache(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
         static stop(): void;
         static pauseSession(): void;
         static resumeSession(): void;
@@ -65,7 +67,9 @@ export default class Leanplum {
         static setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
         static track(event: string, value: number, params: Object): void;
         static track(event: string, params: Object): void;
+        static track(event: string, value?: number, info?: string, params?: Object): void;
         static advanceTo(state: string, params?: Object): void;
+        static advanceTo(state: string, info?: string, params?: Object): void;
         /**
             * Determines if web push is supported in the browser.
             * @return {Boolean} True if supported, else false.
@@ -83,7 +87,7 @@ export default class Leanplum {
             * @return {Promise}                   Resolves if registration successful,
             *                                     otherwise fails.
             */
-        static registerForWebPush(serviceWorkerUrl: string): Promise<boolean>;
+        static registerForWebPush(serviceWorkerUrl?: string): Promise<boolean>;
         /**
             * Unregisters the browser form web push.
             * @return {Promise}            Resolves on success, otherwise rejects.
