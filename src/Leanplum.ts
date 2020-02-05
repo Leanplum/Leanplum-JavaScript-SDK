@@ -25,7 +25,7 @@ import VarCache from './VarCache'
 import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 
-let _browserDetector = new BrowserDetector()
+let _browserDetector = new BrowserDetector();
 
 type StatusHandler = (success: boolean) => void;
 type SimpleHandler = () => void;
@@ -109,7 +109,7 @@ export default class Leanplum {
     VarCache.setVariables(variables)
   }
 
-  static setRequestBatching(batchEnabled: boolean, cooldownSeconds: number) {
+  static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number) {
     LeanplumRequest.batchEnabled = batchEnabled
     LeanplumRequest.batchCooldown = cooldownSeconds
   }
@@ -146,7 +146,7 @@ export default class Leanplum {
     InternalState.removeVariablesChangedHandler(handler)
   }
 
-  static forceContentUpdate(callback: StatusHandler) {
+  static forceContentUpdate(callback?: StatusHandler) {
     LeanplumRequest.request(Constants.METHODS.GET_VARS,
       new ArgsBuilder()
       .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
@@ -174,6 +174,7 @@ export default class Leanplum {
 
   static start(userId: string, callback: StatusHandler): void;
   static start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
+  static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
   static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void {
     if (typeof userId === 'function') {
       callback = userId
@@ -250,6 +251,7 @@ export default class Leanplum {
 
   static startFromCache(userId: string, callback: StatusHandler): void;
   static startFromCache(userAttributes?: UserAttributes, callback?: StatusHandler): void;
+  static startFromCache(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
   static startFromCache(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void {
     if (typeof userId === 'function') {
       callback = userId
@@ -346,6 +348,7 @@ export default class Leanplum {
 
   static track(event: string, value: number, params: Object): void;
   static track(event: string, params: Object): void;
+  static track(event: string, value?: number, info?: string, params?: Object): void;
   static track(event: string, value?: number, info?: string, params?: Object): void {
     if (typeof value === 'object' && value !== null && value !== undefined) {
       params = value
@@ -371,6 +374,7 @@ export default class Leanplum {
   }
 
   static advanceTo(state: string, params?: Object): void;
+  static advanceTo(state: string, info?: string, params?: Object): void;
   static advanceTo(state: string, info?: string, params?: Object): void {
     if (typeof info === 'object' && info !== null && info !== undefined) {
       params = info
@@ -409,7 +413,7 @@ export default class Leanplum {
    * @return {Promise}                   Resolves if registration successful,
    *                                     otherwise fails.
    */
-  static registerForWebPush(serviceWorkerUrl: string): Promise<boolean> {
+  static registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       if (PushManager.isWebPushSupported()) {
         return PushManager.register(serviceWorkerUrl, (isSubscribed) => {
