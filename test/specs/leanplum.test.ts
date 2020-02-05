@@ -23,7 +23,7 @@ import {
   forceContentUpdateResponse
 } from './responses'
 
-//global.WebSocket = undefined
+//(global as any).WebSocket = undefined
 
 // Mocking Requests
 let xhr
@@ -64,24 +64,13 @@ function interceptRequest(callback) {
   }
 }
 
-let Leanplum = require('../../dist/leanplum.js');
-
-/**
- * Sets the app id based on the provided mode.
- * @param {String} mode The Leanplum mode.
- */
-function setAppId(mode) {
-  if (mode === testModes.DEV) {
-    Leanplum.setAppIdForDevelopmentMode(APP_ID, KEY_PROD)
-  } else {
-    Leanplum.setAppIdForProductionMode(APP_ID, KEY_DEV)
-  }
-}
 
 const testModes = {
   PROD: 0,
   DEV: 1
 }
+
+let Leanplum;
 
 const start = (done) => {
   interceptRequest((request) => {
@@ -97,11 +86,19 @@ const start = (done) => {
   })
 }
 
+function setAppId(mode) {
+  if (mode === testModes.DEV) {
+    Leanplum.setAppIdForDevelopmentMode(APP_ID, KEY_PROD)
+  } else {
+    Leanplum.setAppIdForProductionMode(APP_ID, KEY_DEV)
+  }
+}
 
 Object.keys(testModes).forEach((mode) => {
   describe(mode + ' mode:', () => {
     beforeEach(() => {
-      Leanplum = require('../../dist/leanplum.js');
+      Leanplum = require('../../src/Leanplum.ts').default
+
       setAppId(testModes[mode])
     })
 
@@ -110,9 +107,12 @@ Object.keys(testModes).forEach((mode) => {
         xhr.restore()
         xhr = null
       }
+      delete require.cache[require.resolve('../../src/Leanplum.ts')]
+      Leanplum = null
+      localStorage.clear()
     })
 
-    fdescribe('Test start methods.', () => {
+    describe('Test start methods.', () => {
 
       it('start', (done) => {
         interceptRequest((request) => {
@@ -290,7 +290,6 @@ Object.keys(testModes).forEach((mode) => {
         let count = 0
         interceptRequest((request) => {
           expect(request).not.toBeNull()
-          // console.log(request);
           count++
           request.respond(200, {
             'Content-Type': 'application/json'
@@ -308,7 +307,7 @@ Object.keys(testModes).forEach((mode) => {
     })
 
     describe('Test variable changed callback after start.', () => {
-      fit('setVariable', (done) => {
+      it('setVariable', (done) => {
         interceptRequest((request) => {
           request.respond(200, {
             'Content-Type': 'application/json'
@@ -367,7 +366,6 @@ Object.keys(testModes).forEach((mode) => {
 
     describe('Test forceContentUpdate.', () => {
       it('forceContentUpdate', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('getVars')

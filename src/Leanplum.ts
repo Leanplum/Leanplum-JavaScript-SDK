@@ -228,8 +228,8 @@ export default class Leanplum {
           if (InternalState.devMode) {
             let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
-              console.log(`A newer version of Leanplum, ${latestVersion}, is available. Go to` +
-                  'leanplum.com to download it.')
+              console.log(`A newer version of Leanplum, ${latestVersion}, is available.
+Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
             LeanplumSocket.connect()
           }
