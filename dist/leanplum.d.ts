@@ -32,7 +32,7 @@ export default class Leanplum {
             */
         static setNetworkTimeout(seconds: number): void;
         static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean): void;
-        static getVariantDebugInfo(): {};
+        static getVariantDebugInfo(): Object;
         static setAppIdForDevelopmentMode(appId: string, accessKey: string): void;
         static setAppIdForProductionMode(appId: string, accessKey: string): void;
         static setSocketHost(host: string): void;

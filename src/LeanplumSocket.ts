@@ -24,10 +24,9 @@ import LeanplumRequest from './LeanplumRequest'
 import isEqual from 'lodash/isEqual'
 
 export default class LeanplumSocket {
-
   static socketHost = 'dev.leanplum.com'
 
-  static connect() {
+  static connect(cache: VarCache) {
     if (!WebSocket) {
       console.log('Your browser doesn\'t support WebSockets.')
       return
@@ -66,14 +65,14 @@ export default class LeanplumSocket {
                 let values = getVarsResponse[Constants.KEYS.VARS]
                 let variants = getVarsResponse[Constants.KEYS.VARIANTS]
                 let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
-                if (!isEqual(values, VarCache.diffs)) {
-                  VarCache.applyDiffs(values, variants, actionMetadata)
+                if (!isEqual(values, cache.diffs)) {
+                  cache.applyDiffs(values, variants, actionMetadata)
                 }
               }
             }
         )
       } else if (event === 'getVariables') {
-        VarCache.sendVariables()
+        cache.sendVariables()
         client.send('getContentResponse', {
           'updated': true
         })

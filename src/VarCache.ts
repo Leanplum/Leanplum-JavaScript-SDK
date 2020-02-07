@@ -23,168 +23,177 @@ import LocalStorageManager from './LocalStorageManager'
 import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
-  static diffs = undefined
-  static variables: Object = null
-  static variants = []
-  static variantDebugInfo = {}
-  static merged = undefined
-  static onUpdate = undefined
-  static token = ''
-  static actionMetadata = {}
+  private actionMetadata: Object = {}
+  private merged = undefined
+  private variables: Object = null
+  private variantDebugInfo: Object = {}
 
-  static applyDiffs(diffs, variants, actionMetadata) {
-    VarCache.diffs = diffs
-    VarCache.variants = variants
-    VarCache.actionMetadata = actionMetadata
+  public diffs = undefined
+  public onUpdate?: () => void
+  public token: string = ''
+  public variants = []
+
+  public applyDiffs(diffs, variants, actionMetadata) {
+    this.diffs = diffs
+    this.variants = variants
+    this.actionMetadata = actionMetadata
     InternalState.hasReceivedDiffs = true
-    VarCache.merged = VarCache.mergeHelper(VarCache.variables, diffs)
-    VarCache.saveDiffs()
-    if (VarCache.onUpdate) {
-      VarCache.onUpdate()
+    this.merged = mergeHelper(this.variables, diffs)
+    this.saveDiffs()
+    if (this.onUpdate) {
+      this.onUpdate()
     }
   }
 
-  static loadDiffs() {
+  public loadDiffs() {
     try {
-      VarCache.applyDiffs(
-          JSON.parse(LocalStorageManager.getFromLocalStorage(
-              Constants.DEFAULT_KEYS.VARIABLES) || null),
-          JSON.parse(LocalStorageManager.getFromLocalStorage(
-              Constants.DEFAULT_KEYS.VARIANTS) || null),
-          JSON.parse(LocalStorageManager.getFromLocalStorage(
-              Constants.DEFAULT_KEYS.ACTION_METADATA) || null))
-      VarCache.token = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.TOKEN)
-      VarCache.variantDebugInfo = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO)
+      this.applyDiffs(
+        JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.VARIABLES) || null),
+        JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.VARIANTS) || null),
+        JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.ACTION_METADATA) || null)
+      )
+      this.token = this.loadLocal(Constants.DEFAULT_KEYS.TOKEN)
+      this.variantDebugInfo = this.loadLocal(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO)
     } catch (e) {
       console.log(`Leanplum: Invalid diffs: ${e}`)
     }
   }
 
-  static saveDiffs() {
-    LocalStorageManager.saveToLocalStorage(
-        Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(VarCache.diffs || {}))
-    LocalStorageManager.saveToLocalStorage(
-        Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(VarCache.variants || [])
-    )
-    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.ACTION_METADATA,
-        JSON.stringify(VarCache.actionMetadata || {}))
-    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO,
-        JSON.stringify(VarCache.variantDebugInfo || {}))
-    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.TOKEN, VarCache.token)
+  public saveDiffs() {
+    this.saveLocal(Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(this.diffs || {}))
+    this.saveLocal(Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(this.variants || []))
+    this.saveLocal(Constants.DEFAULT_KEYS.ACTION_METADATA, JSON.stringify(this.actionMetadata || {}))
+    this.saveLocal(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO, JSON.stringify(this.variantDebugInfo || {}))
+    this.saveLocal(Constants.DEFAULT_KEYS.TOKEN, this.token)
   }
 
-  static setVariables(variables: Object) {
-    VarCache.variables = variables
+  public getVariables() {
+    return this.merged !== undefined ? this.merged : this.variables
   }
 
-  static getVariables() {
-    return VarCache.merged !== undefined ? VarCache.merged : VarCache.variables
+  public setVariables(variables: Object) {
+    this.variables = variables
   }
 
-  static getVariantDebugInfo() {
-    return VarCache.variantDebugInfo
+  public getVariantDebugInfo() {
+    return this.variantDebugInfo
   }
 
-  static sendVariables() {
+  public setVariantDebugInfo(value: Object) {
+    this.variantDebugInfo = value
+  }
+
+  public sendVariables() {
     let body = {}
-    body[Constants.PARAMS.VARIABLES] = VarCache.variables
-    LeanplumRequest.request(Constants.METHODS.SET_VARS,
-        new ArgsBuilder().body(JSON.stringify(body)), {
-          sendNow: true
-        })
+    body[Constants.PARAMS.VARIABLES] = this.variables
+    LeanplumRequest.request(
+      Constants.METHODS.SET_VARS,
+      new ArgsBuilder().body(JSON.stringify(body)),
+      {
+        sendNow: true
+      }
+    )
   }
 
-  static mergeHelper(vars, diff) {
-    if (typeof diff === 'number' || typeof diff === 'boolean' || typeof diff === 'string') {
-      return diff
-    }
-    if (diff === null || diff === undefined) {
-      return vars
-    }
+  public clearUserContent() {
+    this.diffs = undefined
+    this.variables = null
+    this.variants = []
+    this.variantDebugInfo = {}
+    this.merged = undefined
+  }
 
-    let objIterator = function(obj) {
-      return function(f) {
-        if (obj instanceof Array) {
-          for (let i = 0; i < obj.length; i++) {
-            f(obj[i])
-          }
-        } else {
-          for (let attr in obj) {
-            // This seems to be best practice: https://github.com/eslint/eslint/issues/7071
-            // eslint-disable-next-line prefer-reflect
-            if ({}.hasOwnProperty.call(obj, attr)) {
-              f(attr)
-            }
+  private loadLocal<T>(key: string): T {
+    return LocalStorageManager.getFromLocalStorage(key)
+  }
+
+  private saveLocal<T>(key: string, value: T): void {
+    LocalStorageManager.saveToLocalStorage(key, value)
+  }
+}
+
+function mergeHelper(vars, diff) {
+  if (typeof diff === 'number' || typeof diff === 'boolean' || typeof diff === 'string') {
+    return diff
+  }
+
+  if (diff === null || diff === undefined) {
+    return vars
+  }
+
+  let objIterator = function(obj) {
+    return function(f) {
+      if (obj instanceof Array) {
+        for (let i = 0; i < obj.length; i++) {
+          f(obj[i])
+        }
+      } else {
+        for (let attr in obj) {
+          // This seems to be best practice: https://github.com/eslint/eslint/issues/7071
+          // eslint-disable-next-line prefer-reflect
+          if ({}.hasOwnProperty.call(obj, attr)) {
+            f(attr)
           }
         }
       }
     }
-    let varsIterator = objIterator(vars)
-    let diffIterator = objIterator(diff)
+  }
+  let varsIterator = objIterator(vars)
+  let diffIterator = objIterator(diff)
 
-    // Infer that the diffs is an array if the vars value doesn't exist to tell us the type.
-    let isArray = false
-    if (vars === null) {
-      if (!(diff instanceof Array)) {
-        isArray = null
-        for (let attribute in diff) {
-          if (!diff.hasOwnProperty(attribute)) {
-            continue
-          }
-          if (isArray === null) {
-            isArray = true
-          }
-          if (!(typeof attribute === 'string')) {
-            isArray = false
-            break
-          }
-          if (attribute.length < 3 || attribute.charAt(0) !== '[' ||
-              attribute.charAt(attribute.length - 1) !== ']') {
-            isArray = false
-            break
-          }
+  // Infer that the diffs is an array if the vars value doesn't exist to tell us the type.
+  let isArray = false
+  if (vars === null) {
+    if (!(diff instanceof Array)) {
+      isArray = null
+      for (let attribute in diff) {
+        if (!diff.hasOwnProperty(attribute)) {
+          continue
+        }
+        if (isArray === null) {
+          isArray = true
+        }
+        if (!(typeof attribute === 'string')) {
+          isArray = false
+          break
+        }
+        if (attribute.length < 3 || attribute.charAt(0) !== '[' ||
+            attribute.charAt(attribute.length - 1) !== ']') {
+          isArray = false
+          break
         }
       }
     }
+  }
 
-    // Merge arrays.
-    if (vars instanceof Array || isArray) {
-      let merged = []
-      varsIterator(function(attr) {
-        merged.push(attr)
-      })
-      diffIterator(function(varSubscript) {
-        let subscript =
-            parseInt(varSubscript.substring(1, varSubscript.length - 1))
-        let diffValue = diff[varSubscript]
-        while (subscript >= merged.length) {
-          merged.push(null)
-        }
-        merged[subscript] = VarCache.mergeHelper(merged[subscript], diffValue)
-      })
-      return merged
-    }
-
-    // Merge dictionaries.
-    let merged = {}
+  // Merge arrays.
+  if (vars instanceof Array || isArray) {
+    let merged = []
     varsIterator(function(attr) {
-      if (diff[attr] === null || diff[attr] === undefined) {
-        merged[attr] = vars[attr]
-      }
+      merged.push(attr)
     })
-    diffIterator(function(attr) {
-      merged[attr] = VarCache.mergeHelper(vars !== null ? vars[attr] : null,
-          diff[attr])
+    diffIterator(function(varSubscript) {
+      let subscript =
+          parseInt(varSubscript.substring(1, varSubscript.length - 1))
+      let diffValue = diff[varSubscript]
+      while (subscript >= merged.length) {
+        merged.push(null)
+      }
+      merged[subscript] = mergeHelper(merged[subscript], diffValue)
     })
     return merged
   }
 
-  static clearUserContent() {
-    VarCache.diffs = undefined
-    VarCache.variables = null
-    VarCache.variants = []
-    VarCache.variantDebugInfo = {}
-    VarCache.merged = undefined
-  }
-
+  // Merge dictionaries.
+  let merged = {}
+  varsIterator(function(attr) {
+    if (diff[attr] === null || diff[attr] === undefined) {
+      merged[attr] = vars[attr]
+    }
+  })
+  diffIterator(function(attr) {
+    merged[attr] = mergeHelper(vars !== null ? vars[attr] : null,
+        diff[attr])
+  })
+  return merged
 }
