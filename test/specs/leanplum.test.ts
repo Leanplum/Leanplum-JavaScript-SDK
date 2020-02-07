@@ -23,10 +23,7 @@ import {
   forceContentUpdateResponse
 } from './responses'
 
-//(global as any).WebSocket = undefined
-
-// Mocking Requests
-let xhr
+(global as any).WebSocket = undefined
 
 // Test data
 const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs'
@@ -54,6 +51,7 @@ function getAction(request) {
  * Intercept the next request.
  * @param  {Function} callback The callback to be called on interception.
  */
+let xhr
 function interceptRequest(callback) {
   xhr = sinon.useFakeXMLHttpRequest()
   xhr.onCreate = function(req) {
@@ -82,7 +80,7 @@ const start = (done) => {
   Leanplum.setRequestBatching(false)
   Leanplum.start(userId, userAttributes, (success) => {
     expect(success).toBe(true)
-    return done(success ? null : success)
+    done && done(success ? null : success)
   })
 }
 
@@ -97,7 +95,7 @@ function setAppId(mode) {
 Object.keys(testModes).forEach((mode) => {
   describe(mode + ' mode:', () => {
     beforeEach(() => {
-      Leanplum = require('../../src/Leanplum.ts').default
+      Leanplum = require('../../dist/leanplum.js')
 
       setAppId(testModes[mode])
     })
@@ -107,7 +105,8 @@ Object.keys(testModes).forEach((mode) => {
         xhr.restore()
         xhr = null
       }
-      delete require.cache[require.resolve('../../src/Leanplum.ts')]
+      Leanplum.destroy()
+      delete require.cache[require.resolve('../../dist/leanplum.js')]
       Leanplum = null
       localStorage.clear()
     })
@@ -122,32 +121,34 @@ Object.keys(testModes).forEach((mode) => {
         })
         Leanplum.start(userId, userAttributes, (success) => {
           expect(success).toBe(true)
-          return done(success ? null : success)
+          done()
         })
       })
 
       it('startFromCache', (done) => {
         Leanplum.startFromCache(userId, userAttributes, (success) => {
           expect(success).toBe(true)
-          return done(success ? null : success)
+          done()
         })
       })
 
-      it('stop', () => {
+      it('stop', (done) => {
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('stop')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
+          done()
         })
         Leanplum.stop()
       })
     })
 
     describe('Test action methods.', () => {
+      beforeEach(start)
+
       it('pauseSession', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('pauseSession')
@@ -160,7 +161,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('resumeSession', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('resumeSession')
@@ -173,7 +173,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('pauseState', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('pauseState')
@@ -186,7 +185,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('resumeState', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('resumeState')
@@ -199,7 +197,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('setUserAttributes', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('setUserAttributes')
@@ -212,7 +209,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('track', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('track')
@@ -225,7 +221,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('advanceTo', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('advance')
@@ -238,7 +233,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('verifyDefaultApiPath', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(request.url).toContain('https://www.leanplum.com/api')
@@ -251,7 +245,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('setApiPath', (done) => {
-        start(done)
         const newApiPath = 'http://leanplum-staging.appspot.com/api'
         interceptRequest((request) => {
           expect(request).not.toBeNull()
@@ -266,7 +259,6 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('setUserAttributes', (done) => {
-        start(done)
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           let json = JSON.parse(request.requestBody).data[0]
@@ -281,11 +273,11 @@ Object.keys(testModes).forEach((mode) => {
           }, JSON.stringify(successResponse))
           done()
         })
+
         Leanplum.setUserAttributes('u1', userAttributes)
       })
 
       it('setRequestBatching', (done) => {
-        start(done)
         Leanplum.setRequestBatching(true, 5)
         let count = 0
         interceptRequest((request) => {
@@ -296,13 +288,13 @@ Object.keys(testModes).forEach((mode) => {
           }, JSON.stringify(successResponse))
         })
 
+        Leanplum.track('Page View')
+        Leanplum.advanceTo('Shopping Cart')
+
         setTimeout(function() {
           expect(count).toBe(testModes[mode] === testModes.DEV ? 2 : 1)
           done()
         }, 10)
-
-        Leanplum.track('Page View')
-        Leanplum.advanceTo('Shopping Cart')
       })
     })
 
@@ -313,12 +305,13 @@ Object.keys(testModes).forEach((mode) => {
             'Content-Type': 'application/json'
           }, JSON.stringify(startResponse))
         })
-        Leanplum.setVariables(userAttributes)
+        const variables = userAttributes
+        Leanplum.setVariables(variables)
         Leanplum.addVariablesChangedHandler(() => {
-          expect(Leanplum.getVariables().gender).toBe(userAttributes.gender)
-          expect(Leanplum.getVariables().age).toBe(userAttributes.age)
+          expect(Leanplum.getVariables().gender).toBe(variables.gender)
+          expect(Leanplum.getVariables().age).toBe(variables.age)
         })
-        Leanplum.start(userId, userAttributes, (success) => {
+        Leanplum.start(userId, {}, (success) => {
           expect(success).toBe(true)
           return done(success ? null : success)
         })
@@ -372,9 +365,8 @@ Object.keys(testModes).forEach((mode) => {
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
-          done()
         })
-        Leanplum.forceContentUpdate()
+        Leanplum.forceContentUpdate(() => done())
       })
     })
 
@@ -405,9 +397,9 @@ Object.keys(testModes).forEach((mode) => {
             expect(Leanplum.getVariables().age).toBe(vars.age)
             return done()
           }
-
-          Leanplum.forceContentUpdate();
         })
+
+        Leanplum.forceContentUpdate();
       })
     })
 

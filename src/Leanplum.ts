@@ -106,6 +106,7 @@ export default class Leanplum {
   }
 
   static setVariables(variables: Object) {
+      //console.log(variables);
     VarCache.setVariables(variables)
   }
 
@@ -115,6 +116,7 @@ export default class Leanplum {
   }
 
   static getVariables() {
+      //console.log(VarCache.merged, VarCache.variables);
     return VarCache.getVariables()
   }
 
@@ -132,6 +134,34 @@ export default class Leanplum {
 
   static addStartResponseHandler(handler: StatusHandler) {
     InternalState.addStartResponseHandler(handler)
+  }
+
+  static destroy() {
+    LeanplumRequest.apiPath = 'https://www.leanplum.com/api'
+    LeanplumRequest.batchEnabled = true
+    LeanplumRequest.batchCooldown = 5
+    LeanplumRequest.deviceId = undefined
+    LeanplumRequest.userId = undefined
+    LeanplumRequest.appId = undefined
+    LeanplumRequest.clientKey = undefined
+    LeanplumRequest.versionName = undefined
+
+    InternalState.devMode = false
+    InternalState.variablesChangedHandlers = []
+    InternalState.hasReceivedDiffs = false
+    InternalState.startHandlers = []
+    InternalState.hasStarted = false
+    InternalState.startSuccessful = false
+    InternalState.variantDebugInfoEnabled = false
+
+    VarCache.diffs = undefined
+    VarCache.variables = null
+    VarCache.variants = []
+    VarCache.variantDebugInfo = {}
+    VarCache.merged = undefined
+    VarCache.onUpdate = undefined
+    VarCache.token = ''
+    VarCache.actionMetadata = {}
   }
 
   static addVariablesChangedHandler(handler: SimpleHandler) {
