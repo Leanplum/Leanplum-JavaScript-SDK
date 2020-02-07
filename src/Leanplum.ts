@@ -106,7 +106,6 @@ export default class Leanplum {
   }
 
   static setVariables(variables: Object) {
-      //console.log(variables);
     VarCache.setVariables(variables)
   }
 
@@ -116,7 +115,6 @@ export default class Leanplum {
   }
 
   static getVariables() {
-      //console.log(VarCache.merged, VarCache.variables);
     return VarCache.getVariables()
   }
 

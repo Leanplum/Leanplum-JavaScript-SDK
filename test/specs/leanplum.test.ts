@@ -94,8 +94,10 @@ function setAppId(mode) {
 
 Object.keys(testModes).forEach((mode) => {
   describe(mode + ' mode:', () => {
+    const LEANPLUM_PATH = '../../dist/leanplum.js'
+
     beforeEach(() => {
-      Leanplum = require('../../dist/leanplum.js')
+      Leanplum = require(LEANPLUM_PATH)
 
       setAppId(testModes[mode])
     })
@@ -106,7 +108,7 @@ Object.keys(testModes).forEach((mode) => {
         xhr = null
       }
       Leanplum.destroy()
-      delete require.cache[require.resolve('../../dist/leanplum.js')]
+      delete require.cache[require.resolve(LEANPLUM_PATH)]
       Leanplum = null
       localStorage.clear()
     })
