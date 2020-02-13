@@ -8,6 +8,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/jest": "^25.1.1",
+    "@types/lodash": "^4.14.149",
     "@types/node": "^13.5.0",
     "chai": "^3.5.0",
     "dts-bundle": "^0.7.3",
