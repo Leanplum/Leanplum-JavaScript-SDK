@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "start": "grunt",
-    "lint": "grunt lint",
     "build": "grunt build",
+    "clean": "grunt clean",
+    "lint": "grunt lint",
+    "start": "grunt",
     "test": "jest"
   },
   "license": "Apache-2.0",
@@ -16,6 +17,7 @@
     "eslint-config-google": "^0.7.1",
     "eslint-loader": "^1.6.1",
     "grunt": "^1.0.1",
+    "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-jshint": "^1.1.0",
     "grunt-contrib-uglify": "^4.0.1",
     "grunt-eslint": "^19.0.0",
