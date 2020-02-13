@@ -46,7 +46,7 @@ module.exports = {
     libraryTarget: 'umd'
   },
   resolve: {
-    extensions: [ '.ts', '.js' ],
+    extensions: [ '.ts' ],
   },
   plugins: [
     new DtsBundlePlugin()
