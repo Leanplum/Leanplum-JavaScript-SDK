@@ -3,10 +3,11 @@
     "start": "grunt",
     "lint": "grunt lint",
     "build": "grunt build",
-    "test": "grunt test"
+    "test": "jest"
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/jest": "^25.1.1",
     "@types/node": "^13.5.0",
     "chai": "^3.5.0",
     "dts-bundle": "^0.7.3",
@@ -17,15 +18,14 @@
     "grunt-contrib-jshint": "^1.1.0",
     "grunt-contrib-uglify": "^4.0.1",
     "grunt-eslint": "^19.0.0",
-    "grunt-mocha": "^1.0.4",
-    "grunt-mocha-test": "^0.13.2",
     "grunt-webpack": "^3.0.0",
+    "jest": "^25.1.0",
     "jsdom": "^9.12.0",
     "lodash": "^4.16.6",
-    "mocha": "^1.21.5",
     "mock-local-storage": "^1.0.2",
     "nyc": "^11.2.1",
     "sinon": "^2.1.0",
+    "ts-jest": "^25.2.0",
     "ts-loader": "^6.2.1",
     "typescript": "^3.7.2",
     "webpack": "^4.41.2"

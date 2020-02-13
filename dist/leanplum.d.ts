@@ -48,6 +48,7 @@ export default class Leanplum {
         static getVariable(...args: string[]): any;
         static getVariants(): any[];
         static addStartResponseHandler(handler: StatusHandler): void;
+        static __destroy(): void;
         static addVariablesChangedHandler(handler: SimpleHandler): void;
         static removeStartResponseHandler(handler: StatusHandler): void;
         static removeVariablesChangedHandler(handler: SimpleHandler): void;

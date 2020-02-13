@@ -15,30 +15,26 @@
  *  limitations under the License
  *
  */
-const sinon = require('sinon')
+import sinon from 'sinon'
 
+import {
+  startResponse,
+  successResponse,
+  forceContentUpdateResponse
+} from './responses'
+
+(global as any).WebSocket = undefined
+
+// Test data
 const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs'
 const KEY_DEV = 'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY'
 const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74'
 
-const startResponse = require('./responses/start.json')
-const successResponse = require('./responses/success.json')
-const forceContentUpdateResponse = require('./responses/forceContentUpdate.json')
-const LEANPLUM_PATH = '../../dist/leanplum.js'
-
-global.WebSocket = undefined
-
-// Mocking Requests
-let xhr
-
-// Test data
 const userId = (Math.random() * 100000000).toFixed(0)
 const userAttributes = {
   gender: 'female',
   age: 27
 }
-
-let Leanplum = require(LEANPLUM_PATH)
 
 /**
  * Extracts the leanplum action type from a request.
@@ -55,6 +51,7 @@ function getAction(request) {
  * Intercept the next request.
  * @param  {Function} callback The callback to be called on interception.
  */
+let xhr
 function interceptRequest(callback) {
   xhr = sinon.useFakeXMLHttpRequest()
   xhr.onCreate = function(req) {
@@ -65,10 +62,28 @@ function interceptRequest(callback) {
   }
 }
 
-/**
- * Sets the app id based on the provided mode.
- * @param {String} mode The Leanplum mode.
- */
+
+const testModes = {
+  PROD: 0,
+  DEV: 1
+}
+
+let Leanplum;
+
+const start = (done) => {
+  interceptRequest((request) => {
+    expect(request).not.toBeNull()
+    request.respond(200, {
+      'Content-Type': 'application/json'
+    }, JSON.stringify(startResponse))
+  })
+  Leanplum.setRequestBatching(false)
+  Leanplum.start(userId, userAttributes, (success) => {
+    expect(success).toBe(true)
+    done && done(success ? null : success)
+  })
+}
+
 function setAppId(mode) {
   if (mode === testModes.DEV) {
     Leanplum.setAppIdForDevelopmentMode(APP_ID, KEY_PROD)
@@ -77,31 +92,28 @@ function setAppId(mode) {
   }
 }
 
-const testModes = {
-  PROD: 0,
-  DEV: 1
-}
-
 Object.keys(testModes).forEach((mode) => {
   describe(mode + ' mode:', () => {
-    describe('Test start methods.', () => {
-      before(() => {
-      })
+    const LEANPLUM_PATH = '../../dist/leanplum.js'
 
-      after(() => {
+    beforeEach(() => {
+      Leanplum = require(LEANPLUM_PATH)
+
+      setAppId(testModes[mode])
+    })
+
+    afterEach(() => {
+      if (xhr) {
         xhr.restore()
-      })
+        xhr = null
+      }
+      Leanplum.__destroy()
+      delete require.cache[require.resolve(LEANPLUM_PATH)]
+      Leanplum = null
+      localStorage.clear()
+    })
 
-      beforeEach(() => {
-        Leanplum = require(LEANPLUM_PATH)
-        setAppId(testModes[mode])
-      })
-
-      afterEach(() => {
-        requests = []
-        assert.equal(requests.length, 0)
-        delete require.cache[require.resolve(LEANPLUM_PATH)]
-      })
+    describe('Test start methods.', () => {
 
       it('start', (done) => {
         interceptRequest((request) => {
@@ -110,64 +122,38 @@ Object.keys(testModes).forEach((mode) => {
           }, JSON.stringify(startResponse))
         })
         Leanplum.start(userId, userAttributes, (success) => {
-          assert.equal(success, true)
-          return done(success ? null : success)
+          expect(success).toBe(true)
+          done()
         })
       })
 
       it('startFromCache', (done) => {
         Leanplum.startFromCache(userId, userAttributes, (success) => {
-          assert.equal(success, true)
-          return done(success ? null : success)
+          expect(success).toBe(true)
+          done()
         })
       })
 
-      it('stop', () => {
+      it('stop', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'stop')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('stop')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
+          done()
         })
         Leanplum.stop()
       })
     })
 
     describe('Test action methods.', () => {
-      before((done) => {
-        Leanplum = require(LEANPLUM_PATH)
-        interceptRequest((request) => {
-          assert.isNotNull(request)
-          request.respond(200, {
-            'Content-Type': 'application/json'
-          }, JSON.stringify(startResponse))
-        })
-        setAppId(testModes[mode])
-        Leanplum.setRequestBatching(false)
-        Leanplum.start(userId, userAttributes, (success) => {
-          assert.equal(success, true)
-          requests = []
-          return done(success ? null : success)
-        })
-      })
-
-      after(() => {
-        xhr.restore()
-        delete require.cache[require.resolve(LEANPLUM_PATH)]
-      })
-
-      beforeEach(() => {
-      })
-
-      afterEach(() => {
-        requests = []
-      })
+      beforeEach(start)
 
       it('pauseSession', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'pauseSession')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('pauseSession')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
@@ -178,8 +164,8 @@ Object.keys(testModes).forEach((mode) => {
 
       it('resumeSession', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'resumeSession')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('resumeSession')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
@@ -190,8 +176,8 @@ Object.keys(testModes).forEach((mode) => {
 
       it('pauseState', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'pauseState')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('pauseState')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
@@ -202,8 +188,8 @@ Object.keys(testModes).forEach((mode) => {
 
       it('resumeState', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'resumeState')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('resumeState')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
@@ -214,8 +200,8 @@ Object.keys(testModes).forEach((mode) => {
 
       it('setUserAttributes', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'setUserAttributes')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('setUserAttributes')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
@@ -226,69 +212,70 @@ Object.keys(testModes).forEach((mode) => {
 
       it('track', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'track')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('track')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
           done()
         })
-        Leanplum.track()
+        Leanplum.track('Page View')
       })
 
       it('advanceTo', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'advance')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('advance')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
           done()
         })
-        Leanplum.advanceTo()
+        Leanplum.advanceTo('Shopping Cart')
       })
 
       it('verifyDefaultApiPath', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.include(request.url, 'https://www.leanplum.com/api')
+          expect(request).not.toBeNull()
+          expect(request.url).toContain('https://www.leanplum.com/api')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
           done()
         })
-        Leanplum.track()
+        Leanplum.track('Page View')
       })
 
       it('setApiPath', (done) => {
         const newApiPath = 'http://leanplum-staging.appspot.com/api'
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.include(request.url, newApiPath)
+          expect(request).not.toBeNull()
+          expect(request.url).toContain(newApiPath)
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
           done()
         })
         Leanplum.setApiPath(newApiPath)
-        Leanplum.track()
+        Leanplum.track('Page View')
       })
 
       it('setUserAttributes', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
+          expect(request).not.toBeNull()
           let json = JSON.parse(request.requestBody).data[0]
-          assert.equal(getAction(request), 'setUserAttributes')
-          assert.equal(json.newUserId, 'u1')
-          assert.equal(JSON.parse(json.userAttributes).gender,
+          expect(getAction(request)).toBe('setUserAttributes')
+          expect(json.newUserId).toBe('u1')
+          expect(JSON.parse(json.userAttributes).gender).toBe(
               userAttributes.gender)
-          assert.equal(JSON.parse(json.userAttributes).age,
+          expect(JSON.parse(json.userAttributes).age).toBe(
               userAttributes.age)
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
           done()
         })
+
         Leanplum.setUserAttributes('u1', userAttributes)
       })
 
@@ -296,80 +283,44 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.setRequestBatching(true, 5)
         let count = 0
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          // console.log(request);
+          expect(request).not.toBeNull()
           count++
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
         })
 
+        Leanplum.track('Page View')
+        Leanplum.advanceTo('Shopping Cart')
+
         setTimeout(function() {
-          assert.equal(count, testModes[mode] === testModes.DEV ? 2 : 1)
+          expect(count).toBe(testModes[mode] === testModes.DEV ? 2 : 1)
           done()
         }, 10)
-
-        Leanplum.track()
-        Leanplum.advanceTo()
       })
     })
 
     describe('Test variable changed callback after start.', () => {
-      before(() => {
-      })
-
-      after(() => {
-        xhr.restore()
-      })
-
-      beforeEach(() => {
-        Leanplum = require(LEANPLUM_PATH)
-        setAppId(testModes[mode])
-      })
-
-      afterEach(() => {
-        requests = []
-        assert.equal(requests.length, 0)
-        delete require.cache[require.resolve(LEANPLUM_PATH)]
-      })
-
       it('setVariable', (done) => {
         interceptRequest((request) => {
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(startResponse))
         })
-        Leanplum.setVariables(userAttributes)
+        const variables = userAttributes
+        Leanplum.setVariables(variables)
         Leanplum.addVariablesChangedHandler(() => {
-          assert.equal(Leanplum.getVariables().gender, userAttributes.gender)
-          assert.equal(Leanplum.getVariables().age, userAttributes.age)
+          expect(Leanplum.getVariables().gender).toBe(variables.gender)
+          expect(Leanplum.getVariables().age).toBe(variables.age)
         })
-        Leanplum.start(userId, userAttributes, (success) => {
-          assert.equal(success, true)
+        Leanplum.start(userId, {}, (success) => {
+          expect(success).toBe(true)
           return done(success ? null : success)
         })
       })
     })
 
     describe('Test addStartResponseHandler callback after start.', () => {
-      before(() => {
-      })
-
-      after(() => {
-        xhr.restore()
-      })
-
-      beforeEach(() => {
-        Leanplum = require(LEANPLUM_PATH)
-        setAppId(testModes[mode])
-      })
-
-      afterEach(() => {
-        requests = []
-        assert.equal(requests.length, 0)
-        delete require.cache[require.resolve(LEANPLUM_PATH)]
-      })
-
       it('test addStartResponseHandler', (done) => {
         interceptRequest((request) => {
           request.respond(200, {
@@ -385,7 +336,7 @@ Object.keys(testModes).forEach((mode) => {
 
     describe('Web push.', () => {
       it('test isWebPushSupported', (done) => {
-        assert(!Leanplum.isWebPushSupported())
+        expect(!Leanplum.isWebPushSupported()).toBeTruthy()
         done()
       })
 
@@ -396,69 +347,32 @@ Object.keys(testModes).forEach((mode) => {
         } catch (e) {
           console.log(e)
         }
-        assert(!subscribed)
+        expect(!subscribed).toBeTruthy()
       })
 
       it('test isWebPushSupported', async () => {
         try {
           await Leanplum.registerForWebPush()
         } catch (e) {
-          assert(e)
+          expect(e).toBeTruthy()
         }
       })
     })
 
     describe('Test forceContentUpdate.', () => {
-      before(() => {
-      })
-
-      after(() => {
-        xhr.restore()
-      })
-
-      beforeEach(() => {
-        Leanplum = require(LEANPLUM_PATH)
-        setAppId(testModes[mode])
-      })
-
-      afterEach(() => {
-        requests = []
-        assert.equal(requests.length, 0)
-        delete require.cache[require.resolve(LEANPLUM_PATH)]
-      })
-
       it('forceContentUpdate', (done) => {
         interceptRequest((request) => {
-          assert.isNotNull(request)
-          assert.equal(getAction(request), 'getVars')
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('getVars')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
-          done()
         })
-        Leanplum.forceContentUpdate()
+        Leanplum.forceContentUpdate(() => done())
       })
     })
 
     describe('Test variable changed callback after forceContentUpdate.', () => {
-      before(() => {
-      })
-
-      after(() => {
-        xhr.restore()
-      })
-
-      beforeEach(() => {
-        Leanplum = require(LEANPLUM_PATH)
-        setAppId(testModes[mode])
-      })
-
-      afterEach(() => {
-        requests = []
-        assert.equal(requests.length, 0)
-        delete require.cache[require.resolve(LEANPLUM_PATH)]
-      })
-
       it('test setVariable forceContentUpdate', (done) => {
         interceptRequest((request) => {
           if (getAction(request) == 'getVars'){
@@ -478,38 +392,20 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.addVariablesChangedHandler(() => {
           if(isVariablesChangedFromStart) {
             isVariablesChangedFromStart = false;
-            assert.equal(Leanplum.getVariables().gender, userAttributes.gender)
-            assert.equal(Leanplum.getVariables().age, userAttributes.age)
+            expect(Leanplum.getVariables().gender).toBe(userAttributes.gender)
+            expect(Leanplum.getVariables().age).toBe(userAttributes.age)
           } else {
-            assert.equal(Leanplum.getVariables().gender, vars.gender)
-            assert.equal(Leanplum.getVariables().age, vars.age)
+            expect(Leanplum.getVariables().gender).toBe(vars.gender)
+            expect(Leanplum.getVariables().age).toBe(vars.age)
             return done()
           }
-
-          Leanplum.forceContentUpdate();
         })
+
+        Leanplum.forceContentUpdate();
       })
     })
 
     describe('Test callback in forceContentUpdate.', () => {
-      before(() => {
-      })
-
-      after(() => {
-        xhr.restore()
-      })
-
-      beforeEach(() => {
-        Leanplum = require(LEANPLUM_PATH)
-        setAppId(testModes[mode])
-      })
-
-      afterEach(() => {
-        requests = []
-        assert.equal(requests.length, 0)
-        delete require.cache[require.resolve(LEANPLUM_PATH)]
-      })
-
       it('test callback success forceContentUpdate', (done) => {
         interceptRequest((request) => {
           if (getAction(request) == 'getVars'){
@@ -527,9 +423,9 @@ Object.keys(testModes).forEach((mode) => {
         let vars = forceContentUpdateResponse.response[0].vars
 
         Leanplum.forceContentUpdate(function(success) {
-            assert.equal(success, true)
-            assert.equal(Leanplum.getVariables().gender, vars.gender)
-            assert.equal(Leanplum.getVariables().age, vars.age)
+            expect(success).toBe(true)
+            expect(Leanplum.getVariables().gender).toBe(vars.gender)
+            expect(Leanplum.getVariables().age).toBe(vars.age)
             return done()
         });
       })
@@ -550,7 +446,7 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.start()
 
         Leanplum.forceContentUpdate(function(success) {
-            assert.equal(success, false)
+            expect(success).toBe(false)
             return done()
         });
       })
@@ -571,7 +467,7 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.start()
 
         Leanplum.forceContentUpdate(function(success) {
-            assert.equal(success, false)
+            expect(success).toBe(false)
             return done()
         });
       })

@@ -134,6 +134,34 @@ export default class Leanplum {
     InternalState.addStartResponseHandler(handler)
   }
 
+  static __destroy() {
+    LeanplumRequest.apiPath = 'https://www.leanplum.com/api'
+    LeanplumRequest.batchEnabled = true
+    LeanplumRequest.batchCooldown = 5
+    LeanplumRequest.deviceId = undefined
+    LeanplumRequest.userId = undefined
+    LeanplumRequest.appId = undefined
+    LeanplumRequest.clientKey = undefined
+    LeanplumRequest.versionName = undefined
+
+    InternalState.devMode = false
+    InternalState.variablesChangedHandlers = []
+    InternalState.hasReceivedDiffs = false
+    InternalState.startHandlers = []
+    InternalState.hasStarted = false
+    InternalState.startSuccessful = false
+    InternalState.variantDebugInfoEnabled = false
+
+    VarCache.diffs = undefined
+    VarCache.variables = null
+    VarCache.variants = []
+    VarCache.variantDebugInfo = {}
+    VarCache.merged = undefined
+    VarCache.onUpdate = undefined
+    VarCache.token = ''
+    VarCache.actionMetadata = {}
+  }
+
   static addVariablesChangedHandler(handler: SimpleHandler) {
     InternalState.addVariablesChangedHandler(handler)
   }
@@ -228,8 +256,8 @@ export default class Leanplum {
           if (InternalState.devMode) {
             let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
-              console.log(`A newer version of Leanplum, ${latestVersion}, is available. Go to` +
-                  'leanplum.com to download it.')
+              console.log(`A newer version of Leanplum, ${latestVersion}, is available.
+Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
             LeanplumSocket.connect()
           }
