@@ -134,7 +134,7 @@ export default class Leanplum {
     InternalState.addStartResponseHandler(handler)
   }
 
-  static destroy() {
+  static __destroy() {
     LeanplumRequest.apiPath = 'https://www.leanplum.com/api'
     LeanplumRequest.batchEnabled = true
     LeanplumRequest.batchCooldown = 5

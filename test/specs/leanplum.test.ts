@@ -107,7 +107,7 @@ Object.keys(testModes).forEach((mode) => {
         xhr.restore()
         xhr = null
       }
-      Leanplum.destroy()
+      Leanplum.__destroy()
       delete require.cache[require.resolve(LEANPLUM_PATH)]
       Leanplum = null
       localStorage.clear()
