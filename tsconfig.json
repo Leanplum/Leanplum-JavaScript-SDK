@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "declaration": true,
     "esModuleInterop": true,
     "lib": [
       "dom",
@@ -10,7 +9,8 @@
     ],
     "module": "CommonJS",
     "noImplicitAny": false,
-    "outDir": "./dist/",
+    "outDir": "dist/",
+    "rootDir": "./",
     "target": "es5"
   }
 }
