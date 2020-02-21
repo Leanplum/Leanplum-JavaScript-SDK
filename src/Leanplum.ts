@@ -32,6 +32,8 @@ type SimpleHandler = () => void;
 type UserAttributes = any;
 
 export default class Leanplum {
+  private static _varCache: VarCache = new VarCache()
+
   static _email: string
   static _deviceName: string
   static _deviceModel: string
@@ -62,7 +64,7 @@ export default class Leanplum {
   };
 
   static getVariantDebugInfo() {
-    return VarCache.getVariantDebugInfo()
+    return Leanplum._varCache.getVariantDebugInfo()
   };
 
   static setAppIdForDevelopmentMode(appId: string, accessKey: string) {
@@ -106,7 +108,7 @@ export default class Leanplum {
   }
 
   static setVariables(variables: Object) {
-    VarCache.setVariables(variables)
+    Leanplum._varCache.setVariables(variables)
   }
 
   static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number) {
@@ -115,7 +117,7 @@ export default class Leanplum {
   }
 
   static getVariables() {
-    return VarCache.getVariables()
+    return Leanplum._varCache.getVariables()
   }
 
   static getVariable(...args: string[]) {
@@ -127,7 +129,7 @@ export default class Leanplum {
   }
 
   static getVariants() {
-    return VarCache.variants || []
+    return Leanplum._varCache.variants || []
   }
 
   static addStartResponseHandler(handler: StatusHandler) {
@@ -151,15 +153,6 @@ export default class Leanplum {
     InternalState.hasStarted = false
     InternalState.startSuccessful = false
     InternalState.variantDebugInfoEnabled = false
-
-    VarCache.diffs = undefined
-    VarCache.variables = null
-    VarCache.variants = []
-    VarCache.variantDebugInfo = {}
-    VarCache.merged = undefined
-    VarCache.onUpdate = undefined
-    VarCache.token = ''
-    VarCache.actionMetadata = {}
   }
 
   static addVariablesChangedHandler(handler: SimpleHandler) {
@@ -185,13 +178,13 @@ export default class Leanplum {
           let getVarsResponse = LeanplumRequest.getLastResponse(response);
           let isSuccess = LeanplumRequest.isResponseSuccess(getVarsResponse);
           if (isSuccess) {
-            VarCache.applyDiffs(
+            Leanplum._varCache.applyDiffs(
               getVarsResponse[Constants.KEYS.VARS],
               getVarsResponse[Constants.KEYS.VARIANTS],
               getVarsResponse[Constants.KEYS.ACTION_METADATA])
-            VarCache.variantDebugInfo = getVarsResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
+            Leanplum._varCache.setVariantDebugInfo(getVarsResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
           }
-          
+
           if (callback) {
             callback(isSuccess);
           }
@@ -221,7 +214,7 @@ export default class Leanplum {
       Leanplum.addStartResponseHandler(callback)
     }
 
-    VarCache.onUpdate = function(){
+    Leanplum._varCache.onUpdate = function() {
       InternalState.triggerVariablesChangedHandlers()
     }
 
@@ -244,7 +237,7 @@ export default class Leanplum {
 
     // Issue request.
     // noinspection Annotator
-      LeanplumRequest.request(Constants.METHODS.START, args, {
+    LeanplumRequest.request(Constants.METHODS.START, args, {
       queued: true,
       sendNow: true,
       response: function(response) {
@@ -259,18 +252,18 @@ export default class Leanplum {
               console.log(`A newer version of Leanplum, ${latestVersion}, is available.
 Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
-            LeanplumSocket.connect()
+            LeanplumSocket.connect(Leanplum._varCache)
           }
 
-          VarCache.applyDiffs(
+          Leanplum._varCache.applyDiffs(
               startResponse[Constants.KEYS.VARS],
               startResponse[Constants.KEYS.VARIANTS],
               startResponse[Constants.KEYS.ACTION_METADATA]);
-          VarCache.variantDebugInfo = startResponse[Constants.KEYS.VARIANT_DEBUG_INFO]
-          VarCache.token = startResponse[Constants.KEYS.TOKEN]
+          Leanplum._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
+          Leanplum._varCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
           InternalState.startSuccessful = false
-          VarCache.loadDiffs()
+          Leanplum._varCache.loadDiffs()
         }
         InternalState.triggerStartHandlers()
       }
@@ -301,9 +294,9 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     InternalState.hasStarted = true
     InternalState.startSuccessful = true
     if (InternalState.devMode) {
-      LeanplumSocket.connect()
+      LeanplumSocket.connect(Leanplum._varCache)
     }
-    VarCache.loadDiffs()
+    Leanplum._varCache.loadDiffs()
     InternalState.triggerStartHandlers()
   }
 
@@ -470,6 +463,6 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * inconsistent state or user experience.
    */
   static clearUserContent(): void {
-    VarCache.clearUserContent()
+    Leanplum._varCache.clearUserContent()
   }
 }
