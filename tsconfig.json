@@ -10,7 +10,8 @@
     ],
     "module": "CommonJS",
     "noImplicitAny": false,
-    "outDir": "./dist/",
+    "outDir": "dist/",
+    "rootDir": "./",
     "target": "es5"
   }
 }
