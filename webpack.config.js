@@ -1,18 +1,16 @@
 const path = require('path')
 
-const libraryName = 'Leanplum';
+const libraryName = 'Leanplum'
 
-function DtsBundlePlugin(){}
-DtsBundlePlugin.prototype.apply = function (compiler) {
-  compiler.plugin('done', function(){
-    var dts = require('dts-bundle');
-    dts.bundle({
-      name: libraryName,
-      main: './dist/src/Leanplum.d.ts',
-      out: '../leanplum.d.ts',
-      removeSource: true,
-      headerText: `
- *
+class DtsBundlePlugin {
+  apply(compiler) {
+    compiler.plugin('done', function () {
+      require('dts-bundle').bundle({
+        name: libraryName,
+        main: './dist/src/Leanplum.d.ts',
+        out: '../leanplum.d.ts',
+        removeSource: true,
+        headerText: `
  *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,16 +23,19 @@ DtsBundlePlugin.prototype.apply = function (compiler) {
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
- *  limitations under the License
+ *  limitations under the License.
+ *
  *`,
-      outputAsModuleFolder: true
-    });
-  });
-};
+        indent: '  ',
+        outputAsModuleFolder: true
+      })
+    })
+  }
+}
 
 module.exports = {
   entry: {
-    leanplum: './src/bundles/leanplum.full.ts',
+    'leanplum': './src/bundles/leanplum.full.ts',
     'sw/sw': './src/PushServiceWorker.ts'
   },
   devtool: 'inline-source-map',
@@ -46,7 +47,7 @@ module.exports = {
     libraryTarget: 'umd'
   },
   resolve: {
-    extensions: [ '.ts' ],
+    extensions: ['.js', '.ts']
   },
   plugins: [
     new DtsBundlePlugin()
@@ -54,7 +55,7 @@ module.exports = {
   module: {
     rules: [{
       test: /\.ts$/,
-      exclude: /node_modules|test/,
+      include: [path.resolve(__dirname, './src')],
       loader: 'ts-loader'
     }]
   }

@@ -11,15 +11,6 @@ module.exports = function (grunt) {
     eslint: {
       target: ['lib/leanplum.js']
     },
-    webpack: {
-      options: {
-        stats: !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
-      },
-      prod: webpackConfig,
-      dev: Object.assign({
-        watch: true
-      }, webpackConfig)
-    },
     uglify: {
       my_target: {
         files: {
@@ -33,12 +24,22 @@ module.exports = function (grunt) {
         files: [
           'lib/leanplum.js'
         ],
-        tasks: ['lint', 'build']
+        tasks: ['lint', 'compile']
       }
+    },
+    webpack: {
+      options: {
+        stats: !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
+      },
+      dev: Object.assign({
+        watch: true
+      }, webpackConfig),
+      prod: webpackConfig
     }
   })
 
   grunt.registerTask('lint', ['eslint'])
+  grunt.registerTask('compile', ['clean', 'webpack:prod'])
   grunt.registerTask('build', ['clean', 'webpack:prod', 'uglify'])
   grunt.registerTask('default', ['webpack:dev'])
 }
