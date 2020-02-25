@@ -122,7 +122,7 @@ function mergeHelper(vars, diff) {
   }
 
   let objIterator = function(obj) {
-    return function(f) {
+    return function iterate(f) {
       if (obj instanceof Array) {
         for (let i = 0; i < obj.length; i++) {
           f(obj[i])
@@ -192,8 +192,7 @@ function mergeHelper(vars, diff) {
     }
   })
   diffIterator(function(attr) {
-    merged[attr] = mergeHelper(vars !== null ? vars[attr] : null,
-        diff[attr])
+    merged[attr] = mergeHelper(vars === null ? null : vars[attr] || {}, diff[attr])
   })
   return merged
 }
