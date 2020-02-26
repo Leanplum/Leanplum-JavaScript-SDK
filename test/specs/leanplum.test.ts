@@ -472,35 +472,5 @@ Object.keys(testModes).forEach((mode) => {
         });
       })
     })
-
-    describe('VarCache', () => {
-      it('setVariables before start', (done) => {
-        interceptRequest((request) => {
-            request.respond(200, {
-              'Content-Type': 'application/json'
-            }, JSON.stringify({
-              response: [
-                {
-                  success: true,
-                  vars: {
-                    serverVar: { nestedServerVar: 1 }
-                  }
-                }
-              ]
-            }))
-          })
-
-        Leanplum.setVariables({
-          clientVar: 1
-        })
-
-        Leanplum.start(function(success) {
-          expect(success).toBe(true)
-          expect(Leanplum.getVariables().clientVar).toBe(1)
-          expect(Leanplum.getVariables().serverVar.nestedServerVar).toBe(1)
-          done()
-        })
-      })
-    })
   })
 })
