@@ -6,7 +6,7 @@ describe(VarCache, () => {
 
     cache.setVariables({ foo: 1 })
 
-    expect(cache.getVariables()).toEqual({ foo: 1 });
+    expect(cache.getVariables()).toEqual({ foo: 1 })
   })
 
   it('gets merged variables', () => {
@@ -15,7 +15,7 @@ describe(VarCache, () => {
 
     cache.applyDiffs({ foo: 2 }, null, null)
 
-    expect(cache.getVariables()).toEqual({ foo: 2 });
+    expect(cache.getVariables()).toEqual({ foo: 2 })
   })
 
   it('applyDiffs merges missing server variables', () => {
