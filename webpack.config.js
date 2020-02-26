@@ -1,10 +1,16 @@
 const path = require('path')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 const libraryName = 'Leanplum'
 
 class DtsBundlePlugin {
   apply(compiler) {
-    compiler.plugin('done', function () {
+    compiler.hooks.done.tap('DtsBundlePlugin', (stats) => {
+      // Do not bundle TypeScript declaration files if there are errors.
+      if (stats.compilation.errors && stats.compilation.errors.length) {
+        return
+      }
+
       require('dts-bundle').bundle({
         name: libraryName,
         main: './dist/src/Leanplum.d.ts',
@@ -50,7 +56,8 @@ module.exports = {
     extensions: ['.js', '.ts']
   },
   plugins: [
-    new DtsBundlePlugin()
+    new ForkTsCheckerWebpackPlugin(),
+    new DtsBundlePlugin(),
   ],
   module: {
     rules: [{
