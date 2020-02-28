@@ -33,11 +33,13 @@ export default class VarCache {
   public token: string = ''
   public variants = []
 
+  public constructor(private internalState: InternalState) {}
+
   public applyDiffs(diffs, variants, actionMetadata) {
     this.diffs = diffs
     this.variants = variants
     this.actionMetadata = actionMetadata
-    InternalState.hasReceivedDiffs = true
+    this.internalState.hasReceivedDiffs = true
     this.merged = mergeHelper(this.variables, diffs)
     this.saveDiffs()
     if (this.onUpdate) {
@@ -84,15 +86,13 @@ export default class VarCache {
   }
 
   public sendVariables() {
-    let body = {}
+    const body = {}
+    const args = new ArgsBuilder().body(JSON.stringify(body))
     body[Constants.PARAMS.VARIABLES] = this.variables
-    LeanplumRequest.request(
-      Constants.METHODS.SET_VARS,
-      new ArgsBuilder().body(JSON.stringify(body)),
-      {
-        sendNow: true
-      }
-    )
+    LeanplumRequest.request(Constants.METHODS.SET_VARS, args, {
+      devMode: this.internalState.devMode,
+      sendNow: true
+    })
   }
 
   public clearUserContent() {

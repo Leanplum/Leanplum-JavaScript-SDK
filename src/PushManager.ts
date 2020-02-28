@@ -16,11 +16,12 @@
  *
  */
 
+import isEqual from 'lodash/isEqual'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
-import isEqual from 'lodash/isEqual'
-import LocalStorageManager from './LocalStorageManager'
+import InternalState from './InternalState'
 import LeanplumRequest from './LeanplumRequest'
+import LocalStorageManager from './LocalStorageManager'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
     'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
@@ -33,6 +34,12 @@ let serviceWorkerRegistration = null
  * Push Manager handles the registration and subscription for web push.
  */
 export default class PushManager {
+  private static internalState: InternalState;
+
+  static setInternalState(value: InternalState): void {
+    PushManager.internalState = value
+  }
+
   /**
    * Whether or not web push is supported in the browser.
    * @return {Boolean} True if supported, else false.
@@ -206,6 +213,7 @@ export default class PushManager {
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i)
     }
+
     return outputArray
   }
 
@@ -217,13 +225,14 @@ export default class PushManager {
    * @return {object} The subscription object to be sent to server.
    */
   static prepareSubscription(subscription) {
-    let apply = Function.prototype.apply;
+    let apply = Function.prototype.apply
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
     // noinspection ES6ModulesDependencies
     let keyAscii = btoa(apply.call(String.fromCharCode, null, new Uint8Array(key)))
     // noinspection ES6ModulesDependencies
     let authAscii = btoa(apply.call(String.fromCharCode, null, new Uint8Array(auth)))
+
     return {
       endpoint: subscription.endpoint,
       key: keyAscii,
@@ -241,9 +250,12 @@ export default class PushManager {
       let preparedSubscriptionString = JSON.stringify(preparedSubscription)
       let existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
+
       if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
-        LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
-            preparedSubscriptionString)
+        LocalStorageManager.saveToLocalStorage(
+          Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
+          preparedSubscriptionString
+        )
         PushManager.setSubscription(preparedSubscriptionString)
       }
     }
@@ -257,12 +269,13 @@ export default class PushManager {
     if (!subscription) {
       return
     }
-    LeanplumRequest.request(Constants.METHODS.SET_DEVICE_ATTRIBUTES,
-        new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION,
-            subscription), {
-          queued: false,
-          sendNow: true
-        }
-    )
+
+    const args = new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION, subscription)
+
+    LeanplumRequest.request(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
+      devMode: PushManager.internalState.devMode,
+      queued: false,
+      sendNow: true
+    })
   }
 }

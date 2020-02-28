@@ -15,11 +15,12 @@
  *  limitations under the License
  *
  */
-import Constants from './Constants'
+
 import ArgsBuilder from './ArgsBuilder'
+import Constants from './Constants'
 import InternalState from './InternalState'
-import Network from './Network'
 import LocalStorageManager from './LocalStorageManager'
+import Network from './Network'
 
 let lastRequestTime = undefined
 let cooldownTimeout = null
@@ -47,6 +48,7 @@ export default class LeanplumRequest {
    * @param options.response
    * @param options.queued
    * @param options.sendNow
+   * @param options.devMode
    * @private
    */
   static request(action, params, options) {
@@ -58,22 +60,26 @@ export default class LeanplumRequest {
       LeanplumRequest.deviceId =
           LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID)
     }
+
     if (!LeanplumRequest.deviceId) {
       let id = ''
-      let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
-          '0123456789'
+      let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
       for (let i = 0; i < 16; i++) {
         id += possible.charAt(Math.floor(Math.random() * possible.length))
       }
+
       LeanplumRequest.deviceId = id
       LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.DEVICE_ID, id)
     }
+
     if (!LeanplumRequest.userId) {
       LeanplumRequest.userId = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.USER_ID)
       if (!LeanplumRequest.userId) {
         LeanplumRequest.userId = LeanplumRequest.deviceId
       }
     }
+
     LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, LeanplumRequest.userId)
 
     let argsBuilder = params
@@ -83,7 +89,7 @@ export default class LeanplumRequest {
         .add(Constants.PARAMS.USER_ID, LeanplumRequest.userId)
         .add(Constants.PARAMS.ACTION, action)
         .add(Constants.PARAMS.VERSION_NAME, LeanplumRequest.versionName)
-        .add(Constants.PARAMS.DEV_MODE, InternalState.devMode)
+        .add(Constants.PARAMS.DEV_MODE, options.devMode)
         .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString())
     let success = options.success || options.response
     let error = options.error || options.response
@@ -103,7 +109,7 @@ export default class LeanplumRequest {
       return
     }
 
-    let sendNow = InternalState.devMode || options.sendNow || !LeanplumRequest.batchEnabled
+    let sendNow = options.devMode || options.sendNow || !LeanplumRequest.batchEnabled
 
     let sendUnsentRequests = function() {
       let requestsToSend = LeanplumRequest.popUnsentRequests()
