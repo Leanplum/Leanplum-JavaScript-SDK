@@ -32,6 +32,7 @@ type SimpleHandler = () => void;
 type UserAttributes = any;
 
 export default class Leanplum {
+  private static _lpSocket: LeanplumSocket = new LeanplumSocket()
   private static _varCache: VarCache = new VarCache()
 
   static _email: string
@@ -80,7 +81,7 @@ export default class Leanplum {
   }
 
   static setSocketHost(host: string) {
-    LeanplumSocket.socketHost = host
+    Leanplum._lpSocket.setSocketHost(host)
   }
 
   static setDeviceId(deviceId: string) {
@@ -252,7 +253,7 @@ export default class Leanplum {
               console.log(`A newer version of Leanplum, ${latestVersion}, is available.
 Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
-            LeanplumSocket.connect(Leanplum._varCache)
+            Leanplum._lpSocket.connect(Leanplum._varCache)
           }
 
           Leanplum._varCache.applyDiffs(
@@ -294,7 +295,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     InternalState.hasStarted = true
     InternalState.startSuccessful = true
     if (InternalState.devMode) {
-      LeanplumSocket.connect(Leanplum._varCache)
+      Leanplum._lpSocket.connect(Leanplum._varCache)
     }
     Leanplum._varCache.loadDiffs()
     InternalState.triggerStartHandlers()
