@@ -63,7 +63,7 @@ export default class Leanplum {
   }
 
   static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
-    Leanplum._internalState.setVariantDebugInfoEnabled(variantDebugInfoEnabled)
+    Leanplum._internalState.variantDebugInfoEnabled = variantDebugInfoEnabled
   }
 
   static getVariantDebugInfo() {
@@ -139,6 +139,10 @@ export default class Leanplum {
     Leanplum._internalState.addStartResponseHandler(handler)
   }
 
+  static removeStartResponseHandler(handler: StatusHandler) {
+    Leanplum._internalState.removeStartResponseHandler(handler)
+  }
+
   static __destroy() {
     LeanplumRequest.apiPath = 'https://www.leanplum.com/api'
     LeanplumRequest.batchEnabled = true
@@ -154,15 +158,11 @@ export default class Leanplum {
   }
 
   static addVariablesChangedHandler(handler: SimpleHandler) {
-    Leanplum._internalState.addVariablesChangedHandler(handler)
-  }
-
-  static removeStartResponseHandler(handler: StatusHandler) {
-    Leanplum._internalState.removeStartResponseHandler(handler)
+    Leanplum._varCache.addVariablesChangedHandler(handler)
   }
 
   static removeVariablesChangedHandler(handler: SimpleHandler) {
-    Leanplum._internalState.removeVariablesChangedHandler(handler)
+    Leanplum._varCache.removeVariablesChangedHandler(handler)
   }
 
   static forceContentUpdate(callback?: StatusHandler) {
@@ -217,7 +217,7 @@ export default class Leanplum {
     }
 
     Leanplum._varCache.onUpdate = function() {
-      Leanplum._internalState.triggerVariablesChangedHandlers()
+      Leanplum._varCache.triggerVariablesChangedHandlers()
     }
 
     const args = new ArgsBuilder()

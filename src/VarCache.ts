@@ -24,8 +24,10 @@ import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
   private actionMetadata: Object = {}
+  private hasReceivedDiffs: boolean = false
   private merged = undefined
   private variables: Object = null
+  private variablesChangedHandlers: Function[] = []
   private variantDebugInfo: Object = {}
 
   public diffs = undefined
@@ -39,7 +41,7 @@ export default class VarCache {
     this.diffs = diffs
     this.variants = variants
     this.actionMetadata = actionMetadata
-    this.internalState.hasReceivedDiffs = true
+    this.hasReceivedDiffs = true
     this.merged = mergeHelper(this.variables, diffs)
     this.saveDiffs()
     if (this.onUpdate) {
@@ -75,6 +77,26 @@ export default class VarCache {
 
   public setVariables(variables: Object) {
     this.variables = variables
+  }
+
+  public addVariablesChangedHandler(handler) {
+    this.variablesChangedHandlers.push(handler)
+    if (this.hasReceivedDiffs) {
+      handler()
+    }
+  }
+
+  public removeVariablesChangedHandler(handler) {
+    let idx = this.variablesChangedHandlers.indexOf(handler)
+    if (idx >= 0) {
+      this.variablesChangedHandlers.splice(idx, 1)
+    }
+  }
+
+  public triggerVariablesChangedHandlers() {
+    for (let i = 0; i < this.variablesChangedHandlers.length; i++) {
+      this.variablesChangedHandlers[i]()
+    }
   }
 
   public getVariantDebugInfo() {

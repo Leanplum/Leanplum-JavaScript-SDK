@@ -17,98 +17,30 @@
  */
 
 export default class InternalState {
-  private _devMode: boolean = false
+  private startHandlers: Function[] = []
 
-  private _variablesChangedHandlers: Function[] = []
-  private _hasReceivedDiffs: boolean = false
-
-  private _hasStarted: boolean = false
-  private _startHandlers: Function[] = []
-  private _startSuccessful: boolean = false
-  private _variantDebugInfoEnabled: boolean = false
-
-  public get devMode(): boolean {
-    return this._devMode
-  }
-
-  public set devMode(value: boolean) {
-    this._devMode = value
-  }
-
-  public get hasReceivedDiffs(): boolean {
-    return this._hasReceivedDiffs
-  }
-
-  public set hasReceivedDiffs(value: boolean) {
-    this._hasReceivedDiffs = value
-  }
-
-  public get hasStarted(): boolean {
-    return this._hasStarted
-  }
-
-  public set hasStarted(value: boolean) {
-    this._hasStarted = value
-  }
-
-  public get startSuccessful(): boolean {
-    return this._startSuccessful
-  }
-
-  public set startSuccessful(value: boolean) {
-    this._startSuccessful = value
-  }
-
-  public get variantDebugInfoEnabled(): boolean {
-    return this._variantDebugInfoEnabled
-  }
-
-  public set variantDebugInfoEnabled(value: boolean) {
-    this._variantDebugInfoEnabled = value
-  }
+  public devMode: boolean = false
+  public hasStarted: boolean = false
+  public startSuccessful: boolean = false
+  public variantDebugInfoEnabled: boolean = false
 
   public addStartResponseHandler(handler) {
-    this._startHandlers.push(handler)
-    if (this._hasStarted) {
-      handler(this._startSuccessful)
+    this.startHandlers.push(handler)
+    if (this.hasStarted) {
+      handler(this.startSuccessful)
     }
   }
 
   public removeStartResponseHandler(handler) {
-    let idx = this._startHandlers.indexOf(handler)
+    let idx = this.startHandlers.indexOf(handler)
     if (idx >= 0) {
-      this._startHandlers.splice(idx, 1)
+      this.startHandlers.splice(idx, 1)
     }
   }
 
   public triggerStartHandlers() {
-    for (let i = 0; i < this._startHandlers.length; i++) {
-      this._startHandlers[i](this._startSuccessful)
+    for (let i = 0; i < this.startHandlers.length; i++) {
+      this.startHandlers[i](this.startSuccessful)
     }
   }
-
-  public addVariablesChangedHandler(handler) {
-    this._variablesChangedHandlers.push(handler)
-    if (this._hasReceivedDiffs) {
-      handler()
-    }
-  }
-
-  public removeVariablesChangedHandler(handler) {
-    let idx = this._variablesChangedHandlers.indexOf(handler)
-    if (idx >= 0) {
-      this._variablesChangedHandlers.splice(idx, 1)
-    }
-  }
-
-  public triggerVariablesChangedHandlers() {
-    for (let i = 0; i < this._variablesChangedHandlers.length; i++) {
-      this._variablesChangedHandlers[i]()
-    }
-  }
-
-  public setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
-    this._variantDebugInfoEnabled = variantDebugInfoEnabled
-  }
-
 }
