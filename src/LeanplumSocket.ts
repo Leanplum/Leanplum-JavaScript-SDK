@@ -12,21 +12,21 @@
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
- *  limitations under the License
+ *  limitations under the License.
  *
  */
 
-import Constants from './Constants'
+import isEqual from 'lodash/isEqual'
 import ArgsBuilder from './ArgsBuilder'
+import Constants from './Constants'
+import LeanplumRequest from './LeanplumRequest'
 import SocketIoClient from './SocketIoClient'
 import VarCache from './VarCache'
-import LeanplumRequest from './LeanplumRequest'
-import isEqual from 'lodash/isEqual'
 
 export default class LeanplumSocket {
-  static socketHost = 'dev.leanplum.com'
+  private socketHost = 'dev.leanplum.com'
 
-  static connect(cache: VarCache) {
+  public connect(cache: VarCache): void {
     if (!WebSocket) {
       console.log('Your browser doesn\'t support WebSockets.')
       return
@@ -34,43 +34,38 @@ export default class LeanplumSocket {
 
     let client = new SocketIoClient()
     let authSent = false
-    client.onopen = function() {
+
+    client.onopen = () => {
       if (!authSent) {
         console.log('Leanplum: Connected to development server.')
-        let args = {}
-        args[Constants.PARAMS.APP_ID] = LeanplumRequest.appId
-        args[Constants.PARAMS.DEVICE_ID] = LeanplumRequest.deviceId
-        client.send('auth', args)
+        client.send('auth', {
+          [Constants.PARAMS.APP_ID]: LeanplumRequest.appId,
+          [Constants.PARAMS.DEVICE_ID]: LeanplumRequest.deviceId
+        })
         authSent = true
       }
     }
-    client.onerror = function(event) {
+
+    client.onerror = (event) => {
       console.log('Leanplum: Socket error', event)
     }
-    /**
-     *
-     * @param event
-     * @param args
-     * @param args[].email
-     */
-    client.onmessage = function(event, args) {
+
+    client.onmessage = (event: string, args: { email: string }[]) => {
       if (event === 'updateVars') {
-        LeanplumRequest.request(Constants.METHODS.GET_VARS,
-            new ArgsBuilder()
-                .add(Constants.PARAMS.INCLUDE_DEFAULTS, false), {
-              queued: false,
-              sendNow: true,
-              response: function(response) {
-                let getVarsResponse = LeanplumRequest.getLastResponse(response)
-                let values = getVarsResponse[Constants.KEYS.VARS]
-                let variants = getVarsResponse[Constants.KEYS.VARIANTS]
-                let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
-                if (!isEqual(values, cache.diffs)) {
-                  cache.applyDiffs(values, variants, actionMetadata)
-                }
-              }
+        const args = new ArgsBuilder().add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
+        LeanplumRequest.request(Constants.METHODS.GET_VARS, args, {
+          queued: false,
+          sendNow: true,
+          response: function (response) {
+            let getVarsResponse = LeanplumRequest.getLastResponse(response)
+            let values = getVarsResponse[Constants.KEYS.VARS]
+            let variants = getVarsResponse[Constants.KEYS.VARIANTS]
+            let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
+            if (!isEqual(values, cache.diffs)) {
+              cache.applyDiffs(values, variants, actionMetadata)
             }
-        )
+          }
+        })
       } else if (event === 'getVariables') {
         cache.sendVariables()
         client.send('getContentResponse', {
@@ -86,15 +81,22 @@ export default class LeanplumSocket {
         alert(`Your device has been registered to ${args[0].email}.`)
       }
     }
-    client.onclose = function() {
+
+    client.onclose = () => {
       console.log('Leanplum: Disconnected to development server.')
       authSent = false
     }
-    client.connect(LeanplumSocket.socketHost)
-    setInterval(function() {
+
+    client.connect(this.socketHost)
+
+    setInterval(() => {
       if (!client.connected && !client.connecting) {
-        client.connect(LeanplumSocket.socketHost)
+        client.connect(this.socketHost)
       }
     }, 5000)
+  }
+
+  public setSocketHost(value: string): void {
+    this.socketHost = value
   }
 }
