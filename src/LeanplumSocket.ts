@@ -19,7 +19,6 @@
 import isEqual from 'lodash/isEqual'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import InternalState from './InternalState'
 import LeanplumRequest from './LeanplumRequest'
 import SocketIoClient from './SocketIoClient'
 import VarCache from './VarCache'
@@ -27,7 +26,10 @@ import VarCache from './VarCache'
 export default class LeanplumSocket {
   private socketHost = 'dev.leanplum.com'
 
-  public connect(cache: VarCache, state: InternalState): void {
+  public connect(
+    cache: VarCache,
+    createRequest: (action: string, args: ArgsBuilder, options: any) => void
+  ): void {
     if (!WebSocket) {
       console.log('Your browser doesn\'t support WebSockets.')
       return
@@ -54,8 +56,7 @@ export default class LeanplumSocket {
     client.onmessage = (event: string, args: { email: string }[]) => {
       if (event === 'updateVars') {
         const args = new ArgsBuilder().add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-        LeanplumRequest.request(Constants.METHODS.GET_VARS, args, {
-          devMode: state.devMode,
+        createRequest(Constants.METHODS.GET_VARS, args, {
           queued: false,
           sendNow: true,
           response: function (response) {

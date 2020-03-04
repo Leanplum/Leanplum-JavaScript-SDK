@@ -1,12 +1,10 @@
-import InternalState from '../../src/InternalState';
 import VarCache from '../../src/VarCache'
 
 describe(VarCache, () => {
   let cache: VarCache;
 
   beforeEach(() => {
-    const state = new InternalState()
-    cache = new VarCache(state)
+    cache = new VarCache(() => {})
   })
 
   it('gets set variables', () => {

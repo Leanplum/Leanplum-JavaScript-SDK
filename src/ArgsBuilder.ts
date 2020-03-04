@@ -22,9 +22,9 @@ import Constants from './Constants'
  * Leanplum ArgsBuilder, use to construct request payload.
  */
 export default class ArgsBuilder {
-  argString: string
-  argValues: Object
-  _body: string
+  private argString: string
+  private argValues: Object
+  private _body: string
 
   /**
    * Create a new empty request argument.
@@ -40,16 +40,18 @@ export default class ArgsBuilder {
    * @param {string|boolean} value The value for given key.
    * @return {ArgsBuilder} Returns an object of ArgsBuilder.
    */
-  add(key, value) {
+  add(key: string, value?: string | number | boolean): ArgsBuilder {
     if (typeof value === 'undefined') {
       return this
     }
+
     if (this.argString) {
       this.argString += '&'
     }
-    let encodedUriComponent = encodeURIComponent(value)
-    this.argString += `${key}=${encodedUriComponent}`
+
+    this.argString += `${key}=${encodeURIComponent(value)}`
     this.argValues[key] = value
+
     return this
   }
 
@@ -59,11 +61,12 @@ export default class ArgsBuilder {
    * @return {ArgsBuilder|String} Returns ArgsBuilder if body given, else the
    *                              body.
    */
-  body(body) {
+  body(body?: string): ArgsBuilder | string {
     if (body) {
       this._body = body
       return this
     }
+
     return this._body
   }
 
@@ -73,7 +76,7 @@ export default class ArgsBuilder {
    * @param  {String} clientKey The appKey to attach.
    * @return {ArgsBuilder} Returns an object of ArgsBuilder.
    */
-  attachApiKeys(appId, clientKey) {
+  attachApiKeys(appId: string, clientKey: string): ArgsBuilder {
     return this.add(Constants.PARAMS.APP_ID, appId)
         .add(Constants.PARAMS.CLIENT, Constants.CLIENT)
         .add(Constants.PARAMS.CLIENT_KEY, clientKey)
@@ -83,7 +86,7 @@ export default class ArgsBuilder {
    * Return the arguments.
    * @return {String} Arguments string.
    */
-  build() {
+  build(): string {
     return this.argString
   }
 
@@ -91,7 +94,7 @@ export default class ArgsBuilder {
    * Return the argument values.
    * @return {Object} The argument values.
    */
-  buildDict() {
+  buildDict(): Object {
     return this.argValues
   }
 }

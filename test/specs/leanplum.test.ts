@@ -280,7 +280,7 @@ Object.keys(testModes).forEach((mode) => {
       })
 
       it('setRequestBatching', (done) => {
-        Leanplum.setRequestBatching(true, 5)
+        Leanplum.setRequestBatching(true, 0.01)
         let count = 0
         interceptRequest((request) => {
           expect(request).not.toBeNull()

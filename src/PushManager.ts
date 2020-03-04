@@ -17,10 +17,8 @@
  */
 
 import isEqual from 'lodash/isEqual'
-import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
-import InternalState from './InternalState'
-import LeanplumRequest from './LeanplumRequest'
+import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
@@ -34,10 +32,10 @@ let serviceWorkerRegistration = null
  * Push Manager handles the registration and subscription for web push.
  */
 export default class PushManager {
-  private static internalState: InternalState;
+  private static createRequest: (action: string, args: ArgsBuilder, options: any) => void
 
-  static setInternalState(value: InternalState): void {
-    PushManager.internalState = value
+  static setCreateRequest(value: (action: string, args: ArgsBuilder, options: any) => void): void {
+    PushManager.createRequest = value
   }
 
   /**
@@ -272,8 +270,7 @@ export default class PushManager {
 
     const args = new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION, subscription)
 
-    LeanplumRequest.request(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
-      devMode: PushManager.internalState.devMode,
+    PushManager.createRequest(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
       queued: false,
       sendNow: true
     })

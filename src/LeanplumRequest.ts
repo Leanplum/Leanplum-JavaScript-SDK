@@ -18,7 +18,6 @@
 
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import InternalState from './InternalState'
 import LocalStorageManager from './LocalStorageManager'
 import Network from './Network'
 
@@ -51,7 +50,7 @@ export default class LeanplumRequest {
    * @param options.devMode
    * @private
    */
-  static request(action, params, options) {
+  static request(action: string, params: ArgsBuilder, options: any = {}) {
     options = options || {}
     params = params || new ArgsBuilder()
 

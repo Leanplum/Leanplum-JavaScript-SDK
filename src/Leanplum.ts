@@ -35,7 +35,7 @@ type UserAttributes = any;
 export default class Leanplum {
   private static _internalState: InternalState = new InternalState()
   private static _lpSocket: LeanplumSocket = new LeanplumSocket()
-  private static _varCache: VarCache = new VarCache(Leanplum._internalState)
+  private static _varCache: VarCache = new VarCache(Leanplum.createRequest)
 
   static _email: string
   static _deviceName: string
@@ -154,7 +154,7 @@ export default class Leanplum {
     LeanplumRequest.versionName = undefined
     Leanplum._internalState = new InternalState()
     Leanplum._lpSocket = new LeanplumSocket()
-    Leanplum._varCache = new VarCache(Leanplum._internalState)
+    Leanplum._varCache = new VarCache(Leanplum.createRequest)
   }
 
   static addVariablesChangedHandler(handler: SimpleHandler) {
@@ -170,8 +170,7 @@ export default class Leanplum {
       .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
       .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, Leanplum._internalState.variantDebugInfoEnabled)
 
-    LeanplumRequest.request(Constants.METHODS.GET_VARS, args, {
-      devMode: Leanplum._internalState.devMode,
+    Leanplum.createRequest(Constants.METHODS.GET_VARS, args, {
       queued: false,
       sendNow: true,
       response: function (response) {
@@ -235,12 +234,11 @@ export default class Leanplum {
             `${_browserDetector.browser} ${_browserDetector.version}`)
         .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
         .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-        .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, Leanplum._internalState.variantDebugInfoEnabled);
+        .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, Leanplum._internalState.variantDebugInfoEnabled)
 
     // Issue request.
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.START, args, {
-      devMode: Leanplum._internalState.devMode,
+    Leanplum.createRequest(Constants.METHODS.START, args, {
       queued: true,
       sendNow: true,
       response: function(response) {
@@ -256,7 +254,7 @@ export default class Leanplum {
               console.log(`A newer version of Leanplum, ${latestVersion}, is available.
 Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
-            Leanplum._lpSocket.connect(Leanplum._varCache, Leanplum._internalState)
+            Leanplum._lpSocket.connect(Leanplum._varCache, Leanplum.createRequest)
           }
 
           Leanplum._varCache.applyDiffs(
@@ -302,7 +300,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     Leanplum._internalState.startSuccessful = true
 
     if (Leanplum._internalState.devMode) {
-      Leanplum._lpSocket.connect(Leanplum._varCache, Leanplum._internalState)
+      Leanplum._lpSocket.connect(Leanplum._varCache, Leanplum.createRequest)
     }
 
     Leanplum._varCache.loadDiffs()
@@ -311,8 +309,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   static stop() {
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.STOP, undefined, {
-      sendNow: true,
+    Leanplum.createRequest(Constants.METHODS.STOP, undefined, {
       devMode: Leanplum._internalState.devMode,
       queued: true
     })
@@ -320,8 +317,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   static pauseSession() {
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.PAUSE_SESSION, undefined, {
-      sendNow: true,
+    Leanplum.createRequest(Constants.METHODS.PAUSE_SESSION, undefined, {
       devMode: Leanplum._internalState.devMode,
       queued: true
     })
@@ -329,8 +325,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   static resumeSession() {
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.RESUME_SESSION, undefined, {
-      sendNow: true,
+    Leanplum.createRequest(Constants.METHODS.RESUME_SESSION, undefined, {
       devMode: Leanplum._internalState.devMode,
       queued: true
     })
@@ -338,16 +333,14 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   static pauseState() {
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.PAUSE_STATE, undefined, {
-      devMode: Leanplum._internalState.devMode,
+    Leanplum.createRequest(Constants.METHODS.PAUSE_STATE, undefined, {
       queued: true
     })
   }
 
   static resumeState() {
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.RESUME_STATE, undefined, {
-      devMode: Leanplum._internalState.devMode,
+    Leanplum.createRequest(Constants.METHODS.RESUME_STATE, undefined, {
       queued: true
     })
   }
@@ -374,8 +367,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.NEW_USER_ID, userId)
 
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.SET_USER_ATTRIBUTES, args, {
-      devMode: Leanplum._internalState.devMode,
+    Leanplum.createRequest(Constants.METHODS.SET_USER_ATTRIBUTES, args, {
       queued: true
     })
 
@@ -409,8 +401,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
 
     // noinspection Annotator
-    LeanplumRequest.request(Constants.METHODS.TRACK, args, {
-      devMode: Leanplum._internalState.devMode,
+    Leanplum.createRequest(Constants.METHODS.TRACK, args, {
       queued: true
     })
   }
@@ -428,8 +419,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.INFO, info)
       .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
 
-    LeanplumRequest.request(Constants.METHODS.ADVANCE, args, {
-      devMode: Leanplum._internalState.devMode,
+    Leanplum.createRequest(Constants.METHODS.ADVANCE, args, {
       queued: true
     })
   }
@@ -439,7 +429,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Boolean} True if supported, else false.
    */
   static isWebPushSupported(): boolean {
-    PushManager.setInternalState(Leanplum._internalState)
+    PushManager.setCreateRequest(Leanplum.createRequest)
     return PushManager.isWebPushSupported()
   }
 
@@ -448,7 +438,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise} Resolves if true, rejects if false.
    */
   static isWebPushSubscribed(): Promise<boolean> {
-    PushManager.setInternalState(Leanplum._internalState)
+    PushManager.setCreateRequest(Leanplum.createRequest)
     return PushManager.isWebPushSubscribed()
   }
 
@@ -461,7 +451,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    */
   static registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-    PushManager.setInternalState(Leanplum._internalState)
+    PushManager.setCreateRequest(Leanplum.createRequest)
     if (PushManager.isWebPushSupported()) {
         return PushManager.register(serviceWorkerUrl, (isSubscribed) => {
           if (isSubscribed) {
@@ -480,7 +470,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
   static unregisterFromWebPush(): Promise<string> {
-    PushManager.setInternalState(Leanplum._internalState)
+    PushManager.setCreateRequest(Leanplum.createRequest)
     return PushManager.unsubscribeUser()
   }
 
@@ -491,5 +481,12 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    */
   static clearUserContent(): void {
     Leanplum._varCache.clearUserContent()
+  }
+
+  private static createRequest(action: string, args: ArgsBuilder, options: any = {}) {
+    LeanplumRequest.request(action, args, {
+      devMode: Leanplum._internalState.devMode,
+      ...options
+    })
   }
 }

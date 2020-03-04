@@ -16,11 +16,9 @@
  *
  */
 
-import Constants from './Constants'
-import InternalState from './InternalState'
 import ArgsBuilder from './ArgsBuilder'
+import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
-import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
   private actionMetadata: Object = {}
@@ -35,7 +33,9 @@ export default class VarCache {
   public token: string = ''
   public variants = []
 
-  public constructor(private internalState: InternalState) {}
+  public constructor(
+    private createRequest: (action: string, args: ArgsBuilder, options: any) => void
+  ) {}
 
   public applyDiffs(diffs, variants, actionMetadata) {
     this.diffs = diffs
@@ -108,11 +108,9 @@ export default class VarCache {
   }
 
   public sendVariables() {
-    const body = {}
-    const args = new ArgsBuilder().body(JSON.stringify(body))
-    body[Constants.PARAMS.VARIABLES] = this.variables
-    LeanplumRequest.request(Constants.METHODS.SET_VARS, args, {
-      devMode: this.internalState.devMode,
+    const body = { [Constants.PARAMS.VARIABLES]: this.variables }
+    const args = new ArgsBuilder().body(JSON.stringify(body)) as ArgsBuilder
+    this.createRequest(Constants.METHODS.SET_VARS, args, {
       sendNow: true
     })
   }
