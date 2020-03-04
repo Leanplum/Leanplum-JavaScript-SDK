@@ -16,16 +16,16 @@
  *
  */
 
-import Constants from './Constants'
-import InternalState from './InternalState'
 import ArgsBuilder from './ArgsBuilder'
+import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
-import LeanplumRequest from './LeanplumRequest'
 
 export default class VarCache {
   private actionMetadata: Object = {}
+  private hasReceivedDiffs: boolean = false
   private merged = undefined
   private variables: Object = null
+  private variablesChangedHandlers: Function[] = []
   private variantDebugInfo: Object = {}
 
   public diffs = undefined
@@ -33,11 +33,15 @@ export default class VarCache {
   public token: string = ''
   public variants = []
 
+  public constructor(
+    private createRequest: (action: string, args: ArgsBuilder, options: any) => void
+  ) {}
+
   public applyDiffs(diffs, variants, actionMetadata) {
     this.diffs = diffs
     this.variants = variants
     this.actionMetadata = actionMetadata
-    InternalState.hasReceivedDiffs = true
+    this.hasReceivedDiffs = true
     this.merged = mergeHelper(this.variables, diffs)
     this.saveDiffs()
     if (this.onUpdate) {
@@ -75,6 +79,26 @@ export default class VarCache {
     this.variables = variables
   }
 
+  public addVariablesChangedHandler(handler) {
+    this.variablesChangedHandlers.push(handler)
+    if (this.hasReceivedDiffs) {
+      handler()
+    }
+  }
+
+  public removeVariablesChangedHandler(handler) {
+    let idx = this.variablesChangedHandlers.indexOf(handler)
+    if (idx >= 0) {
+      this.variablesChangedHandlers.splice(idx, 1)
+    }
+  }
+
+  public triggerVariablesChangedHandlers() {
+    for (let i = 0; i < this.variablesChangedHandlers.length; i++) {
+      this.variablesChangedHandlers[i]()
+    }
+  }
+
   public getVariantDebugInfo() {
     return this.variantDebugInfo
   }
@@ -84,15 +108,11 @@ export default class VarCache {
   }
 
   public sendVariables() {
-    let body = {}
-    body[Constants.PARAMS.VARIABLES] = this.variables
-    LeanplumRequest.request(
-      Constants.METHODS.SET_VARS,
-      new ArgsBuilder().body(JSON.stringify(body)),
-      {
-        sendNow: true
-      }
-    )
+    const body = { [Constants.PARAMS.VARIABLES]: this.variables }
+    const args = new ArgsBuilder().body(JSON.stringify(body)) as ArgsBuilder
+    this.createRequest(Constants.METHODS.SET_VARS, args, {
+      sendNow: true
+    })
   }
 
   public clearUserContent() {

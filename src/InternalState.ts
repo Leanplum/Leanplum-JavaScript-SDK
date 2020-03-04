@@ -17,58 +17,30 @@
  */
 
 export default class InternalState {
-  static devMode = false
+  private startHandlers: Function[] = []
 
-  static variablesChangedHandlers = []
-  static hasReceivedDiffs = false
+  public devMode: boolean = false
+  public hasStarted: boolean = false
+  public startSuccessful: boolean = false
+  public variantDebugInfoEnabled: boolean = false
 
-  static startHandlers = []
-  static hasStarted = false
-  static startSuccessful = false
-  static variantDebugInfoEnabled: boolean = false
-
-  static addStartResponseHandler(handler) {
-    InternalState.startHandlers.push(handler)
-    if (InternalState.hasStarted) {
-      handler(InternalState.startSuccessful)
+  public addStartResponseHandler(handler) {
+    this.startHandlers.push(handler)
+    if (this.hasStarted) {
+      handler(this.startSuccessful)
     }
   }
 
-  static removeStartResponseHandler(handler) {
-    let idx = InternalState.startHandlers.indexOf(handler)
+  public removeStartResponseHandler(handler) {
+    let idx = this.startHandlers.indexOf(handler)
     if (idx >= 0) {
-      InternalState.startHandlers.splice(idx, 1)
+      this.startHandlers.splice(idx, 1)
     }
   }
 
-  static triggerStartHandlers() {
-    for (let i = 0; i < InternalState.startHandlers.length; i++) {
-      InternalState.startHandlers[i](InternalState.startSuccessful)
+  public triggerStartHandlers() {
+    for (let i = 0; i < this.startHandlers.length; i++) {
+      this.startHandlers[i](this.startSuccessful)
     }
   }
-
-  static addVariablesChangedHandler(handler) {
-    InternalState.variablesChangedHandlers.push(handler)
-    if (InternalState.hasReceivedDiffs) {
-      handler()
-    }
-  }
-
-  static removeVariablesChangedHandler(handler) {
-    let idx = InternalState.variablesChangedHandlers.indexOf(handler)
-    if (idx >= 0) {
-      InternalState.variablesChangedHandlers.splice(idx, 1)
-    }
-  }
-
-  static triggerVariablesChangedHandlers() {
-    for (let i = 0; i < InternalState.variablesChangedHandlers.length; i++) {
-        InternalState.variablesChangedHandlers[i]()
-      }
-  }
-
-    static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
-    InternalState.variantDebugInfoEnabled = variantDebugInfoEnabled
-  }
-
 }
