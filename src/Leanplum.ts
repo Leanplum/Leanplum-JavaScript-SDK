@@ -310,7 +310,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   static stop() {
     // noinspection Annotator
     Leanplum.createRequest(Constants.METHODS.STOP, undefined, {
-      devMode: Leanplum._internalState.devMode,
+      sendNow: true,
       queued: true
     })
   }
@@ -318,7 +318,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   static pauseSession() {
     // noinspection Annotator
     Leanplum.createRequest(Constants.METHODS.PAUSE_SESSION, undefined, {
-      devMode: Leanplum._internalState.devMode,
+      sendNow: true,
       queued: true
     })
   }
@@ -326,7 +326,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   static resumeSession() {
     // noinspection Annotator
     Leanplum.createRequest(Constants.METHODS.RESUME_SESSION, undefined, {
-      devMode: Leanplum._internalState.devMode,
+      sendNow: true,
       queued: true
     })
   }
