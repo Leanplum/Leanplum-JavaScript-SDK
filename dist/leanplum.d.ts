@@ -93,7 +93,7 @@ export default class Leanplum {
       * Unregisters the browser form web push.
       * @return {Promise}            Resolves on success, otherwise rejects.
       */
-    static unregisterFromWebPush(): Promise<string>;
+    static unregisterFromWebPush(): Promise<void>;
     /**
       * Clears cached values for messages, variables and test assignments.
       * Use sparingly as if the app is updated, you'll have to deal with potentially

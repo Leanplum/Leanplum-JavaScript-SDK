@@ -22,16 +22,14 @@ import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
-    'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjA' +
-    'nfCt-3vK0Ci68'
-
-let isSubscribed = false
-let serviceWorkerRegistration = null
+  'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjAnfCt-3vK0Ci68'
 
 /**
  * Push Manager handles the registration and subscription for web push.
  */
 export default class PushManager {
+  private serviceWorkerRegistration: ServiceWorkerRegistration | null = null
+
   public constructor(
     private createRequest: (action: string, args: ArgsBuilder, options: any) => void
   ) { }
@@ -41,39 +39,30 @@ export default class PushManager {
    * @return {Boolean} True if supported, else false.
    */
   public isWebPushSupported(): boolean {
-    return navigator && navigator.serviceWorker && 'serviceWorker' in navigator &&
-        'PushManager' in window
+    return navigator?.serviceWorker && 'serviceWorker' in navigator && 'PushManager' in window
   }
 
   /**
    * Whether or not the browser is subscribed to web push notifications.
    * @return {Promise} True if subscribed, else false.
    */
-  public isWebPushSubscribed(): Promise<boolean> {
-    if (!this.isWebPushSupported()) {
-      return new Promise((resolve) => {
-        resolve(false)
-      })
+  public async isWebPushSubscribed(): Promise<boolean> {
+    if (this.isWebPushSupported()) {
+      const registration = await this.getServiceWorkerRegistration()
+
+      if (registration) {
+        const subscription = await registration.pushManager.getSubscription()
+        const isSubscribed = subscription !== null
+
+        if (isSubscribed) {
+          this.updateNewSubscriptionOnServer(subscription)
+        }
+
+        return isSubscribed
+      }
     }
-    return this.getServiceWorkerRegistration()
-        .then((registration) => {
-          return new Promise((resolve) => {
-            if (!registration) {
-              resolve(false)
-            } else {
-              /** @namespace registration.pushManager The push manager object of the browser. **/
-              /** @namespace registration.pushManager.getSubscription **/
-              registration.pushManager.getSubscription()
-                  .then((subscription) => {
-                    isSubscribed = subscription !== null
-                    if (isSubscribed) {
-                      this.updateNewSubscriptionOnServer(subscription)
-                    }
-                    resolve(isSubscribed)
-                  })
-            }
-          })
-        })
+
+    return false
   }
 
   /**
@@ -83,113 +72,96 @@ export default class PushManager {
    * @param  {Function} callback         The callback to be called with result.
    * @return {object} nothing
    */
-  public register(serviceWorkerUrl, callback): void {
+  public async register(
+    serviceWorkerUrl: string,
+    callback: (isSubscribed: boolean) => Promise<boolean>
+  ): Promise<boolean> {
     if (!this.isWebPushSupported()) {
       console.log('Leanplum: Push messaging is not supported.')
       return callback(false)
     }
-    navigator.serviceWorker.register(
-        serviceWorkerUrl ? serviceWorkerUrl : '/sw.min.js', null)
-        .then((registration) => {
-          serviceWorkerRegistration = registration
 
-          // Set the initial subscription value
-          serviceWorkerRegistration.pushManager.getSubscription()
-              .then((subscription) => {
-                isSubscribed = !(subscription === null)
-                if (isSubscribed) {
-                  this.updateNewSubscriptionOnServer(subscription)
-                }
-                if (callback) {
-                  return callback(isSubscribed)
-                }
-              })
-        })
-        .catch((error) => {
-          console.log('Leanplum: Service Worker Error: ', error)
-        })
+    try {
+      this.serviceWorkerRegistration = await navigator.serviceWorker.register(
+        serviceWorkerUrl || '/sw.min.js',
+        null
+      )
+
+      const subscription = this.serviceWorkerRegistration.pushManager.getSubscription()
+      const isSubscribed = subscription !== null
+
+      if (isSubscribed) {
+        this.updateNewSubscriptionOnServer(subscription)
+      }
+
+      return callback(isSubscribed)
+    } catch (error) {
+      console.log('Leanplum: Service Worker Error: ', error)
+      return callback(false)
+    }
   }
 
   /**
    * Subscribe the user(browser) to push.
    * @return {Promise} Resolves if subscription successful, otherwise rejects.
    */
-  public subscribeUser(): Promise<boolean> {
+  public async subscribeUser(): Promise<boolean> {
     const applicationServerKey = this.urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
-    return new Promise((resolve, reject) => {
-      /** @namespace serviceWorkerRegistration.pushManager.subscribe Subscribe to push. **/
-      return serviceWorkerRegistration.pushManager.subscribe({
+
+    try {
+      const subscription = await this.serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey
       })
-          .then((subscription) => {
-            if (subscription) {
-              this.updateNewSubscriptionOnServer(subscription)
-              isSubscribed = true
-              return resolve(isSubscribed)
-            }
-            isSubscribed = false
-            return reject()
-          })
-          .catch((err) => {
-            return reject(`Leanplum: Failed to subscribe the user: ${err}`)
-          })
-    })
+
+      if (!subscription) {
+        throw new Error()
+      }
+
+      this.updateNewSubscriptionOnServer(subscription)
+    } catch (error) {
+      throw new Error(`Leanplum: Failed to subscribe the user: ${error}`)
+    }
+
+    return true
   }
 
   /**
    * Unsubscribe the user(browser) from push.
    * @return {Promise} Resolves if unsubscribed, otherwise rejects.
    */
-  public unsubscribeUser(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.isWebPushSubscribed().then((subscribed) => {
-        if (!subscribed) {
-          return resolve()
+  public async unsubscribeUser(): Promise<void> {
+    let subscribed = await this.isWebPushSubscribed()
+
+    if (subscribed) {
+      try {
+        const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription()
+
+        if (!subscription) {
+          throw new Error()
         }
 
-        serviceWorkerRegistration.pushManager.getSubscription()
-            .then((subscription) => {
-              if (subscription) {
-                /** @namespace serviceWorkerRegistration.pushManager.unsubscribe Unsubscribe to
-                 *  push. **/
-                return subscription.unsubscribe()
-              }
-              return reject()
-            })
-            .catch((error) => {
-              reject(`Leanplum: Error unsubscribing: ${error}`)
-            })
-            .then((success) => {
-              if (success) {
-                isSubscribed = false
-                return resolve()
-              }
-              return reject()
-            })
-      }, () => {
-        return reject()
-      })
-    })
+        subscribed = await subscription.unsubscribe()
+      } catch (error) {
+        throw new Error(`Leanplum: Error unsubscribing: ${error}`)
+      }
+
+      if (subscribed) {
+        throw new Error()
+      }
+    }
   }
 
   /**
    * Retrieves the service worker registration object from browser.
    * @return {object} Returns the registration or null.
    */
-  private getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
-    return new Promise((resolve) => {
-      if (serviceWorkerRegistration) {
-        resolve(serviceWorkerRegistration)
-      } else {
-        /** @namespace navigator.serviceWorker.getRegistration Retrieves the  push registration
-         * from the browser. **/
-        navigator.serviceWorker.getRegistration().then((registration) => {
-          serviceWorkerRegistration = registration
-          resolve(registration)
-        })
-      }
-    })
+  private async getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
+    if (!this.serviceWorkerRegistration) {
+      this.serviceWorkerRegistration = await navigator.serviceWorker.getRegistration()
+    }
+
+    return this.serviceWorkerRegistration
   }
 
   /**
@@ -199,10 +171,7 @@ export default class PushManager {
    */
   private urlB64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
-    const base64 = (base64String + padding)
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
     const rawData = window.atob(base64)
     const outputArray = new Uint8Array(rawData.length)
 
@@ -245,7 +214,8 @@ export default class PushManager {
       let preparedSubscription = this.prepareSubscription(subscription)
       let preparedSubscriptionString = JSON.stringify(preparedSubscription)
       let existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
-          Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
+        Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION
+      )
 
       if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
         LocalStorageManager.saveToLocalStorage(
@@ -262,15 +232,13 @@ export default class PushManager {
    * @param {String/Object} subscription The subscription string.
    */
   private setSubscription(subscription) {
-    if (!subscription) {
-      return
+    if (subscription) {
+      const args = new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION, subscription)
+
+      this.createRequest(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
+        queued: false,
+        sendNow: true
+      })
     }
-
-    const args = new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION, subscription)
-
-    this.createRequest(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
-      queued: false,
-      sendNow: true
-    })
   }
 }

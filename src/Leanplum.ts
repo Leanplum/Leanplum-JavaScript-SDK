@@ -450,25 +450,23 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    *                                     otherwise fails.
    */
   static registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
     if (Leanplum._pushManager.isWebPushSupported()) {
-        return Leanplum._pushManager.register(serviceWorkerUrl, (isSubscribed) => {
-          if (isSubscribed) {
-            return resolve(true)
-          }
-          return Leanplum._pushManager.subscribeUser()
-        })
-      } else {
-        return reject('Leanplum: WebPush is not supported.')
-      }
-    })
+      return Leanplum._pushManager.register(serviceWorkerUrl, (isSubscribed) => {
+        if (isSubscribed) {
+          return Promise.resolve(true)
+        }
+        return Leanplum._pushManager.subscribeUser()
+      })
+    } else {
+      return Promise.reject('Leanplum: WebPush is not supported.')
+    }
   }
 
   /**
    * Unregisters the browser form web push.
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
-  static unregisterFromWebPush(): Promise<string> {
+  static unregisterFromWebPush(): Promise<void> {
     return Leanplum._pushManager.unsubscribeUser()
   }
 
