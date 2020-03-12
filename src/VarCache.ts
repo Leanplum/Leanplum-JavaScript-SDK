@@ -19,6 +19,7 @@
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
+import { CreateRequestFunction } from './types'
 
 export default class VarCache {
   private actionMetadata: Object = {}
@@ -34,7 +35,7 @@ export default class VarCache {
   public variants = []
 
   public constructor(
-    private createRequest: (action: string, args: ArgsBuilder, options: any) => void
+    private createRequest: CreateRequestFunction
   ) {}
 
   public applyDiffs(diffs, variants, actionMetadata) {
