@@ -35,6 +35,7 @@ type UserAttributes = any;
 export default class Leanplum {
   private static _internalState: InternalState = new InternalState()
   private static _lpSocket: LeanplumSocket = new LeanplumSocket()
+  private static _pushManager: PushManager = new PushManager(Leanplum.createRequest)
   private static _varCache: VarCache = new VarCache(Leanplum.createRequest)
 
   static _email: string
@@ -154,6 +155,7 @@ export default class Leanplum {
     LeanplumRequest.versionName = undefined
     Leanplum._internalState = new InternalState()
     Leanplum._lpSocket = new LeanplumSocket()
+    Leanplum._pushManager = new PushManager(Leanplum.createRequest)
     Leanplum._varCache = new VarCache(Leanplum.createRequest)
   }
 
@@ -429,8 +431,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Boolean} True if supported, else false.
    */
   static isWebPushSupported(): boolean {
-    PushManager.setCreateRequest(Leanplum.createRequest)
-    return PushManager.isWebPushSupported()
+    return Leanplum._pushManager.isWebPushSupported()
   }
 
   /**
@@ -438,8 +439,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise} Resolves if true, rejects if false.
    */
   static isWebPushSubscribed(): Promise<boolean> {
-    PushManager.setCreateRequest(Leanplum.createRequest)
-    return PushManager.isWebPushSubscribed()
+    return Leanplum._pushManager.isWebPushSubscribed()
   }
 
   /**
@@ -451,13 +451,12 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    */
   static registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-    PushManager.setCreateRequest(Leanplum.createRequest)
-    if (PushManager.isWebPushSupported()) {
-        return PushManager.register(serviceWorkerUrl, (isSubscribed) => {
+    if (Leanplum._pushManager.isWebPushSupported()) {
+        return Leanplum._pushManager.register(serviceWorkerUrl, (isSubscribed) => {
           if (isSubscribed) {
             return resolve(true)
           }
-          return PushManager.subscribeUser()
+          return Leanplum._pushManager.subscribeUser()
         })
       } else {
         return reject('Leanplum: WebPush is not supported.')
@@ -470,8 +469,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
   static unregisterFromWebPush(): Promise<string> {
-    PushManager.setCreateRequest(Leanplum.createRequest)
-    return PushManager.unsubscribeUser()
+    return Leanplum._pushManager.unsubscribeUser()
   }
 
   /**

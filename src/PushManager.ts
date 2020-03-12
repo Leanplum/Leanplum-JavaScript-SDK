@@ -32,17 +32,15 @@ let serviceWorkerRegistration = null
  * Push Manager handles the registration and subscription for web push.
  */
 export default class PushManager {
-  private static createRequest: (action: string, args: ArgsBuilder, options: any) => void
-
-  static setCreateRequest(value: (action: string, args: ArgsBuilder, options: any) => void): void {
-    PushManager.createRequest = value
-  }
+  public constructor(
+    private createRequest: (action: string, args: ArgsBuilder, options: any) => void
+  ) { }
 
   /**
    * Whether or not web push is supported in the browser.
    * @return {Boolean} True if supported, else false.
    */
-  static isWebPushSupported() {
+  public isWebPushSupported(): boolean {
     return navigator && navigator.serviceWorker && 'serviceWorker' in navigator &&
         'PushManager' in window
   }
@@ -51,14 +49,14 @@ export default class PushManager {
    * Whether or not the browser is subscribed to web push notifications.
    * @return {Promise} True if subscribed, else false.
    */
-  static isWebPushSubscribed(): Promise<boolean> {
-    if (!PushManager.isWebPushSupported()) {
+  public isWebPushSubscribed(): Promise<boolean> {
+    if (!this.isWebPushSupported()) {
       return new Promise((resolve) => {
         resolve(false)
       })
     }
-    return PushManager.getServiceWorkerRegistration()
-        .then(function(registration) {
+    return this.getServiceWorkerRegistration()
+        .then((registration) => {
           return new Promise((resolve) => {
             if (!registration) {
               resolve(false)
@@ -66,10 +64,10 @@ export default class PushManager {
               /** @namespace registration.pushManager The push manager object of the browser. **/
               /** @namespace registration.pushManager.getSubscription **/
               registration.pushManager.getSubscription()
-                  .then(function(subscription) {
+                  .then((subscription) => {
                     isSubscribed = subscription !== null
                     if (isSubscribed) {
-                      PushManager.updateNewSubscriptionOnServer(subscription)
+                      this.updateNewSubscriptionOnServer(subscription)
                     }
                     resolve(isSubscribed)
                   })
@@ -85,29 +83,29 @@ export default class PushManager {
    * @param  {Function} callback         The callback to be called with result.
    * @return {object} nothing
    */
-  static register(serviceWorkerUrl, callback) {
-    if (!PushManager.isWebPushSupported()) {
+  public register(serviceWorkerUrl, callback): void {
+    if (!this.isWebPushSupported()) {
       console.log('Leanplum: Push messaging is not supported.')
       return callback(false)
     }
     navigator.serviceWorker.register(
         serviceWorkerUrl ? serviceWorkerUrl : '/sw.min.js', null)
-        .then(function(registration) {
+        .then((registration) => {
           serviceWorkerRegistration = registration
 
           // Set the initial subscription value
           serviceWorkerRegistration.pushManager.getSubscription()
-              .then(function(subscription) {
+              .then((subscription) => {
                 isSubscribed = !(subscription === null)
                 if (isSubscribed) {
-                  PushManager.updateNewSubscriptionOnServer(subscription)
+                  this.updateNewSubscriptionOnServer(subscription)
                 }
                 if (callback) {
                   return callback(isSubscribed)
                 }
               })
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.log('Leanplum: Service Worker Error: ', error)
         })
   }
@@ -116,24 +114,24 @@ export default class PushManager {
    * Subscribe the user(browser) to push.
    * @return {Promise} Resolves if subscription successful, otherwise rejects.
    */
-  static subscribeUser() {
-    const applicationServerKey = PushManager.urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
-    return new Promise(function(resolve, reject) {
+  public subscribeUser(): Promise<boolean> {
+    const applicationServerKey = this.urlB64ToUint8Array(APPLICATION_SERVER_PUBLIC_KEY)
+    return new Promise((resolve, reject) => {
       /** @namespace serviceWorkerRegistration.pushManager.subscribe Subscribe to push. **/
       return serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey
       })
-          .then(function(subscription) {
+          .then((subscription) => {
             if (subscription) {
-              PushManager.updateNewSubscriptionOnServer(subscription)
+              this.updateNewSubscriptionOnServer(subscription)
               isSubscribed = true
               return resolve(isSubscribed)
             }
             isSubscribed = false
             return reject()
           })
-          .catch(function(err) {
+          .catch((err) => {
             return reject(`Leanplum: Failed to subscribe the user: ${err}`)
           })
     })
@@ -143,15 +141,15 @@ export default class PushManager {
    * Unsubscribe the user(browser) from push.
    * @return {Promise} Resolves if unsubscribed, otherwise rejects.
    */
-  static unsubscribeUser(): Promise<string> {
+  public unsubscribeUser(): Promise<string> {
     return new Promise((resolve, reject) => {
-      PushManager.isWebPushSubscribed().then((subscribed) => {
+      this.isWebPushSubscribed().then((subscribed) => {
         if (!subscribed) {
           return resolve()
         }
 
         serviceWorkerRegistration.pushManager.getSubscription()
-            .then(function(subscription) {
+            .then((subscription) => {
               if (subscription) {
                 /** @namespace serviceWorkerRegistration.pushManager.unsubscribe Unsubscribe to
                  *  push. **/
@@ -159,17 +157,17 @@ export default class PushManager {
               }
               return reject()
             })
-            .catch(function(error) {
+            .catch((error) => {
               reject(`Leanplum: Error unsubscribing: ${error}`)
             })
-            .then(function(success) {
+            .then((success) => {
               if (success) {
                 isSubscribed = false
                 return resolve()
               }
               return reject()
             })
-      }, (error) => {
+      }, () => {
         return reject()
       })
     })
@@ -179,7 +177,7 @@ export default class PushManager {
    * Retrieves the service worker registration object from browser.
    * @return {object} Returns the registration or null.
    */
-  static getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
+  private getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
     return new Promise((resolve) => {
       if (serviceWorkerRegistration) {
         resolve(serviceWorkerRegistration)
@@ -199,7 +197,7 @@ export default class PushManager {
    * @param  {string} base64String [description]
    * @return {Uint8Array}              [description]
    */
-  static urlB64ToUint8Array(base64String) {
+  private urlB64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
     const base64 = (base64String + padding)
         .replace(/-/g, '+')
@@ -218,11 +216,11 @@ export default class PushManager {
   /**
    * [prepareSubscription description]
    * @param  {object} subscription The raw subscription from browser.
-   * @param  {function} subscription.getKey The subscription key.
+   * @param  {Function} subscription.getKey The subscription key.
    * @param  {string} subscription.endpoint The subscription key.
    * @return {object} The subscription object to be sent to server.
    */
-  static prepareSubscription(subscription) {
+  private prepareSubscription(subscription) {
     let apply = Function.prototype.apply
     let key = subscription.getKey ? subscription.getKey('p256dh') : ''
     let auth = subscription.getKey ? subscription.getKey('auth') : ''
@@ -242,9 +240,9 @@ export default class PushManager {
    * Send a new subscription object to the Leanplum server.
    * @param {object} subscription The subscription.
    */
-  static updateNewSubscriptionOnServer(subscription) {
+  private updateNewSubscriptionOnServer(subscription) {
     if (subscription) {
-      let preparedSubscription = PushManager.prepareSubscription(subscription)
+      let preparedSubscription = this.prepareSubscription(subscription)
       let preparedSubscriptionString = JSON.stringify(preparedSubscription)
       let existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
@@ -254,7 +252,7 @@ export default class PushManager {
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
           preparedSubscriptionString
         )
-        PushManager.setSubscription(preparedSubscriptionString)
+        this.setSubscription(preparedSubscriptionString)
       }
     }
   }
@@ -263,14 +261,14 @@ export default class PushManager {
    * Send the subscription to the Leanplum server.
    * @param {String/Object} subscription The subscription string.
    */
-  static setSubscription(subscription) {
+  private setSubscription(subscription) {
     if (!subscription) {
       return
     }
 
     const args = new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION, subscription)
 
-    PushManager.createRequest(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
+    this.createRequest(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
       queued: false,
       sendNow: true
     })
