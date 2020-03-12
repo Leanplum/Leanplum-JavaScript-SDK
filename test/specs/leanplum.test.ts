@@ -68,7 +68,7 @@ const testModes = {
   DEV: 1
 }
 
-let Leanplum;
+let Leanplum
 
 const start = (done) => {
   interceptRequest((request) => {
@@ -334,10 +334,46 @@ Object.keys(testModes).forEach((mode) => {
       })
     })
 
-    describe('Web push.', () => {
-      it('test isWebPushSupported', (done) => {
-        expect(!Leanplum.isWebPushSupported()).toBeTruthy()
-        done()
+    describe('Web push', () => {
+      describe('isWebPushSupported()', () => {
+        let windowMock: jest.SpyInstance<Window & typeof globalThis, []>
+
+        beforeAll(() => {
+          windowMock = jest.spyOn(globalThis, 'window', 'get')
+        })
+
+        afterAll(() => {
+          windowMock.mockReset()
+        })
+
+        it('returns `false` when navigator is undefined', () => {
+          windowMock.mockReturnValue({ PushManager: {} } as any)
+
+          expect(Leanplum.isWebPushSupported()).toBeFalsy()
+        })
+
+        it('returns `false` when serviceWorker is undefined', () => {
+          windowMock.mockReturnValue({ navigator: {}, PushManager: {} } as any)
+
+          expect(Leanplum.isWebPushSupported()).toBeFalsy()
+        })
+
+        it('returns `false` when PushManager is undefined', () => {
+          windowMock.mockReturnValue({ navigator: { serviceWorker: {} } } as any)
+
+          expect(Leanplum.isWebPushSupported()).toBeFalsy()
+        })
+
+        it('returns `true` when supported', () => {
+          windowMock.mockReturnValue({
+            navigator: {
+              serviceWorker: {}
+            },
+            PushManager: {}
+          } as any)
+
+          expect(Leanplum.isWebPushSupported()).toBeTruthy()
+        })
       })
 
       it('test isWebPushSubscribed', async () => {

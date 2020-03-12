@@ -40,7 +40,11 @@ export default class PushManager {
    * @return {Boolean} True if supported, else false.
    */
   public isWebPushSupported(): boolean {
-    return navigator?.serviceWorker && 'serviceWorker' in navigator && 'PushManager' in window
+    return Boolean(
+      window?.navigator !== undefined &&
+      'serviceWorker' in window.navigator &&
+      'PushManager' in window
+    )
   }
 
   /**
