@@ -19,6 +19,7 @@ import isEqual from 'lodash/isEqual'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
+import { CreateRequestFunction } from './types'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
   'BInWPpWntfR39rgXSP04pqdmEdDGa50z6zqbMvxyxJCwzXIuSpSh8C888-CfJ82WELl7Xe8cjAnfCt-3vK0Ci68'
@@ -34,7 +35,7 @@ export default class PushManager {
   }
 
   public constructor(
-    private createRequest: (action: string, args: ArgsBuilder, options: any) => void
+    private createRequest: CreateRequestFunction
   ) { }
 
   /**
