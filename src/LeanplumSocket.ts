@@ -89,6 +89,14 @@ export default class LeanplumSocket {
       } else if (event === 'registerDevice') {
         // eslint-disable-next-line no-alert
         alert(`Your device has been registered to ${args[0].email}.`)
+      } else if (event === 'trigger') {
+        // TODO: pass as real event to user code
+        // TODO: properties are weird, translate to camelCase?
+        const action = (args && args[0] as any).action;
+        const messageHandler = (window as any).Leanplum.onShowMessage;
+        if (messageHandler) {
+          messageHandler(action);
+        }
       }
     }
 

@@ -302,6 +302,26 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
             startResponse[Constants.KEYS.ACTION_METADATA])
           this._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
           this._varCache.token = startResponse[Constants.KEYS.TOKEN]
+
+          // TODO: add real events
+          // TODO: check logic for showing messages from other SDKs
+          // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
+          const messages = startResponse.messages;
+          const messageIds = Object.keys(messages);
+          if (messageIds.length && (Leanplum as any).onShowMessage) {
+            messageIds.forEach(id => {
+              // track impression
+              const args = new ArgsBuilder().add("messageId", id);
+              this.createRequest(Constants.METHODS.TRACK, args, {
+                sendNow: true,
+                queued: false
+              })
+
+              // tell user code to render it
+              const action = messages[id].vars;
+              (Leanplum as any).onShowMessage(action);
+            });
+          }
         } else {
           this._internalState.startSuccessful = false
           this._varCache.loadDiffs()
