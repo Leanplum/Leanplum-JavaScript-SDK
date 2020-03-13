@@ -28,7 +28,9 @@ export default class LeanplumSocket {
 
   public connect(
     cache: VarCache,
-    createRequest: (action: string, args: ArgsBuilder, options: any) => void
+    auth: { appId: string, deviceId: string },
+    createRequest: (action: string, args: ArgsBuilder, options: any) => void,
+    getLastResponse: (response: any) => any
   ): void {
     if (!WebSocket) {
       console.log('Your browser doesn\'t support WebSockets.')
@@ -42,8 +44,8 @@ export default class LeanplumSocket {
       if (!authSent) {
         console.log('Leanplum: Connected to development server.')
         client.send('auth', {
-          [Constants.PARAMS.APP_ID]: LeanplumRequest.appId,
-          [Constants.PARAMS.DEVICE_ID]: LeanplumRequest.deviceId
+          [Constants.PARAMS.APP_ID]: auth.appId,
+          [Constants.PARAMS.DEVICE_ID]: auth.deviceId
         })
         authSent = true
       }
@@ -60,7 +62,7 @@ export default class LeanplumSocket {
           queued: false,
           sendNow: true,
           response: function (response) {
-            let getVarsResponse = LeanplumRequest.getLastResponse(response)
+            let getVarsResponse = getLastResponse(response)
             let values = getVarsResponse[Constants.KEYS.VARS]
             let variants = getVarsResponse[Constants.KEYS.VARIANTS]
             let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
