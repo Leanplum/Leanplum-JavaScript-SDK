@@ -26,7 +26,7 @@ import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
 import VarCache from './VarCache'
 
-let _browserDetector = new BrowserDetector();
+let _browserDetector = new BrowserDetector(window)
 
 type StatusHandler = (success: boolean) => void;
 type SimpleHandler = () => void;
