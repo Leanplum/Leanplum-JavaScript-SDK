@@ -34,6 +34,7 @@ type UserAttributes = any;
 
 export default class Leanplum {
   private static _internalState: InternalState = new InternalState()
+  private static _lpRequest: LeanplumRequest = new LeanplumRequest()
   private static _lpSocket: LeanplumSocket = new LeanplumSocket()
   private static _pushManager: PushManager = new PushManager(Leanplum.createRequest)
   private static _varCache: VarCache = new VarCache(Leanplum.createRequest)
@@ -45,10 +46,10 @@ export default class Leanplum {
   static _systemVersion: string
 
   static setApiPath(apiPath: string) {
-    if (!LeanplumRequest.apiPath) {
+    if (!Leanplum._lpRequest.apiPath) {
       return
     }
-    LeanplumRequest.apiPath = apiPath
+    Leanplum._lpRequest.apiPath = apiPath
   }
 
   static setEmail(email: string) {
@@ -60,7 +61,7 @@ export default class Leanplum {
    * @param {number} seconds The timeout in seconds.
    */
   static setNetworkTimeout(seconds: number) {
-    LeanplumRequest.setNetworkTimeout(seconds)
+    Leanplum._lpRequest.setNetworkTimeout(seconds)
   }
 
   static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
@@ -72,14 +73,14 @@ export default class Leanplum {
   }
 
   static setAppIdForDevelopmentMode(appId: string, accessKey: string) {
-    LeanplumRequest.appId = appId
-    LeanplumRequest.clientKey = accessKey
+    Leanplum._lpRequest.appId = appId
+    Leanplum._lpRequest.clientKey = accessKey
     Leanplum._internalState.devMode = true
   }
 
   static setAppIdForProductionMode(appId: string, accessKey: string) {
-    LeanplumRequest.appId = appId
-    LeanplumRequest.clientKey = accessKey
+    Leanplum._lpRequest.appId = appId
+    Leanplum._lpRequest.clientKey = accessKey
     Leanplum._internalState.devMode = false
   }
 
@@ -88,11 +89,11 @@ export default class Leanplum {
   }
 
   static setDeviceId(deviceId: string) {
-    LeanplumRequest.deviceId = deviceId
+    Leanplum._lpRequest.deviceId = deviceId
   }
 
   static setAppVersion(versionName: string) {
-    LeanplumRequest.versionName = versionName
+    Leanplum._lpRequest.versionName = versionName
   }
 
   static setDeviceName(deviceName: string) {
@@ -116,8 +117,8 @@ export default class Leanplum {
   }
 
   static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number) {
-    LeanplumRequest.batchEnabled = batchEnabled
-    LeanplumRequest.batchCooldown = cooldownSeconds
+    Leanplum._lpRequest.batchEnabled = batchEnabled
+    Leanplum._lpRequest.batchCooldown = cooldownSeconds
   }
 
   static getVariables() {
@@ -145,14 +146,7 @@ export default class Leanplum {
   }
 
   static __destroy() {
-    LeanplumRequest.apiPath = 'https://www.leanplum.com/api'
-    LeanplumRequest.batchEnabled = true
-    LeanplumRequest.batchCooldown = 5
-    LeanplumRequest.deviceId = undefined
-    LeanplumRequest.userId = undefined
-    LeanplumRequest.appId = undefined
-    LeanplumRequest.clientKey = undefined
-    LeanplumRequest.versionName = undefined
+    Leanplum._lpRequest = new LeanplumRequest()
     Leanplum._internalState = new InternalState()
     Leanplum._lpSocket = new LeanplumSocket()
     Leanplum._pushManager = new PushManager(Leanplum.createRequest)
@@ -176,8 +170,8 @@ export default class Leanplum {
       queued: false,
       sendNow: true,
       response: function (response) {
-        let getVarsResponse = LeanplumRequest.getLastResponse(response);
-        let isSuccess = LeanplumRequest.isResponseSuccess(getVarsResponse);
+        let getVarsResponse = Leanplum._lpRequest.getLastResponse(response)
+        let isSuccess = Leanplum._lpRequest.isResponseSuccess(getVarsResponse)
         if (isSuccess) {
           Leanplum._varCache.applyDiffs(
             getVarsResponse[Constants.KEYS.VARS],
@@ -211,7 +205,7 @@ export default class Leanplum {
       userAttributes = {}
     }
 
-    LeanplumRequest.userId = userId
+    Leanplum._lpRequest.userId = userId
 
     if (callback) {
       Leanplum.addStartResponseHandler(callback)
@@ -245,9 +239,9 @@ export default class Leanplum {
       sendNow: true,
       response: function(response) {
         Leanplum._internalState.hasStarted = true
-        let startResponse = LeanplumRequest.getLastResponse(response)
+        let startResponse = Leanplum._lpRequest.getLastResponse(response)
 
-        if (LeanplumRequest.isResponseSuccess(startResponse)) {
+        if (Leanplum._lpRequest.isResponseSuccess(startResponse)) {
           Leanplum._internalState.startSuccessful = true
 
           if (Leanplum._internalState.devMode) {
@@ -256,13 +250,13 @@ export default class Leanplum {
               console.log(`A newer version of Leanplum, ${latestVersion}, is available.
 Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
-            Leanplum._lpSocket.connect(Leanplum._varCache, Leanplum.createRequest)
+            Leanplum.connectSocket()
           }
 
           Leanplum._varCache.applyDiffs(
               startResponse[Constants.KEYS.VARS],
               startResponse[Constants.KEYS.VARIANTS],
-              startResponse[Constants.KEYS.ACTION_METADATA]);
+              startResponse[Constants.KEYS.ACTION_METADATA])
           Leanplum._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
           Leanplum._varCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
@@ -292,7 +286,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       userAttributes = {}
     }
 
-    LeanplumRequest.userId = userId
+    Leanplum._lpRequest.userId = userId
 
     if (callback) {
       Leanplum.addStartResponseHandler(callback)
@@ -302,7 +296,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     Leanplum._internalState.startSuccessful = true
 
     if (Leanplum._internalState.devMode) {
-      Leanplum._lpSocket.connect(Leanplum._varCache, Leanplum.createRequest)
+      Leanplum.connectSocket()
     }
 
     Leanplum._varCache.loadDiffs()
@@ -374,8 +368,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     })
 
     if (userId) {
-      LeanplumRequest.userId = userId
-      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, LeanplumRequest.userId)
+      Leanplum._lpRequest.userId = userId
+      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._lpRequest.userId)
     }
   }
 
@@ -481,10 +475,22 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     Leanplum._varCache.clearUserContent()
   }
 
-  private static createRequest(action: string, args: ArgsBuilder, options: any = {}) {
-    LeanplumRequest.request(action, args, {
+  private static createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
+    Leanplum._lpRequest.request(action, args, {
       devMode: Leanplum._internalState.devMode,
       ...options
     })
+  }
+
+  private static connectSocket(): void {
+    Leanplum._lpSocket.connect(
+      Leanplum._varCache,
+      {
+        appId: Leanplum._lpRequest.appId,
+        deviceId: Leanplum._lpRequest.deviceId
+      },
+      Leanplum.createRequest,
+      Leanplum._lpRequest.getLastResponse
+    )
   }
 }
