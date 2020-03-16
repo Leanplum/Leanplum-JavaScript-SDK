@@ -45,8 +45,8 @@ export default class BrowserDetector {
   constructor(wnd: Window) {
     this.browser = this.searchString(this.getBrowserData(wnd)) || 'Unknown Browser'
     this.version = (
-      this.searchVersion(navigator.userAgent) ||
-      this.searchVersion(navigator.appVersion) ||
+      this.searchVersion(wnd.navigator.userAgent) ||
+      this.searchVersion(wnd.navigator.appVersion) ||
       'Unknown Version'
     )
     this.OS = this.searchString(this.getOSData(wnd)) || 'Unknown OS'
@@ -80,11 +80,11 @@ export default class BrowserDetector {
    */
   private searchVersion(dataString) {
     if (!dataString) {
-      return -1
+      return
     }
     let index = dataString.indexOf(this.versionSearchString)
     if (index === -1) {
-      return -1
+      return
     }
     return parseFloat(dataString.substring(index + this.versionSearchString.length + 1))
   }
@@ -143,6 +143,12 @@ export default class BrowserDetector {
         subString: 'MSIE',
         identity: 'Explorer',
         versionSearch: 'MSIE'
+      },
+      {
+        string: wnd.navigator.userAgent,
+        subString: 'Android',
+        identity: 'Android Browser',
+        versionSearch: 'Version'
       },
       {
         string: wnd.navigator.userAgent,
