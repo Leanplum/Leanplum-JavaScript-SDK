@@ -306,21 +306,89 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
           // TODO: add real events
           // TODO: check logic for showing messages from other SDKs
           // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
+          // TODO: handle whenTriggers and whenLimits logic on client-side
           const messages = startResponse.messages;
           const messageIds = Object.keys(messages);
-          if (messageIds.length && (Leanplum as any).onShowMessage) {
-            messageIds.forEach(id => {
+          if (messageIds.length && Leanplum.onShowMessage) {
+            const processMessage = (id: string, message: any) => {
+              if (message.action === "Open URL") {
+                alert('Navigating to ' + message.vars.URL);
+                return;
+              }
+
               // track impression
               const args = new ArgsBuilder().add("messageId", id);
-              this.createRequest(Constants.METHODS.TRACK, args, {
+              Leanplum.createRequest(Constants.METHODS.TRACK, args, {
                 sendNow: true,
                 queued: false
-              })
+              });
 
               // tell user code to render it
-              const action = messages[id].vars;
-              (Leanplum as any).onShowMessage(action);
-            });
+              const vars = message.vars;
+              const result = Leanplum.onShowMessage({
+                action: message.action,
+                title: vars.Title.Text || vars.Title,
+                message: vars.Message.Text || vars.Message,
+                accept: vars['Accept text'],
+                cancel: vars['Cancel text']
+              });
+
+              const chainedMsg = vars['Accept action']['Chained message'];
+
+              if (chainedMsg) {
+                result.then((success: boolean) => {
+                  if (success) {
+                    processMessage(chainedMsg, messages[chainedMsg]);
+                  }
+                });
+              }
+            };
+
+            const setupExitIntent = (callback) => {
+              const SENSITIVITY = 20; // pixels from browser top
+              const DELAY_INTERVAL = 1000; // milliseconds to wait before returns
+              let delay = null;
+
+              function onMouseLeave(e) {
+                if (e.clientY > SENSITIVITY) {
+                  return;
+                }
+
+                delay = setTimeout(() => {
+                  callback();
+                  document.documentElement.removeEventListener('mouseleave', onMouseLeave);
+                  document.documentElement.removeEventListener('mouseenter', onMouseEnter);
+                }, DELAY_INTERVAL);
+              }
+
+              function onMouseEnter() {
+                if (delay) {
+                  clearTimeout(delay);
+                  delay = null;
+                }
+              }
+
+              document.documentElement.addEventListener('mouseleave', onMouseLeave);
+              document.documentElement.addEventListener('mouseenter', onMouseEnter);
+            };
+
+            const showOrSetupMessage = (id: string, message: any) => {
+              // skip action
+              if (message.action === 'Open URL') {
+                return;
+              }
+
+              const vars = message.vars;
+
+              // TODO: serialize exit intent parameter in vars, currently hacked
+              if (/leave|leaving/gi.test(vars.Title.Text || vars.Title)) {
+                setupExitIntent(() => processMessage(id, message));
+              } else {
+                processMessage(id, message);
+              }
+            };
+
+            messageIds.forEach(id => showOrSetupMessage(id, messages[id]));
           }
         } else {
           this._internalState.startSuccessful = false
