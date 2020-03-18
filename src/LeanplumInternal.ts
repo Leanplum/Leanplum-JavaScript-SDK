@@ -306,22 +306,23 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
           // TODO: add real events
           // TODO: check logic for showing messages from other SDKs
           // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
-          // TODO: handle whenTriggers and whenLimits logic on client-side
+          // TODO: handle whenTriggers and whenLimits logic on client-side (change insertion point)
           const messages = startResponse.messages;
           const messageIds = Object.keys(messages);
           if (messageIds.length && Leanplum.onShowMessage) {
             const processMessage = (id: string, message: any) => {
-              if (message.action === "Open URL") {
-                alert('Navigating to ' + message.vars.URL);
-                return;
-              }
-
               // track impression
               const args = new ArgsBuilder().add("messageId", id);
               Leanplum.createRequest(Constants.METHODS.TRACK, args, {
                 sendNow: true,
                 queued: false
               });
+
+              if (message.action === "Open URL") {
+                // TODO: use window.location.href
+                alert('Navigating to ' + message.vars.URL);
+                return;
+              }
 
               // tell user code to render it
               const vars = message.vars;
@@ -337,6 +338,17 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
               if (chainedMsg) {
                 result.then((success: boolean) => {
+                  // track accept click
+                  const args = new ArgsBuilder()
+                    .add("messageId", id)
+                    // TODO: generate event name for actions
+                    .add(Constants.PARAMS.EVENT, '.m910545446-Accept');
+
+                  Leanplum.createRequest(Constants.METHODS.TRACK, args, {
+                    sendNow: true,
+                    queued: false
+                  });
+
                   if (success) {
                     processMessage(chainedMsg, messages[chainedMsg]);
                   }
@@ -380,7 +392,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
               const vars = message.vars;
 
-              // TODO: serialize exit intent parameter in vars, currently hacked
+              // TODO: serialize exit intent parameter in vars, currently hacked through title text
               if (/leave|leaving/gi.test(vars.Title.Text || vars.Title)) {
                 setupExitIntent(() => processMessage(id, message));
               } else {
