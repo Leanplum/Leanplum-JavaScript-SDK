@@ -21,7 +21,7 @@ import {
   startResponse,
   successResponse,
   forceContentUpdateResponse
-} from './responses'
+} from '../data/responses'
 
 (global as any).WebSocket = undefined
 
