@@ -40,10 +40,10 @@ export default class Leanplum {
     static setAppVersion(versionName: string): void;
     static setDeviceName(deviceName: string): void;
     static setDeviceModel(deviceModel: string): void;
+    static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number): void;
     static setSystemName(systemName: string): void;
     static setSystemVersion(systemVersion: string): void;
     static setVariables(variables: Object): void;
-    static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number): void;
     static getVariables(): any;
     static getVariable(...args: string[]): any;
     static getVariants(): any[];
