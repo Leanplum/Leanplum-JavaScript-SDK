@@ -104,6 +104,11 @@ export default class Leanplum {
     Leanplum._deviceModel = deviceModel
   }
 
+  static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number) {
+    Leanplum._lpRequest.batchEnabled = batchEnabled
+    Leanplum._lpRequest.batchCooldown = cooldownSeconds
+  }
+
   static setSystemName(systemName: string) {
     Leanplum._systemName = systemName
   }
@@ -114,11 +119,6 @@ export default class Leanplum {
 
   static setVariables(variables: Object) {
     Leanplum._varCache.setVariables(variables)
-  }
-
-  static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number) {
-    Leanplum._lpRequest.batchEnabled = batchEnabled
-    Leanplum._lpRequest.batchCooldown = cooldownSeconds
   }
 
   static getVariables() {
@@ -184,8 +184,7 @@ export default class Leanplum {
           callback(isSuccess)
         }
       },
-    }
-    )
+    })
   }
 
   static start(userId: string, callback: StatusHandler): void;
