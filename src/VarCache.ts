@@ -98,10 +98,6 @@ export default class VarCache {
     }
   }
 
-  public getVariablesChangedHandlers() {
-    return this.variablesChangedHandlers
-  }
-
   public getVariantDebugInfo() {
     return this.variantDebugInfo
   }

@@ -130,11 +130,9 @@ describe(VarCache, () => {
       const handler = jest.fn()
 
       cache.addVariablesChangedHandler(handler)
+      cache.triggerVariablesChangedHandlers()
 
-      const handlers = cache.getVariablesChangedHandlers()
-
-      expect(handlers.length).toBe(1)
-      expect(handlers[0]).toBe(handler)
+      expect(handler).toHaveBeenCalledTimes(1)
     })
 
     it('calls handler after addition when there are diffs', () => {
@@ -155,10 +153,9 @@ describe(VarCache, () => {
       cache.addVariablesChangedHandler(jest.fn())
       cache.removeVariablesChangedHandler(handler)
 
-      const handlers = cache.getVariablesChangedHandlers()
+      cache.triggerVariablesChangedHandlers()
 
-      expect(handlers.length).toBe(2)
-      expect(handlers.find((x) => x === handler)).toBe(undefined)
+      expect(handler).toHaveBeenCalledTimes(0)
     })
 
     it('triggers handlers', () => {
@@ -174,16 +171,6 @@ describe(VarCache, () => {
       expect(handler1).toHaveBeenCalledTimes(1)
       expect(handler2).toHaveBeenCalledTimes(1)
       expect(handler3).toHaveBeenCalledTimes(1)
-    })
-
-    it('returns handlers', () => {
-      cache.addVariablesChangedHandler(jest.fn())
-      cache.addVariablesChangedHandler(jest.fn())
-      cache.addVariablesChangedHandler(jest.fn())
-
-      const handlers = cache.getVariablesChangedHandlers()
-
-      expect(handlers.length).toBe(3)
     })
   })
 
