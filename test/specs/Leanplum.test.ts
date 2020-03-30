@@ -68,7 +68,7 @@ const testModes = {
   DEV: 1
 }
 
-let Leanplum;
+let Leanplum
 
 const start = (done) => {
   interceptRequest((request) => {
@@ -334,7 +334,7 @@ Object.keys(testModes).forEach((mode) => {
       })
     })
 
-    describe('Web push.', () => {
+    describe('Web push', () => {
       it('test isWebPushSupported', (done) => {
         expect(!Leanplum.isWebPushSupported()).toBeTruthy()
         done()
