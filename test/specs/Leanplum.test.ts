@@ -222,6 +222,41 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.track('Page View')
       })
 
+      it('trackPurchase', (done) => {
+        interceptRequest((request) => {
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('track')
+          const body = JSON.parse(request.requestBody).data[0];
+          const params = JSON.parse(body.params);
+          expect(body.value).toEqual(19.99);
+          expect(params.currencyCode).toEqual('EUR');
+          request.respond(200, {
+            'Content-Type': 'application/json'
+          }, JSON.stringify(successResponse))
+          done()
+        })
+        Leanplum.trackPurchase(19.99, 'EUR')
+      })
+
+      it('trackPurchase with custom event name', (done) => {
+        interceptRequest((request) => {
+          expect(request).not.toBeNull()
+          expect(getAction(request)).toBe('track')
+          const body = JSON.parse(request.requestBody).data[0];
+          const params = JSON.parse(body.params);
+
+          expect(body.event).toEqual('Checkout');
+          expect(body.value).toEqual(19.99);
+          expect(params.itemsInCart).toEqual(4);
+
+          request.respond(200, {
+            'Content-Type': 'application/json'
+          }, JSON.stringify(successResponse))
+          done()
+        })
+        Leanplum.trackPurchase(19.99, 'BGN', { itemsInCart: 4 }, 'Checkout')
+      })
+
       it('advanceTo', (done) => {
         interceptRequest((request) => {
           expect(request).not.toBeNull()
