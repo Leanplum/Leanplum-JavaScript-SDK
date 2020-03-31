@@ -55,22 +55,24 @@ export default class PushManager {
    * @return {Promise} True if subscribed, else false.
    */
   public async isWebPushSubscribed(): Promise<boolean> {
-    if (this.isWebPushSupported()) {
-      const registration = await this.getServiceWorkerRegistration()
-
-      if (registration) {
-        const subscription = await registration.pushManager.getSubscription()
-        const isSubscribed = subscription !== null
-
-        if (isSubscribed) {
-          this.updateNewSubscriptionOnServer(subscription)
-        }
-
-        return isSubscribed
-      }
+    if (!this.isWebPushSupported()) {
+      return false
     }
 
-    return false
+    const registration = await this.getServiceWorkerRegistration()
+
+    if (!registration) {
+      return false
+    }
+
+    const subscription = await registration.pushManager.getSubscription()
+    const isSubscribed = subscription !== null
+
+    if (isSubscribed) {
+      this.updateNewSubscriptionOnServer(subscription)
+    }
+
+    return isSubscribed
   }
 
   /**
