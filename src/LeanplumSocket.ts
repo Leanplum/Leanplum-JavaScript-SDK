@@ -19,8 +19,8 @@
 import isEqual from 'lodash/isEqual'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import LeanplumRequest from './LeanplumRequest'
 import SocketIoClient from './SocketIoClient'
+import { CreateRequestFunction } from './types'
 import VarCache from './VarCache'
 
 export default class LeanplumSocket {
@@ -29,7 +29,7 @@ export default class LeanplumSocket {
   public connect(
     cache: VarCache,
     auth: { appId: string, deviceId: string },
-    createRequest: (action: string, args: ArgsBuilder, options: any) => void,
+    createRequest: CreateRequestFunction,
     getLastResponse: (response: any) => any
   ): void {
     if (!WebSocket) {
