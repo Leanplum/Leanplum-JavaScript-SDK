@@ -1,5 +1,3 @@
-import Constants from '../../src/Constants'
-import LocalStorageManager from '../../src/LocalStorageManager'
 import PushManager from '../../src/PushManager'
 
 describe(PushManager, () => {
@@ -15,6 +13,7 @@ describe(PushManager, () => {
   afterEach(() => {
     createRequestSpy.mockClear()
     windowMock.mockReset()
+    localStorage.clear()
   })
 
   describe('isWebPushSupported', () => {
@@ -118,14 +117,8 @@ describe(PushManager, () => {
   })
 
   describe('register', () => {
-    const callback = jest.fn()
-
-    afterEach(() => {
-      LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
-      callback.mockClear()
-    })
-
     it('calls callback with `false` when Web Push is not supported', async () => {
+      const callback = jest.fn()
       windowMock.mockReturnValue({} as any)
 
       jest.spyOn(console, 'log').mockImplementationOnce(() => {})
@@ -136,6 +129,7 @@ describe(PushManager, () => {
     })
 
     it('calls callback with `false` when there is an error', async () => {
+      const callback = jest.fn()
       mockServiceWorker({
         register: () => ({
           pushManager: null // cause an exception
@@ -150,6 +144,7 @@ describe(PushManager, () => {
     })
 
     it('calls callback with `false` when not subscribed', async () => {
+      const callback = jest.fn()
       mockServiceWorker({
         register: () => ({
           pushManager: {
@@ -165,6 +160,7 @@ describe(PushManager, () => {
     })
 
     it('calls callback with `true` when subscribed', async () => {
+      const callback = jest.fn()
       mockServiceWorker({
         register: () => ({
           pushManager: {
@@ -182,6 +178,7 @@ describe(PushManager, () => {
     })
 
     it('uses default SW URL when empty provided', async () => {
+      const callback = jest.fn()
       const register = jest.fn().mockReturnValue({
         pushManager: {
           getSubscription: () => null
@@ -227,10 +224,6 @@ describe(PushManager, () => {
   })
 
   describe('subscribeUser', () => {
-    afterEach(() => {
-      LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
-    })
-
     it('throws error when error occurs', async () => {
       mockServiceWorker({
         register: () => ({
@@ -314,10 +307,6 @@ describe(PushManager, () => {
   })
 
   describe('unsubscribeUser', () => {
-    afterEach(() => {
-      LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
-    })
-
     it('throws error when error occurs', async () => {
       let subscriptionValues: any[] = [null, { endpoint: 'test' }, {}]
 
