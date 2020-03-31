@@ -4,27 +4,20 @@ import PushManager from '../../src/PushManager'
 
 describe(PushManager, () => {
   let pushManager: PushManager
+  let windowMock: jest.SpyInstance<Window & typeof globalThis, []>
   const createRequestSpy: jest.Mock<() => void> = jest.fn()
 
   beforeEach(() => {
     pushManager = new PushManager(createRequestSpy)
+    windowMock = jest.spyOn(globalThis, 'window', 'get')
   })
 
   afterEach(() => {
     createRequestSpy.mockClear()
+    windowMock.mockReset()
   })
 
   describe('isWebPushSupported', () => {
-    let windowMock: jest.SpyInstance<Window & typeof globalThis, []>
-
-    beforeAll(() => {
-      windowMock = jest.spyOn(globalThis, 'window', 'get')
-    })
-
-    afterAll(() => {
-      windowMock.mockReset()
-    })
-
     it('returns `false` when navigator is undefined', () => {
       windowMock.mockReturnValue({ PushManager: {} } as any)
 
@@ -44,28 +37,13 @@ describe(PushManager, () => {
     })
 
     it('returns `true` when supported', () => {
-      windowMock.mockReturnValue({
-        navigator: {
-          serviceWorker: {}
-        },
-        PushManager: {}
-      } as any)
+      mockServiceWorker({})
 
       expect(pushManager.isWebPushSupported()).toBeTruthy()
     })
   })
 
   describe('isWebPushSubscribed', () => {
-    let windowMock: jest.SpyInstance<Window & typeof globalThis, []>
-
-    beforeAll(() => {
-      windowMock = jest.spyOn(globalThis, 'window', 'get')
-    })
-
-    afterAll(() => {
-      windowMock.mockReset()
-    })
-
     it('returns `false` when Web Push is not supported', async () => {
       windowMock.mockReturnValue({} as any)
 
@@ -73,52 +51,35 @@ describe(PushManager, () => {
     })
 
     it('returns `false` with no registration', async () => {
-      windowMock.mockReturnValue({
-        navigator: {
-          serviceWorker: {
-            getRegistration: () => null
-          }
-        },
-        PushManager: {}
-      } as any)
+      mockServiceWorker({
+        getRegistration: () => null
+      })
 
       expect(await pushManager.isWebPushSubscribed()).toBeFalsy()
     })
 
     it('returns `false` with no subscription', async () => {
-      windowMock.mockReturnValue({
-        navigator: {
-          serviceWorker: {
-            getRegistration: () => ({
-              pushManager: {
-                getSubscription: () => null
-              }
-            })
+      mockServiceWorker({
+        getRegistration: () => ({
+          pushManager: {
+            getSubscription: () => null
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       expect(await pushManager.isWebPushSubscribed()).toBeFalsy()
     })
 
     it('returns `true` when there is subscription', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            getRegistration: () => ({
-              pushManager: {
-                getSubscription: () => ({
-                  endpoint: 'test'
-                })
-              }
+      mockServiceWorker({
+        getRegistration: () => ({
+          pushManager: {
+            getSubscription: () => ({
+              endpoint: 'test'
             })
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       expect(await pushManager.isWebPushSubscribed()).toBeTruthy()
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
@@ -133,17 +94,10 @@ describe(PushManager, () => {
         }
       }
 
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            getRegistration: () => registration,
-            register: () => registration
-          }
-        },
-        PushManager: {}
-      } as any)
+      mockServiceWorker({
+        getRegistration: () => registration,
+        register: () => registration
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -164,16 +118,7 @@ describe(PushManager, () => {
   })
 
   describe('register', () => {
-    let windowMock: jest.SpyInstance<Window & typeof globalThis, []>
     const callback = jest.fn()
-
-    beforeAll(() => {
-      windowMock = jest.spyOn(globalThis, 'window', 'get')
-    })
-
-    afterAll(() => {
-      windowMock.mockReset()
-    })
 
     afterEach(() => {
       LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
@@ -191,18 +136,11 @@ describe(PushManager, () => {
     })
 
     it('calls callback with `false` when there is an error', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: null // cause an exception
-            })
-          }
-        },
-        PushManager: {}
-      } as any)
+      mockServiceWorker({
+        register: () => ({
+          pushManager: null // cause an exception
+        })
+      })
 
       jest.spyOn(console, 'log').mockImplementationOnce(() => {})
       await pushManager.register('', callback)
@@ -212,20 +150,13 @@ describe(PushManager, () => {
     })
 
     it('calls callback with `false` when not subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', callback)
 
@@ -234,22 +165,15 @@ describe(PushManager, () => {
     })
 
     it('calls callback with `true` when subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => ({
-                  endpoint: 'test'
-                })
-              }
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => ({
+              endpoint: 'test'
             })
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', callback)
 
@@ -263,16 +187,7 @@ describe(PushManager, () => {
           getSubscription: () => null
         }
       })
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register
-          }
-        },
-        PushManager: {}
-      } as any)
+      mockServiceWorker({ register })
 
       await pushManager.register('', callback)
 
@@ -281,20 +196,13 @@ describe(PushManager, () => {
     })
 
     it('does not update subscription on server when not subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -302,22 +210,15 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server when subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => ({
-                  endpoint: 'test'
-                })
-              }
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => ({
+              endpoint: 'test'
             })
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -326,36 +227,19 @@ describe(PushManager, () => {
   })
 
   describe('subscribeUser', () => {
-    let windowMock: jest.SpyInstance<Window & typeof globalThis, []>
-
-    beforeAll(() => {
-      windowMock = jest.spyOn(globalThis, 'window', 'get')
-    })
-
-    afterAll(() => {
-      windowMock.mockReset()
-    })
-
     afterEach(() => {
       LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
     })
 
     it('throws error when error occurs', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null,
-                subscribe: undefined // cause an exception
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null,
+            subscribe: undefined // cause an exception
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -363,21 +247,14 @@ describe(PushManager, () => {
     })
 
     it('throws error when not subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null,
-                subscribe: () => null
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null,
+            subscribe: () => null
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -385,23 +262,16 @@ describe(PushManager, () => {
     })
 
     it('returns `true` on success', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null,
-                subscribe: () => ({
-                  endpoint: 'test'
-                })
-              }
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null,
+            subscribe: () => ({
+              endpoint: 'test'
             })
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -409,21 +279,14 @@ describe(PushManager, () => {
     })
 
     it('does not update subscription on server when not subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null,
-                subscribe: () => null
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null,
+            subscribe: () => null
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
       await pushManager.subscribeUser().catch(() => { /* noop - expected */ })
@@ -432,23 +295,16 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server when subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null,
-                subscribe: () => ({
-                  endpoint: 'test'
-                })
-              }
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null,
+            subscribe: () => ({
+              endpoint: 'test'
             })
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
       await pushManager.subscribeUser()
@@ -458,16 +314,6 @@ describe(PushManager, () => {
   })
 
   describe('unsubscribeUser', () => {
-    let windowMock: jest.SpyInstance<Window & typeof globalThis, []>
-
-    beforeAll(() => {
-      windowMock = jest.spyOn(globalThis, 'window', 'get')
-    })
-
-    afterAll(() => {
-      windowMock.mockReset()
-    })
-
     afterEach(() => {
       LocalStorageManager.removeFromLocalStorage(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)
     })
@@ -475,20 +321,13 @@ describe(PushManager, () => {
     it('throws error when error occurs', async () => {
       let subscriptionValues: any[] = [null, { endpoint: 'test' }, {}]
 
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => subscriptionValues.shift()
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => subscriptionValues.shift()
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -498,20 +337,13 @@ describe(PushManager, () => {
     it('throws error when no subscription', async () => {
       let subscriptionValues: any[] = [null, { endpoint: 'test' }, null]
 
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => subscriptionValues.shift()
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => subscriptionValues.shift()
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -519,20 +351,13 @@ describe(PushManager, () => {
     })
 
     it('resolves when not subscribed', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => null
-              }
-            })
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => null
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
@@ -540,27 +365,31 @@ describe(PushManager, () => {
     })
 
     it('resolves when unsubscribe was successful', async () => {
-      windowMock.mockReturnValue({
-        atob,
-        btoa,
-        navigator: {
-          serviceWorker: {
-            register: () => ({
-              pushManager: {
-                getSubscription: () => ({
-                  endpoint: 'test',
-                  unsubscribe: () => Promise.resolve(true)
-                })
-              }
+      mockServiceWorker({
+        register: () => ({
+          pushManager: {
+            getSubscription: () => ({
+              endpoint: 'test',
+              unsubscribe: () => Promise.resolve(true)
             })
           }
-        },
-        PushManager: {}
-      } as any)
+        })
+      })
 
       await pushManager.register('', (x) => Promise.resolve(x))
 
       await expect(pushManager.unsubscribeUser()).resolves.not.toThrowError()
     })
   })
+
+  function mockServiceWorker(serviceWorker: any): void {
+    windowMock.mockReturnValue({
+      atob,
+      btoa,
+      navigator: {
+        serviceWorker
+      },
+      PushManager: {}
+    } as any)
+  }
 })
