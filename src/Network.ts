@@ -20,20 +20,17 @@
 
 declare var XDomainRequest
 
-const apply = Function.prototype.apply;
-let requestQueue = []
-let networkTimeoutSeconds: number = 10
-
 export default class Network {
-
-  static runningRequest: boolean = false
+  private networkTimeoutSeconds: number = 10
+  private requestQueue = []
+  private runningRequest: boolean = false
 
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  static setNetworkTimeout(seconds: number) {
-    networkTimeoutSeconds = seconds
+  public setNetworkTimeout(seconds: number) {
+    this.networkTimeoutSeconds = seconds
   }
 
   /**
@@ -47,13 +44,13 @@ export default class Network {
    * @param {boolean} [plainText] Whether the response should be returned as plain text or json.
    * @return {*}
    */
-  static ajax(method, url, data, success, error, queued, plainText?) {
+  public ajax(method, url, data, success, error, queued, plainText?) {
     if (queued) {
-      if (Network.runningRequest) {
+      if (this.runningRequest) {
         // eslint-disable-next-line prefer-rest-params
-        return Network.enqueueRequest(arguments)
+        return this.enqueueRequest(arguments)
       }
-      Network.runningRequest = true
+      this.runningRequest = true
     }
 
     /** @namespace XDomainRequest **/
@@ -63,13 +60,13 @@ export default class Network {
         url = `http:${url.substring(6)}`
       }
       // eslint-disable-next-line prefer-rest-params
-      return apply.call(Network.ajaxIE8, null, arguments)
+      return Function.prototype.apply.call(this.ajaxIE8.bind(this), null, arguments)
     }
 
     let handled = false
 
     let xhr = new XMLHttpRequest()
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
         if (handled) {
           return
@@ -84,7 +81,7 @@ export default class Network {
           try {
             response = JSON.parse(xhr.responseText)
           } catch (e) {
-            setTimeout(function() {
+            setTimeout(() => {
               if (error) {
                 error(null, xhr)
               }
@@ -95,13 +92,13 @@ export default class Network {
 
         if (!ranCallback) {
           if (xhr.status >= 200 && xhr.status < 300) {
-            setTimeout(function() {
+            setTimeout(() => {
               if (success) {
                 success(response, xhr)
               }
             }, 0)
           } else {
-            setTimeout(function() {
+            setTimeout(() => {
               if (error) {
                 error(response, xhr)
               }
@@ -110,19 +107,19 @@ export default class Network {
         }
 
         if (queued) {
-          Network.runningRequest = false
-          Network.dequeueRequest()
+          this.runningRequest = false
+          this.dequeueRequest()
         }
       }
     }
     xhr.open(method, url, true)
     xhr.setRequestHeader('Content-Type', 'text/plain') // Avoid pre-flight.
     xhr.send(data)
-    setTimeout(function() {
+    setTimeout(() => {
       if (!handled) {
         xhr.abort()
       }
-    }, networkTimeoutSeconds * 1000)
+    }, this.networkTimeoutSeconds * 1000)
   }
 
   /**
@@ -135,9 +132,9 @@ export default class Network {
    * @param {boolean} queued Whether the request should be queued or immediately sent.
    * @param {boolean} plainText Whether the response should be returned as plain text or json.
    */
-  static ajaxIE8(method, url, data, success, error, queued, plainText) {
+  private ajaxIE8(method, url, data, success, error, queued, plainText) {
     let xdr = new XDomainRequest()
-    xdr.onload = function() {
+    xdr.onload = () => {
       let response
       let ranCallback = false
       if (plainText) {
@@ -146,7 +143,7 @@ export default class Network {
         try {
           response = JSON.parse(xdr.responseText)
         } catch (e) {
-          setTimeout(function() {
+          setTimeout(() => {
             if (error) {
               error(null, xdr)
             }
@@ -155,32 +152,32 @@ export default class Network {
         }
       }
       if (!ranCallback) {
-        setTimeout(function() {
+        setTimeout(() => {
           if (success) {
             success(response, xdr)
           }
         }, 0)
       }
       if (queued) {
-        Network.runningRequest = false
-        Network.dequeueRequest()
+        this.runningRequest = false
+        this.dequeueRequest()
       }
     }
-    xdr.onerror = xdr.ontimeout = function() {
-      setTimeout(function() {
+    xdr.onerror = xdr.ontimeout = () => {
+      setTimeout(() => {
         if (error) {
           error(null, xdr)
         }
       }, 0)
       if (queued) {
-        Network.runningRequest = false
-        Network.dequeueRequest()
+        this.runningRequest = false
+        this.dequeueRequest()
       }
     }
-    xdr.onprogress = function() {
+    xdr.onprogress = () => {
     }
     xdr.open(method, url)
-    xdr.timeout = networkTimeoutSeconds * 1000
+    xdr.timeout = this.networkTimeoutSeconds * 1000
     xdr.send(data)
   }
 
@@ -189,18 +186,18 @@ export default class Network {
    * @param {Arguments} requestArguments The request arguments from the initial method call.
    * @private
    */
-  static enqueueRequest(requestArguments) {
-    requestQueue.push(requestArguments)
+  private enqueueRequest(requestArguments) {
+    this.requestQueue.push(requestArguments)
   }
 
   /**
    * Removes the request from the request queue.
    * @private
    */
-  static dequeueRequest() {
-    let args = requestQueue.shift()
+  private dequeueRequest() {
+    let args = this.requestQueue.shift()
     if (args) {
-      apply.call(Network.ajax, null, args)
+      Function.prototype.apply.call(this.ajax.bind(this), null, args)
     }
   }
 }
