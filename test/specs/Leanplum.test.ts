@@ -384,7 +384,6 @@ Object.keys(testModes).forEach((mode) => {
             expect(await Leanplum.registerForWebPush()).toBe(true)
           } finally {
             windowMock.mockReset()
-            localStorage.clear()
           }
         })
       })
