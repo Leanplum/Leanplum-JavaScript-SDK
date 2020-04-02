@@ -350,12 +350,42 @@ Object.keys(testModes).forEach((mode) => {
         expect(!subscribed).toBeTruthy()
       })
 
-      it('test isWebPushSupported', async () => {
-        try {
-          await Leanplum.registerForWebPush()
-        } catch (e) {
-          expect(e).toBeTruthy()
-        }
+      describe('registerForWebPush', () => {
+        it('fails when WebPush is not suported', async () => {
+          try {
+            await Leanplum.registerForWebPush()
+          } catch (e) {
+            expect(e).toBeTruthy()
+          }
+        })
+
+        it('works when WebPush is supported', async () => {
+          const windowMock = jest.spyOn(globalThis, 'window', 'get')
+
+          windowMock.mockReturnValue({
+            atob,
+            btoa,
+            navigator: {
+              serviceWorker: {
+                register: () => ({
+                  pushManager: {
+                    getSubscription: () => null,
+                    subscribe: () => ({
+                      endpoint: 'test'
+                    })
+                  }
+                })
+              }
+            },
+            PushManager: {}
+          } as any)
+
+          try {
+            expect(await Leanplum.registerForWebPush()).toBe(true)
+          } finally {
+            windowMock.mockReset()
+          }
+        })
       })
     })
 
