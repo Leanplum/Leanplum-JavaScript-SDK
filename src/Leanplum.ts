@@ -407,7 +407,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     if (currencyCode) {
       parameters = Object.assign({}, params, { currencyCode })
     }
-    Leanplum.track(event || 'Purchase', value, parameters)
+    Leanplum.track(event, value, parameters)
   }
 
   static advanceTo(state: string, params?: Object): void;
