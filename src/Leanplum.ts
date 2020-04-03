@@ -403,7 +403,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   }
 
   static trackPurchase(value: number, currencyCode?: string, params?: Object, event: string = 'Purchase'): void {
-    let parameters = params;
+    let parameters = params
     if (currencyCode) {
       parameters = Object.assign({}, params, { currencyCode })
     }

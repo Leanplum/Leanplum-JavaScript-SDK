@@ -226,10 +226,10 @@ Object.keys(testModes).forEach((mode) => {
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('track')
-          const body = JSON.parse(request.requestBody).data[0];
-          const params = JSON.parse(body.params);
-          expect(body.value).toEqual(19.99);
-          expect(params.currencyCode).toEqual('EUR');
+          const body = JSON.parse(request.requestBody).data[0]
+          const params = JSON.parse(body.params)
+          expect(body.value).toEqual(19.99)
+          expect(params.currencyCode).toEqual('EUR')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))
@@ -242,12 +242,12 @@ Object.keys(testModes).forEach((mode) => {
         interceptRequest((request) => {
           expect(request).not.toBeNull()
           expect(getAction(request)).toBe('track')
-          const body = JSON.parse(request.requestBody).data[0];
-          const params = JSON.parse(body.params);
+          const body = JSON.parse(request.requestBody).data[0]
+          const params = JSON.parse(body.params)
 
-          expect(body.event).toEqual('Checkout');
-          expect(body.value).toEqual(19.99);
-          expect(params.itemsInCart).toEqual(4);
+          expect(body.event).toEqual('Checkout')
+          expect(body.value).toEqual(19.99)
+          expect(params.itemsInCart).toEqual(4)
 
           request.respond(200, {
             'Content-Type': 'application/json'
