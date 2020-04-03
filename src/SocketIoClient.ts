@@ -119,4 +119,12 @@ export default class SocketIoClient {
     })
     this.socket.send(`5:::${argsJson}`)
   }
+
+  /**
+   * Sets the network timeout.
+   * @param {number} seconds The timeout in seconds.
+   */
+  setNetworkTimeout(seconds) {
+    this.network.setNetworkTimeout(seconds)
+  }
 }

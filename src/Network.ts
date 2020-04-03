@@ -60,7 +60,7 @@ export default class Network {
         url = `http:${url.substring(6)}`
       }
       // eslint-disable-next-line prefer-rest-params
-      return Function.prototype.apply.call(this.ajaxIE8.bind(this), null, arguments)
+      return this.ajaxIE8.call(this, arguments)
     }
 
     let handled = false
@@ -197,7 +197,7 @@ export default class Network {
   private dequeueRequest() {
     let args = this.requestQueue.shift()
     if (args) {
-      Function.prototype.apply.call(this.ajax.bind(this), null, args)
+      this.ajax.call(this, args)
     }
   }
 }
