@@ -24,6 +24,8 @@ import { CreateRequestFunction } from './types'
 import VarCache from './VarCache'
 
 export default class LeanplumSocket {
+  private networkTimeoutSeconds: number = 10
+  private socketClient: SocketIoClient | null = null
   private socketHost = 'dev.leanplum.com'
 
   public connect(
@@ -37,13 +39,15 @@ export default class LeanplumSocket {
       return
     }
 
-    let client = new SocketIoClient()
     let authSent = false
+    this.socketClient = new SocketIoClient()
 
-    client.onopen = () => {
+    this.socketClient.setNetworkTimeout(this.networkTimeoutSeconds)
+
+    this.socketClient.onopen = () => {
       if (!authSent) {
         console.log('Leanplum: Connected to development server.')
-        client.send('auth', {
+        this.socketClient.send('auth', {
           [Constants.PARAMS.APP_ID]: auth.appId,
           [Constants.PARAMS.DEVICE_ID]: auth.deviceId
         })
@@ -51,11 +55,11 @@ export default class LeanplumSocket {
       }
     }
 
-    client.onerror = (event) => {
+    this.socketClient.onerror = (event) => {
       console.log('Leanplum: Socket error', event)
     }
 
-    client.onmessage = (event: string, args: { email: string }[]) => {
+    this.socketClient.onmessage = (event: string, args: { email: string }[]) => {
       if (event === 'updateVars') {
         const args = new ArgsBuilder().add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
         createRequest(Constants.METHODS.GET_VARS, args, {
@@ -73,12 +77,12 @@ export default class LeanplumSocket {
         })
       } else if (event === 'getVariables') {
         cache.sendVariables()
-        client.send('getContentResponse', {
+        this.socketClient.send('getContentResponse', {
           'updated': true
         })
       } else if (event === 'getActions') {
         // Unsupported in JavaScript SDK.
-        client.send('getContentResponse', {
+        this.socketClient.send('getContentResponse', {
           'updated': false
         })
       } else if (event === 'registerDevice') {
@@ -87,21 +91,30 @@ export default class LeanplumSocket {
       }
     }
 
-    client.onclose = () => {
+    this.socketClient.onclose = () => {
       console.log('Leanplum: Disconnected to development server.')
       authSent = false
     }
 
-    client.connect(this.socketHost)
+    this.socketClient.connect(this.socketHost)
 
     setInterval(() => {
-      if (!client.connected && !client.connecting) {
-        client.connect(this.socketHost)
+      if (!this.socketClient.connected && !this.socketClient.connecting) {
+        this.socketClient.connect(this.socketHost)
       }
     }, 5000)
   }
 
   public setSocketHost(value: string): void {
     this.socketHost = value
+  }
+
+  /**
+   * Sets the network timeout.
+   * @param {number} seconds The timeout in seconds.
+   */
+  public setNetworkTimeout(seconds) {
+    this.networkTimeoutSeconds = seconds
+    this.socketClient?.setNetworkTimeout(seconds)
   }
 }

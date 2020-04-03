@@ -16,15 +16,17 @@
  *
  */
 
-import Request from './Network'
+import Network from './Network'
 
 /**
  * Socket.io 1.0 client class.
  */
 export default class SocketIoClient {
+  private network: Network = new Network()
+  private socket: WebSocket | undefined
+
   connected: boolean = false
   connecting: boolean = false
-  socket: WebSocket | undefined
 
   onopen: Function | undefined
   onclose: Function | undefined
@@ -47,7 +49,7 @@ export default class SocketIoClient {
     // eslint-disable-next-line consistent-this
     let self = this
     self.connecting = true
-    Request.ajax('POST', `https://${socketHost}/socket.io/1`, '',
+    this.network.ajax('POST', `https://${socketHost}/socket.io/1`, '',
         function(line) {
           let parts = line.split(':')
           let session = parts[0]
@@ -116,5 +118,13 @@ export default class SocketIoClient {
       args
     })
     this.socket.send(`5:::${argsJson}`)
+  }
+
+  /**
+   * Sets the network timeout.
+   * @param {number} seconds The timeout in seconds.
+   */
+  setNetworkTimeout(seconds) {
+    this.network.setNetworkTimeout(seconds)
   }
 }

@@ -21,8 +21,9 @@ import LocalStorageManager from './LocalStorageManager'
 import Network from './Network'
 
 export default class LeanplumRequest {
-  private lastRequestTime = undefined
   private cooldownTimeout = null
+  private lastRequestTime = undefined
+  private network = new Network()
 
   public apiPath: string = 'https://www.leanplum.com/api'
   public appId: string
@@ -98,8 +99,14 @@ export default class LeanplumRequest {
     }
 
     if (params.body()) {
-      Network.ajax('POST', `${this.apiPath}?${argsBuilder.build()}`,
-          params.body(), success, error, options.queued)
+      this.network.ajax(
+        'POST',
+        `${this.apiPath}?${argsBuilder.build()}`,
+        params.body(),
+        success,
+        error,
+        options.queued
+      )
       return
     }
 
@@ -117,7 +124,14 @@ export default class LeanplumRequest {
             .add(Constants.PARAMS.ACTION, Constants.METHODS.MULTI)
             .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString().toString())
             .build()
-        Network.ajax('POST', `${this.apiPath}?${multiRequestArgs}`, requestData, success, error, options.queued)
+        this.network.ajax(
+          'POST',
+          `${this.apiPath}?${multiRequestArgs}`,
+          requestData,
+          success,
+          error,
+          options.queued
+        )
       }
     }
 
@@ -148,7 +162,7 @@ export default class LeanplumRequest {
    * @param {number} seconds The timeout in seconds.
    */
   public setNetworkTimeout(seconds) {
-    Network.setNetworkTimeout(seconds)
+    this.network.setNetworkTimeout(seconds)
   }
 
   public getLastResponse(response) {

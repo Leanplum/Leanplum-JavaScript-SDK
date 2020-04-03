@@ -62,6 +62,7 @@ export default class Leanplum {
    */
   static setNetworkTimeout(seconds: number) {
     Leanplum._lpRequest.setNetworkTimeout(seconds)
+    Leanplum._lpSocket.setNetworkTimeout(seconds)
   }
 
   static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
