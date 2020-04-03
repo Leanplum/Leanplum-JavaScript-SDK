@@ -69,6 +69,7 @@ export default class Leanplum {
     static track(event: string, value: number, params: Object): void;
     static track(event: string, params: Object): void;
     static track(event: string, value?: number, info?: string, params?: Object): void;
+    static trackPurchase(value: number, currencyCode?: string, params?: Object, event?: string): void;
     static advanceTo(state: string, params?: Object): void;
     static advanceTo(state: string, info?: string, params?: Object): void;
     /**
