@@ -394,7 +394,9 @@ Object.keys(testModes).forEach((mode) => {
           }
         })
 
+        // TODO: Move this test to LeanplumInternal.test.ts.
         it('works when WebPush is supported', async () => {
+          const winObject = globalThis.window
           const windowMock = jest.spyOn(globalThis, 'window', 'get')
 
           windowMock.mockReturnValue({
@@ -418,7 +420,8 @@ Object.keys(testModes).forEach((mode) => {
           try {
             expect(await Leanplum.registerForWebPush()).toBe(true)
           } finally {
-            windowMock.mockReset()
+            // Restore original value - `mockReset()` doesn't work as expected.
+            windowMock.mockReturnValue(winObject)
           }
         })
       })

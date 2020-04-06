@@ -20,7 +20,7 @@ import isEqual from 'lodash/isEqual'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import SocketIoClient from './SocketIoClient'
-import { CreateRequestFunction } from './types'
+import { CreateRequestFunction } from './types/internal'
 import VarCache from './VarCache'
 
 export default class LeanplumSocket {
