@@ -18,7 +18,7 @@
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
-import { CreateRequestFunction } from './types'
+import { CreateRequestFunction } from './types/internal'
 
 export default class VarCache {
   private actionMetadata: Object = {}

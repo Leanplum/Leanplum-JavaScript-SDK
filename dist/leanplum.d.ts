@@ -3,7 +3,7 @@
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  You may obtain a copy of the License at:
  *
  *      https://www.apache.org/licenses/LICENSE-2.0
  *
@@ -12,18 +12,9 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- **/
+ */
 
-type StatusHandler = (success: boolean) => void;
-type SimpleHandler = () => void;
-type UserAttributes = any;
 export default class Leanplum {
-    static _email: string;
-    static _deviceName: string;
-    static _deviceModel: string;
-    static _systemName: string;
-    static _systemVersion: string;
     static setApiPath(apiPath: string): void;
     static setEmail(email: string): void;
     /**
@@ -31,8 +22,6 @@ export default class Leanplum {
       * @param {number} seconds The timeout in seconds.
       */
     static setNetworkTimeout(seconds: number): void;
-    static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean): void;
-    static getVariantDebugInfo(): Object;
     static setAppIdForDevelopmentMode(appId: string, accessKey: string): void;
     static setAppIdForProductionMode(appId: string, accessKey: string): void;
     static setSocketHost(host: string): void;
@@ -44,12 +33,13 @@ export default class Leanplum {
     static setSystemName(systemName: string): void;
     static setSystemVersion(systemVersion: string): void;
     static setVariables(variables: Object): void;
+    static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean): void;
+    static getVariantDebugInfo(): Object;
     static getVariables(): any;
     static getVariable(...args: string[]): any;
     static getVariants(): any[];
     static addStartResponseHandler(handler: StatusHandler): void;
     static removeStartResponseHandler(handler: StatusHandler): void;
-    static __destroy(): void;
     static addVariablesChangedHandler(handler: SimpleHandler): void;
     static removeVariablesChangedHandler(handler: SimpleHandler): void;
     static forceContentUpdate(callback?: StatusHandler): void;
@@ -101,6 +91,10 @@ export default class Leanplum {
       * inconsistent state or user experience.
       */
     static clearUserContent(): void;
+    static __destroy(): void;
 }
-export {};
+
+export type SimpleHandler = () => void;
+export type StatusHandler = (success: boolean) => void;
+export type UserAttributes = any;
 

@@ -1,10 +1,9 @@
 /*
- *
  *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  You may obtain a copy of the License at:
  *
  *      https://www.apache.org/licenses/LICENSE-2.0
  *
@@ -12,394 +11,162 @@
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
- *  limitations under the License
- *
+ *  limitations under the License.
  */
 
-import ArgsBuilder from './ArgsBuilder'
-import BrowserDetector from './BrowserDetector'
-import Constants from './Constants'
-import InternalState from './InternalState'
-import LeanplumRequest from './LeanplumRequest'
-import LeanplumSocket from './LeanplumSocket'
-import LocalStorageManager from './LocalStorageManager'
-import PushManager from './PushManager'
-import VarCache from './VarCache'
-
-let _browserDetector = new BrowserDetector(window)
-
-type StatusHandler = (success: boolean) => void;
-type SimpleHandler = () => void;
-type UserAttributes = any;
+import LeanplumInternal from './LeanplumInternal'
+import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 
 export default class Leanplum {
-  private static _internalState: InternalState = new InternalState()
-  private static _lpRequest: LeanplumRequest = new LeanplumRequest()
-  private static _lpSocket: LeanplumSocket = new LeanplumSocket()
-  private static _pushManager: PushManager = new PushManager(Leanplum.createRequest)
-  private static _varCache: VarCache = new VarCache(Leanplum.createRequest)
+  private static _lp: LeanplumInternal = new LeanplumInternal(window)
 
-  static _email: string
-  static _deviceName: string
-  static _deviceModel: string
-  static _systemName: string
-  static _systemVersion: string
-
-  static setApiPath(apiPath: string) {
-    if (!Leanplum._lpRequest.apiPath) {
-      return
-    }
-    Leanplum._lpRequest.apiPath = apiPath
+  static setApiPath(apiPath: string): void {
+    Leanplum._lp.setApiPath(apiPath)
   }
 
-  static setEmail(email: string) {
-    Leanplum._email = email
+  static setEmail(email: string): void {
+    Leanplum._lp.setEmail(email)
   }
 
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  static setNetworkTimeout(seconds: number) {
-    Leanplum._lpRequest.setNetworkTimeout(seconds)
-    Leanplum._lpSocket.setNetworkTimeout(seconds)
+  static setNetworkTimeout(seconds: number): void {
+    Leanplum._lp.setNetworkTimeout(seconds)
   }
 
-  static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean) {
-    Leanplum._internalState.variantDebugInfoEnabled = variantDebugInfoEnabled
+  static setAppIdForDevelopmentMode(appId: string, accessKey: string): void {
+    Leanplum._lp.setAppIdForDevelopmentMode(appId, accessKey)
   }
 
-  static getVariantDebugInfo() {
-    return Leanplum._varCache.getVariantDebugInfo()
+  static setAppIdForProductionMode(appId: string, accessKey: string): void {
+    Leanplum._lp.setAppIdForProductionMode(appId, accessKey)
   }
 
-  static setAppIdForDevelopmentMode(appId: string, accessKey: string) {
-    Leanplum._lpRequest.appId = appId
-    Leanplum._lpRequest.clientKey = accessKey
-    Leanplum._internalState.devMode = true
+  static setSocketHost(host: string): void {
+    Leanplum._lp.setSocketHost(host)
   }
 
-  static setAppIdForProductionMode(appId: string, accessKey: string) {
-    Leanplum._lpRequest.appId = appId
-    Leanplum._lpRequest.clientKey = accessKey
-    Leanplum._internalState.devMode = false
+  static setDeviceId(deviceId: string): void {
+    Leanplum._lp.setDeviceId(deviceId)
   }
 
-  static setSocketHost(host: string) {
-    Leanplum._lpSocket.setSocketHost(host)
+  static setAppVersion(versionName: string): void {
+    Leanplum._lp.setAppVersion(versionName)
   }
 
-  static setDeviceId(deviceId: string) {
-    Leanplum._lpRequest.deviceId = deviceId
+  static setDeviceName(deviceName: string): void {
+    Leanplum._lp.setDeviceName(deviceName)
   }
 
-  static setAppVersion(versionName: string) {
-    Leanplum._lpRequest.versionName = versionName
+  static setDeviceModel(deviceModel: string): void {
+    Leanplum._lp.setDeviceModel(deviceModel)
   }
 
-  static setDeviceName(deviceName: string) {
-    Leanplum._deviceName = deviceName
+  static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number): void {
+    Leanplum._lp.setRequestBatching(batchEnabled, cooldownSeconds)
   }
 
-  static setDeviceModel(deviceModel: string) {
-    Leanplum._deviceModel = deviceModel
+  static setSystemName(systemName: string): void {
+    Leanplum._lp.setSystemName(systemName)
   }
 
-  static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number) {
-    Leanplum._lpRequest.batchEnabled = batchEnabled
-    Leanplum._lpRequest.batchCooldown = cooldownSeconds
+  static setSystemVersion(systemVersion: string): void {
+    Leanplum._lp.setSystemVersion(systemVersion)
   }
 
-  static setSystemName(systemName: string) {
-    Leanplum._systemName = systemName
+  static setVariables(variables: Object): void {
+    Leanplum._lp.setVariables(variables)
   }
 
-  static setSystemVersion(systemVersion: string) {
-    Leanplum._systemVersion = systemVersion
+  static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean): void {
+    Leanplum._lp.setVariantDebugInfoEnabled(variantDebugInfoEnabled)
   }
 
-  static setVariables(variables: Object) {
-    Leanplum._varCache.setVariables(variables)
+  static getVariantDebugInfo(): Object {
+    return Leanplum._lp.getVariantDebugInfo()
   }
 
-  static getVariables() {
-    return Leanplum._varCache.getVariables()
+  static getVariables(): any {
+    return Leanplum._lp.getVariables()
   }
 
-  static getVariable(...args: string[]) {
-    let current = Leanplum.getVariables()
-    for (let i = 0; i < args.length; i++) {
-      current = current[args[i]]
-    }
-    return current
+  static getVariable(...args: string[]): any {
+    return Leanplum._lp.getVariable(...args)
   }
 
-  static getVariants() {
-    return Leanplum._varCache.variants || []
+  static getVariants(): any[] {
+    return Leanplum._lp.getVariants()
   }
 
-  static addStartResponseHandler(handler: StatusHandler) {
-    Leanplum._internalState.addStartResponseHandler(handler)
+  static addStartResponseHandler(handler: StatusHandler): void {
+    Leanplum._lp.addStartResponseHandler(handler)
   }
 
-  static removeStartResponseHandler(handler: StatusHandler) {
-    Leanplum._internalState.removeStartResponseHandler(handler)
+  static removeStartResponseHandler(handler: StatusHandler): void {
+    Leanplum._lp.removeStartResponseHandler(handler)
   }
 
-  static __destroy() {
-    Leanplum._lpRequest = new LeanplumRequest()
-    Leanplum._internalState = new InternalState()
-    Leanplum._lpSocket = new LeanplumSocket()
-    Leanplum._pushManager = new PushManager(Leanplum.createRequest)
-    Leanplum._varCache = new VarCache(Leanplum.createRequest)
+  static addVariablesChangedHandler(handler: SimpleHandler): void {
+    Leanplum._lp.addVariablesChangedHandler(handler)
   }
 
-  static addVariablesChangedHandler(handler: SimpleHandler) {
-    Leanplum._varCache.addVariablesChangedHandler(handler)
+  static removeVariablesChangedHandler(handler: SimpleHandler): void {
+    Leanplum._lp.removeVariablesChangedHandler(handler)
   }
 
-  static removeVariablesChangedHandler(handler: SimpleHandler) {
-    Leanplum._varCache.removeVariablesChangedHandler(handler)
-  }
-
-  static forceContentUpdate(callback?: StatusHandler) {
-    const args = new ArgsBuilder()
-      .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-      .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, Leanplum._internalState.variantDebugInfoEnabled)
-
-    Leanplum.createRequest(Constants.METHODS.GET_VARS, args, {
-      queued: false,
-      sendNow: true,
-      response: function (response) {
-        let getVarsResponse = Leanplum._lpRequest.getLastResponse(response)
-        let isSuccess = Leanplum._lpRequest.isResponseSuccess(getVarsResponse)
-        if (isSuccess) {
-          Leanplum._varCache.applyDiffs(
-            getVarsResponse[Constants.KEYS.VARS],
-            getVarsResponse[Constants.KEYS.VARIANTS],
-            getVarsResponse[Constants.KEYS.ACTION_METADATA])
-          Leanplum._varCache.setVariantDebugInfo(getVarsResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
-        }
-
-        if (callback) {
-          callback(isSuccess)
-        }
-      },
-    })
+  static forceContentUpdate(callback?: StatusHandler): void {
+    Leanplum._lp.forceContentUpdate(callback)
   }
 
   static start(userId: string, callback: StatusHandler): void;
   static start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
   static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
   static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void {
-    if (typeof userId === 'function') {
-      callback = userId
-      userAttributes = {}
-      userId = null
-    } else if (typeof userId === 'object' && userId !== null && userId !== undefined) {
-      callback = userAttributes
-      userAttributes = userId
-      userId = null
-    } else if (typeof userAttributes === 'function') {
-      callback = userAttributes
-      userAttributes = {}
-    }
-
-    Leanplum._lpRequest.userId = userId
-
-    if (callback) {
-      Leanplum.addStartResponseHandler(callback)
-    }
-
-    Leanplum._varCache.onUpdate = function() {
-      Leanplum._varCache.triggerVariablesChangedHandlers()
-    }
-
-    const args = new ArgsBuilder()
-        .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
-        .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.SYSTEM_NAME, Leanplum._systemName || _browserDetector.OS)
-        .add(Constants.PARAMS.SYSTEM_VERSION, (Leanplum._systemVersion || '').toString())
-        .add(Constants.PARAMS.BROWSER_NAME, _browserDetector.browser)
-        .add(Constants.PARAMS.BROWSER_VERSION, _browserDetector.version.toString())
-        .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.DEVICE_NAME, Leanplum._deviceName ||
-            `${_browserDetector.browser} ${_browserDetector.version}`)
-        .add(Constants.PARAMS.DEVICE_MODEL, Leanplum._deviceModel || 'Web Browser')
-        .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-        .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, Leanplum._internalState.variantDebugInfoEnabled)
-
-    // Issue request.
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.START, args, {
-      queued: true,
-      sendNow: true,
-      response: function(response) {
-        Leanplum._internalState.hasStarted = true
-        let startResponse = Leanplum._lpRequest.getLastResponse(response)
-
-        if (Leanplum._lpRequest.isResponseSuccess(startResponse)) {
-          Leanplum._internalState.startSuccessful = true
-
-          if (Leanplum._internalState.devMode) {
-            let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
-            if (latestVersion) {
-              console.log(`A newer version of Leanplum, ${latestVersion}, is available.
-Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
-            }
-            Leanplum.connectSocket()
-          }
-
-          Leanplum._varCache.applyDiffs(
-              startResponse[Constants.KEYS.VARS],
-              startResponse[Constants.KEYS.VARIANTS],
-              startResponse[Constants.KEYS.ACTION_METADATA])
-          Leanplum._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
-          Leanplum._varCache.token = startResponse[Constants.KEYS.TOKEN]
-        } else {
-          Leanplum._internalState.startSuccessful = false
-          Leanplum._varCache.loadDiffs()
-        }
-
-        Leanplum._internalState.triggerStartHandlers()
-      }
-    })
+    Leanplum._lp.start(userId, userAttributes, callback)
   }
 
   static startFromCache(userId: string, callback: StatusHandler): void;
   static startFromCache(userAttributes?: UserAttributes, callback?: StatusHandler): void;
   static startFromCache(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
   static startFromCache(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void {
-    if (typeof userId === 'function') {
-      callback = userId
-      userAttributes = {}
-      userId = null
-    } else if (typeof userId === 'object' && userId !== null && userId !== undefined) {
-      callback = userAttributes
-      userAttributes = userId
-      userId = null
-    } else if (typeof userAttributes === 'function') {
-      callback = userAttributes
-      userAttributes = {}
-    }
-
-    Leanplum._lpRequest.userId = userId
-
-    if (callback) {
-      Leanplum.addStartResponseHandler(callback)
-    }
-
-    Leanplum._internalState.hasStarted = true
-    Leanplum._internalState.startSuccessful = true
-
-    if (Leanplum._internalState.devMode) {
-      Leanplum.connectSocket()
-    }
-
-    Leanplum._varCache.loadDiffs()
-    Leanplum._internalState.triggerStartHandlers()
+    Leanplum._lp.startFromCache(userId, userAttributes, callback)
   }
 
-  static stop() {
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.STOP, undefined, {
-      sendNow: true,
-      queued: true
-    })
+  static stop(): void {
+    Leanplum._lp.stop()
   }
 
-  static pauseSession() {
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.PAUSE_SESSION, undefined, {
-      sendNow: true,
-      queued: true
-    })
+  static pauseSession(): void {
+    Leanplum._lp.pauseSession()
   }
 
-  static resumeSession() {
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.RESUME_SESSION, undefined, {
-      sendNow: true,
-      queued: true
-    })
+  static resumeSession(): void {
+    Leanplum._lp.resumeSession()
   }
 
-  static pauseState() {
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.PAUSE_STATE, undefined, {
-      queued: true
-    })
+  static pauseState(): void {
+    Leanplum._lp.pauseState()
   }
 
-  static resumeState() {
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.RESUME_STATE, undefined, {
-      queued: true
-    })
+  static resumeState(): void {
+    Leanplum._lp.resumeState()
   }
 
-  static setUserId(userId: string) {
+  static setUserId(userId: string): void {
     Leanplum.setUserAttributes(userId)
   }
 
-  static setUserAttributes(userId: string, userAttributes?: UserAttributes) {
-    if (userAttributes === undefined) {
-      if (typeof userId === 'object') {
-        userAttributes = userId
-        userId = undefined
-      } else if (typeof userId !== 'string') {
-        console.log('Leanplum: setUserAttributes expects a string or an ' +
-            'object')
-        return
-      }
-    }
-
-    const args = new ArgsBuilder()
-      .add(Constants.PARAMS.USER_ATTRIBUTES,
-        userAttributes ? JSON.stringify(userAttributes) : undefined)
-      .add(Constants.PARAMS.NEW_USER_ID, userId)
-
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.SET_USER_ATTRIBUTES, args, {
-      queued: true
-    })
-
-    if (userId) {
-      Leanplum._lpRequest.userId = userId
-      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, Leanplum._lpRequest.userId)
-    }
+  static setUserAttributes(userId: string, userAttributes?: UserAttributes): void {
+    Leanplum._lp.setUserAttributes(userId, userAttributes)
   }
 
   static track(event: string, value: number, params: Object): void;
   static track(event: string, params: Object): void;
   static track(event: string, value?: number, info?: string, params?: Object): void;
   static track(event: string, value?: number, info?: string, params?: Object): void {
-    if (typeof value === 'object' && value !== null && value !== undefined) {
-      params = value
-      info = undefined
-      value = undefined
-    } else if (typeof value === 'string') {
-      params = info
-      info = value
-      value = undefined
-    } else if (typeof info === 'object' && info !== null && info !== undefined) {
-      params = info
-      info = undefined
-    }
-
-    const args = new ArgsBuilder()
-      .add(Constants.PARAMS.EVENT, event)
-      .add(Constants.PARAMS.VALUE, value || 0.0)
-      .add(Constants.PARAMS.INFO, info)
-      .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
-
-    // noinspection Annotator
-    Leanplum.createRequest(Constants.METHODS.TRACK, args, {
-      queued: true
-    })
+    Leanplum._lp.track(event, value, info, params)
   }
 
   static trackPurchase(value: number, currencyCode?: string, params?: Object, event: string = 'Purchase'): void {
@@ -413,19 +180,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   static advanceTo(state: string, params?: Object): void;
   static advanceTo(state: string, info?: string, params?: Object): void;
   static advanceTo(state: string, info?: string, params?: Object): void {
-    if (typeof info === 'object' && info !== null && info !== undefined) {
-      params = info
-      info = undefined
-    }
-
-    const args = new ArgsBuilder()
-      .add(Constants.PARAMS.STATE, state)
-      .add(Constants.PARAMS.INFO, info)
-      .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
-
-    Leanplum.createRequest(Constants.METHODS.ADVANCE, args, {
-      queued: true
-    })
+    Leanplum._lp.advanceTo(state, info, params)
   }
 
   /**
@@ -433,7 +188,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Boolean} True if supported, else false.
    */
   static isWebPushSupported(): boolean {
-    return Leanplum._pushManager.isWebPushSupported()
+    return Leanplum._lp.isWebPushSupported()
   }
 
   /**
@@ -441,7 +196,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise} Resolves if true, rejects if false.
    */
   static isWebPushSubscribed(): Promise<boolean> {
-    return Leanplum._pushManager.isWebPushSubscribed()
+    return Leanplum._lp.isWebPushSubscribed()
   }
 
   /**
@@ -452,16 +207,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    *                                     otherwise fails.
    */
   static registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
-    if (Leanplum._pushManager.isWebPushSupported()) {
-      return Leanplum._pushManager.register(serviceWorkerUrl, (isSubscribed) => {
-        if (isSubscribed) {
-          return Promise.resolve(true)
-        }
-        return Leanplum._pushManager.subscribeUser()
-      })
-    } else {
-      return Promise.reject('Leanplum: WebPush is not supported.')
-    }
+    return Leanplum._lp.registerForWebPush(serviceWorkerUrl)
   }
 
   /**
@@ -469,7 +215,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
   static unregisterFromWebPush(): Promise<void> {
-    return Leanplum._pushManager.unsubscribeUser()
+    return Leanplum._lp.unregisterFromWebPush()
   }
 
   /**
@@ -478,25 +224,10 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * inconsistent state or user experience.
    */
   static clearUserContent(): void {
-    Leanplum._varCache.clearUserContent()
+    Leanplum._lp.clearUserContent()
   }
 
-  private static createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
-    Leanplum._lpRequest.request(action, args, {
-      devMode: Leanplum._internalState.devMode,
-      ...options
-    })
-  }
-
-  private static connectSocket(): void {
-    Leanplum._lpSocket.connect(
-      Leanplum._varCache,
-      {
-        appId: Leanplum._lpRequest.appId,
-        deviceId: Leanplum._lpRequest.deviceId
-      },
-      Leanplum.createRequest,
-      Leanplum._lpRequest.getLastResponse
-    )
+  static __destroy(): void {
+    this._lp = new LeanplumInternal(window)
   }
 }
