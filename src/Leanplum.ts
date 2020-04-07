@@ -170,11 +170,7 @@ export default class Leanplum {
   }
 
   static trackPurchase(value: number, currencyCode?: string, params?: Object, event: string = 'Purchase'): void {
-    let parameters = params
-    if (currencyCode) {
-      parameters = Object.assign({}, params, { currencyCode })
-    }
-    Leanplum.track(event, value, parameters)
+    Leanplum._lp.trackPurchase(value, currencyCode, params, event)
   }
 
   static advanceTo(state: string, params?: Object): void;

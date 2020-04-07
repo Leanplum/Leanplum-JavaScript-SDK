@@ -385,6 +385,14 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     })
   }
 
+  trackPurchase(value: number, currencyCode?: string, params?: Object, event: string = 'Purchase'): void {
+    let parameters = params
+    if (currencyCode) {
+      parameters = Object.assign({}, params, { currencyCode })
+    }
+    this.track(event, value, parameters)
+  }
+
   advanceTo(state: string, params?: Object): void;
   advanceTo(state: string, info?: string, params?: Object): void;
   advanceTo(state: string, info?: string, params?: Object): void {
