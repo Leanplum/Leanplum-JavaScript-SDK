@@ -16,9 +16,12 @@
 
 import LeanplumInternal from './LeanplumInternal'
 import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import Constants from './Constants';
 
 export default class Leanplum {
   private static _lp: LeanplumInternal = new LeanplumInternal(window)
+
+  static VERSION = Constants.SDK_VERSION;
 
   static setApiPath(apiPath: string): void {
     Leanplum._lp.setApiPath(apiPath)
