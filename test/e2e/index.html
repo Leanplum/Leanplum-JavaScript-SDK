@@ -1,12 +1,101 @@
 <!doctype html>
-<html>
-<head>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Rondo Web</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="jumbotron">
+        <h1 class="display-4">Rondo Web</h1>
+        <p class="lead">Facilitates testing of the Leanplum Web SDK.</p>
+      </div>
+
+      <h2>Setup information</h2>
+
+      <div class="card-deck">
+        <div class="card bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Application</h5>
+            <div class="card-text">
+              <p>App Name: <span id="appName"></span></p>
+              <p>Prod Key: <span id="prodKey"></span></p>
+              <p>Dev Key: <span id="devKey"></span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-light">
+          <div class="card-body">
+            <h5 class="card-title">SDK &amp; API</h5>
+            <div class="card-text">
+              <p>SDK version: <span id="sdkVersion"></span></p>
+              <p>API Host: <span id="apiHost"></span></p>
+              <p>API SSL: <span id="apiSsl"></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <h2>App Setup</h2>
+
+      <div class="form-group">
+        <label for="appId">App ID</label>
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="appId" aria-label="App ID">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Choose...</button>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="#">Rondo QA Production</a>
+              <a class="dropdown-item" href="#">Rondo QA Automation</a>
+              <a class="dropdown-item" href="#">Musala QA</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="appId">Environment</label>
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="environment" aria-label="App ID">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Choose...</button>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="#">api.leanplum.com</a>
+              <a class="dropdown-item" href="#">leanplum-qa-1372.appspot.com</a>
+              <a class="dropdown-item" href="#">leanplum-staging.appspot.com</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-secondary" id="registerForWebPush">Request Web Push Permission</button>
+
+      <button type="button" class="btn btn-primary" id="start">Start</button>
+
+      <h2>Ad-hoc</h2>
+
+      <h3>Track event</h3>
+
+      <h3>State event</h3>
+
+      <h3>User ID</h3>
+
+      <h3>User attribute</h3>
+
+      <button id="forceContentUpdate" class="btn btn-danger" type="button">Force Content Update</button>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     <script src="../../dist/leanplum.js"></script>
-    <script src="js/index.js"></script>
-</head>
-<body>
-<h1>Leanplum E2E Test</h1>
-<a href="javascript:Leanplum.track('Clicks')">Track</a><br>
-<a href="javascript:Leanplum.pauseSession()">Pause</a>
-</body>
+    <script src="rondo.js"></script>
+  </body>
 </html>
