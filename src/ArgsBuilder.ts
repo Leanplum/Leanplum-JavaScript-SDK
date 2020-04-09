@@ -23,7 +23,7 @@ import Constants from './Constants'
  */
 export default class ArgsBuilder {
   private argString: string
-  private argValues: Object
+  private argValues: { [key: string]: any }
   private _body: string
 
   /**
@@ -94,7 +94,7 @@ export default class ArgsBuilder {
    * Return the argument values.
    * @return {Object} The argument values.
    */
-  buildDict(): Object {
+  buildDict(): { [key: string]: any } {
     return this.argValues
   }
 }

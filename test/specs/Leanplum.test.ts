@@ -1,10 +1,9 @@
 /*
- *
  *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  You may obtain a copy of the License at:
  *
  *      https://www.apache.org/licenses/LICENSE-2.0
  *
@@ -12,11 +11,10 @@
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
- *  limitations under the License
- *
+ *  limitations under the License.
  */
-import sinon from 'sinon'
 
+import sinon from 'sinon'
 import {
   startResponse,
   successResponse,
@@ -208,53 +206,6 @@ Object.keys(testModes).forEach((mode) => {
           done()
         })
         Leanplum.setUserAttributes(userId, userAttributes)
-      })
-
-      it('track', (done) => {
-        interceptRequest((request) => {
-          expect(request).not.toBeNull()
-          expect(getAction(request)).toBe('track')
-          request.respond(200, {
-            'Content-Type': 'application/json'
-          }, JSON.stringify(successResponse))
-          done()
-        })
-        Leanplum.track('Page View')
-      })
-
-      it('trackPurchase', (done) => {
-        interceptRequest((request) => {
-          expect(request).not.toBeNull()
-          expect(getAction(request)).toBe('track')
-          const body = JSON.parse(request.requestBody).data[0]
-          const params = JSON.parse(body.params)
-          expect(body.value).toEqual(19.99)
-          expect(params.currencyCode).toEqual('EUR')
-          request.respond(200, {
-            'Content-Type': 'application/json'
-          }, JSON.stringify(successResponse))
-          done()
-        })
-        Leanplum.trackPurchase(19.99, 'EUR')
-      })
-
-      it('trackPurchase with custom event name', (done) => {
-        interceptRequest((request) => {
-          expect(request).not.toBeNull()
-          expect(getAction(request)).toBe('track')
-          const body = JSON.parse(request.requestBody).data[0]
-          const params = JSON.parse(body.params)
-
-          expect(body.event).toEqual('Checkout')
-          expect(body.value).toEqual(19.99)
-          expect(params.itemsInCart).toEqual(4)
-
-          request.respond(200, {
-            'Content-Type': 'application/json'
-          }, JSON.stringify(successResponse))
-          done()
-        })
-        Leanplum.trackPurchase(19.99, 'BGN', { itemsInCart: 4 }, 'Checkout')
       })
 
       it('advanceTo', (done) => {
