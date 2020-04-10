@@ -37,6 +37,7 @@ const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
 const varCacheMock: Partial<jest.Mocked<VarCache>> = {
   setVariables: jest.fn(),
   getVariables: jest.fn(),
+  getVariable: jest.fn(),
   getVariantDebugInfo: jest.fn(),
   addVariablesChangedHandler: jest.fn(),
   removeVariablesChangedHandler: jest.fn(),
@@ -231,10 +232,10 @@ describe(LeanplumInternal, () => {
   describe('Variables', () => {
     describe('setVariables', () => {
       it('calls internal method', () => {
-        lp.setVariables({ foo: 'bar' })
+        lp.setVariables({ items: [ '1st', '2nd' ] })
 
         expect(varCacheMock.setVariables).toHaveBeenCalledTimes(1)
-        expect(varCacheMock.setVariables).toHaveBeenLastCalledWith({ foo: 'bar' })
+        expect(varCacheMock.setVariables).toHaveBeenLastCalledWith({ items: [ '1st', '2nd' ] })
       })
     })
 
@@ -247,31 +248,11 @@ describe(LeanplumInternal, () => {
     })
 
     describe('getVariable', () => {
-      it('returns single root variable', () => {
-        varCacheMock.getVariables.mockReturnValueOnce({ foo: { bar: 1 } })
+      it('calls internal method', () => {
+        lp.getVariable('items', 1)
 
-        const result = lp.getVariable('foo')
-
-        expect(varCacheMock.getVariables).toHaveBeenCalledTimes(1)
-        expect(result).toEqual({ bar: 1 })
-      })
-
-      it('returns single nested variable', () => {
-        varCacheMock.getVariables.mockReturnValueOnce({ foo: { bar: 1 } })
-
-        const result = lp.getVariable('foo', 'bar')
-
-        expect(varCacheMock.getVariables).toHaveBeenCalledTimes(1)
-        expect(result).toEqual(1)
-      })
-
-      it('returns single variable from array', () => {
-        varCacheMock.getVariables.mockReturnValueOnce({ foo: ['one', 'two'] })
-
-        const result = lp.getVariable('foo', 1)
-
-        expect(varCacheMock.getVariables).toHaveBeenCalledTimes(1)
-        expect(result).toEqual('two')
+        expect(varCacheMock.getVariable).toHaveBeenCalledTimes(1)
+        expect(varCacheMock.getVariable).toHaveBeenLastCalledWith('items', 1)
       })
     })
 

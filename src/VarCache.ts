@@ -12,7 +12,6 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
  */
 
 import ArgsBuilder from './ArgsBuilder'
@@ -69,6 +68,16 @@ export default class VarCache {
     this.saveLocal(Constants.DEFAULT_KEYS.ACTION_METADATA, JSON.stringify(this.actionMetadata || {}))
     this.saveLocal(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO, JSON.stringify(this.variantDebugInfo || {}))
     this.saveLocal(Constants.DEFAULT_KEYS.TOKEN, this.token)
+  }
+
+  public getVariable(...args: (string | number)[]): any {
+    let current = this.getVariables()
+    if (current) {
+      for (let i = 0; i < args.length; i++) {
+        current = current[args[i]]
+      }
+    }
+    return current
   }
 
   public getVariables() {

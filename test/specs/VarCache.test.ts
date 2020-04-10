@@ -106,6 +106,42 @@ describe(VarCache, () => {
     })
   })
 
+  describe('getVariable', () => {
+    it('returns `null` when the variables are not set', () => {
+      expect(cache.getVariable('items')).toEqual(null)
+    })
+
+    it('returns the whole variables object without parameters', () => {
+      cache.setVariables({ items: { qty: 4 } })
+
+      expect(cache.getVariable()).toEqual({ items: { qty: 4 } })
+    })
+
+    it('returns single root variable', () => {
+      cache.setVariables({ items: { qty: 4 } })
+
+      const result = cache.getVariable('items')
+
+      expect(result).toEqual({ qty: 4 })
+    })
+
+    it('returns single nested variable', () => {
+      cache.setVariables({ items: { qty: 4 } })
+
+      const result = cache.getVariable('items', 'qty')
+
+      expect(result).toEqual(4)
+    })
+
+    it('returns single variable from array', () => {
+      cache.setVariables({ items: ['one', 'two'] })
+
+      const result = cache.getVariable('items', 1)
+
+      expect(result).toEqual('two')
+    })
+  })
+
   describe('variables', () => {
     it('returns `null` when the variables are not set', () => {
       expect(cache.getVariables()).toEqual(null)
