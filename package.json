@@ -4,6 +4,7 @@
     "clean": "grunt clean",
     "lint": "grunt lint",
     "start": "grunt",
+    "e2e": "(cd test/e2e/ && cp ../../dist/{leanplum,sw/sw}.min.js ./ && python -m SimpleHTTPServer 8989)",
     "test": "jest"
   },
   "license": "Apache-2.0",

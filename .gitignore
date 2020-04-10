@@ -113,3 +113,6 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 dist/test
+
+test/e2e/leanplum.min.js
+test/e2e/sw.min.js
