@@ -124,7 +124,7 @@ export default class LeanplumInternal {
     return this._varCache.getVariables()
   }
 
-  getVariable(...args: string[]): any {
+  getVariable(...args: (string | number)[]): any {
     let current = this.getVariables()
     for (let i = 0; i < args.length; i++) {
       current = current[args[i]]
