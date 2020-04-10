@@ -38,31 +38,47 @@ class DtsBundlePlugin {
   }
 }
 
-module.exports = {
-  entry: {
-    'leanplum': './src/bundles/leanplum.full.ts',
-    'sw/sw': './src/PushServiceWorker.ts'
-  },
-  devtool: 'inline-source-map',
-  mode: 'production',
-  output: {
-    path: path.resolve(__dirname, './dist'),
-    filename: '[name].js',
-    library: libraryName,
-    libraryTarget: 'umd'
-  },
-  resolve: {
-    extensions: ['.js', '.ts']
-  },
-  plugins: [
-    new ForkTsCheckerWebpackPlugin(),
-    new DtsBundlePlugin(),
-  ],
-  module: {
-    rules: [{
-      test: /\.ts$/,
-      include: [path.resolve(__dirname, './src')],
-      loader: 'ts-loader'
-    }]
-  }
+const buildFile = (options) => {
+    const commonOptions = {
+      mode: 'production',
+      resolve: {
+        extensions: ['.js', '.ts']
+      },
+      module: {
+        rules: [{
+          test: /\.ts$/,
+          include: [path.resolve(__dirname, './src')],
+          loader: 'ts-loader'
+        }]
+      }
+    }
+
+    return Object.assign({}, commonOptions, options)
 }
+
+module.exports = [
+    buildFile({
+        entry: './src/bundles/leanplum.full.ts',
+        output: {
+            path: path.resolve(__dirname, './dist'),
+            filename: 'leanplum.js',
+            library: libraryName,
+            libraryTarget: 'umd'
+        },
+        plugins: [
+            new ForkTsCheckerWebpackPlugin(),
+            new DtsBundlePlugin(),
+        ]
+    }),
+    buildFile({
+        entry: './src/PushServiceWorker.ts',
+        output: {
+            path: path.resolve(__dirname, './dist'),
+            filename: 'sw/sw.js'
+        },
+        plugins: [
+            new ForkTsCheckerWebpackPlugin(),
+        ]
+    })];
+
+
