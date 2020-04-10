@@ -18,6 +18,11 @@ import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import LeanplumRequest from '../../src/LeanplumRequest'
 
+// Test data
+const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs'
+const KEY_DEV = 'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY'
+const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74'
+
 const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
   request: jest.fn()
 }
@@ -120,6 +125,22 @@ describe(LeanplumInternal, () => {
       expect(info).toEqual('test')
       expect(options).toEqual({ devMode: false, queued: true })
     })
+
+    it('works in DEV mode', () => {
+      lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
+      lp.track('Test Purchase', 0.99, 'Development', { dev: true })
+
+      const [action, args, options] = lpRequestMock.request.mock.calls[0]
+      const {event, value, params, info} = args.buildDict()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      expect(action).toEqual(Constants.METHODS.TRACK)
+      expect(event).toEqual('Test Purchase')
+      expect(value).toEqual(0.99)
+      expect(params).toEqual(JSON.stringify({ dev: true }))
+      expect(info).toEqual('Development')
+      expect(options).toEqual({ devMode: true, queued: true })
+    })
   })
 
   describe('trackPurchase', () => {
@@ -177,6 +198,21 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(19.99)
       expect(params).toEqual(JSON.stringify({ itemsInCart: 4, currencyCode: 'BGN' }))
       expect(options).toEqual({ devMode: false, queued: true })
+    })
+
+    it('works in DEV mode', () => {
+      lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
+      lp.trackPurchase(0.99, 'USD', { dev: true }, 'Test Purchase')
+
+      const [action, args, options] = lpRequestMock.request.mock.calls[0]
+      const {event, value, params, info} = args.buildDict()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      expect(action).toEqual(Constants.METHODS.TRACK)
+      expect(event).toEqual('Test Purchase')
+      expect(value).toEqual(0.99)
+      expect(params).toEqual(JSON.stringify({ dev: true, currencyCode: 'USD' }))
+      expect(options).toEqual({ devMode: true, queued: true })
     })
   })
 })
