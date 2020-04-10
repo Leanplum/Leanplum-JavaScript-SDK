@@ -13,76 +13,119 @@
       <div class="jumbotron">
         <h1 class="display-4">Rondo Web</h1>
         <p class="lead">Facilitates testing of the Leanplum Web SDK.</p>
+        <p>SDK version: <span id="sdkVersion"></span></p>
       </div>
 
-      <h2>Setup information</h2>
+      <div class="row row-cols-md-2">
+        <div class="col mb-3">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">App Setup</h2>
+              <div class="card-text">
+                <div class="form-group">
+                  <label for="appId">App ID</label>
+                  <input type="text" class="form-control lp-config" id="appId" aria-label="App ID" placeholder="app_01234...">
+                </div>
 
-      <div class="card-deck">
-        <div class="card bg-light">
-          <div class="card-body">
-            <h5 class="card-title">Application</h5>
-            <div class="card-text">
-              <p>App Name: <span id="appName"></span></p>
-              <p>Prod Key: <span id="prodKey"></span></p>
-              <p>Dev Key: <span id="devKey"></span></p>
+                <div class="form-group">
+                  <label for="accessKey">Access Key</label>
+                  <input type="text" class="form-control lp-config" id="accessKey" aria-label="Access Key" placeholder="dev_01234...">
+                </div>
+
+                <div class="form-group">
+                  <label for="apiPath">API path (environment)</label>
+                  <input type="text" class="form-control lp-config" id="apiPath" aria-label="API path (environment)" placeholder="https://www.leanplum.com/api">
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
 
-        <div class="card bg-light">
-          <div class="card-body">
-            <h5 class="card-title">SDK &amp; API</h5>
-            <div class="card-text">
-              <p>SDK version: <span id="sdkVersion"></span></p>
-              <!--<p>API Host: <span id="apiHost"></span></p>-->
-              <!--<p>API SSL: <span id="apiSsl"></span></p>-->
+        <div class="col mb-3">
+        </div>
+
+        <div class="col mb-3">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Start</h2>
+              <div class="card-text">
+                <div class="form-group">
+                  <label for="userId">User ID (optional)</label>
+                  <input type="text" class="form-control" id="userId" aria-label="User ID">
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button type="button" class="btn btn-primary" id="start">Start</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
+        <div class="col mb-3">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Web Push</h2>
+              <div class="card-text">
+                <p>Is Web Push supported?: <span id="isWebPushSupported"></span></p>
+              </div>
 
-      <h2>App Setup</h2>
-
-      <div class="form-group">
-        <label for="appId">App ID</label>
-        <div class="input-group mb-3">
-          <input type="text" class="form-control" id="appId" aria-label="App ID">
-          <div class="input-group-append">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Choose...</button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="#">Rondo QA Production</a>
-              <a class="dropdown-item" href="#">Rondo QA Automation</a>
-              <a class="dropdown-item" href="#">Musala QA</a>
+              <div class="card-actions">
+                <button type="button" class="btn btn-primary" id="registerForWebPush">Request Web Push Permission</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="appId">Environment</label>
-        <div class="input-group mb-3">
-          <input type="text" class="form-control" id="environment" aria-label="App ID">
-          <div class="input-group-append">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Choose...</button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="#">api.leanplum.com</a>
-              <a class="dropdown-item" href="#">leanplum-qa-1372.appspot.com</a>
-              <a class="dropdown-item" href="#">leanplum-staging.appspot.com</a>
+        <div class="col mb-3">
+          <form data-action="track" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Track event</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="eventName">Event</label>
+                  <input type="text" class="form-control" id="eventName" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="eventKey">Params (optional)</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="eventKey" placeholder="Key">
+                    <input type="text" class="form-control" id="eventValue" placeholder="Value">
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Send Track</button>
+              </div>
             </div>
-          </div>
+          </form>
+        </div>
+
+        <div class="col mb-3">
+          <form data-action="state" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">State</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="stateName">State Name</label>
+                  <input type="text" class="form-control" id="stateName" required>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Advance to State</button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
-
-      <button type="button" class="btn btn-secondary" id="registerForWebPush">Request Web Push Permission</button>
-
-      <button type="button" class="btn btn-primary" id="start">Start</button>
-
-      <h2>Ad-hoc</h2>
-
-      <h3>Track event</h3>
-
-      <h3>State event</h3>
 
       <h3>User ID</h3>
 
