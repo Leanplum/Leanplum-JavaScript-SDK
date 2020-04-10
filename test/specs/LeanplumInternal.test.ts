@@ -52,14 +52,14 @@ describe(LeanplumInternal, () => {
 
   describe('track', () => {
     it('works with event name only', () => {
-      lp.track('Foo')
+      lp.track('Test Event')
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
       const {event, value, params, info} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
-      expect(event).toEqual('Foo')
+      expect(event).toEqual('Test Event')
       expect(value).toEqual(0.0)
       expect(params).toEqual(undefined)
       expect(info).toEqual(undefined)
@@ -67,14 +67,14 @@ describe(LeanplumInternal, () => {
     })
 
     it('works with params', () => {
-      lp.track('Foo', { test: true })
+      lp.track('Test Event', { test: true })
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
       const {event, value, params, info} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
-      expect(event).toEqual('Foo')
+      expect(event).toEqual('Test Event')
       expect(value).toEqual(0.0)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual(undefined)
@@ -82,14 +82,14 @@ describe(LeanplumInternal, () => {
     })
 
     it('works with value', () => {
-      lp.track('Foo', 1.23)
+      lp.track('Test Event', 1.23)
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
       const {event, value, params, info} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
-      expect(event).toEqual('Foo')
+      expect(event).toEqual('Test Event')
       expect(value).toEqual(1.23)
       expect(params).toEqual(undefined)
       expect(info).toEqual(undefined)
@@ -97,14 +97,14 @@ describe(LeanplumInternal, () => {
     })
 
     it('works with value and params', () => {
-      lp.track('Foo', 1.23, { test: true })
+      lp.track('Test Event', 1.23, { test: true })
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
       const {event, value, params, info} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
-      expect(event).toEqual('Foo')
+      expect(event).toEqual('Test Event')
       expect(value).toEqual(1.23)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual(undefined)
@@ -112,14 +112,14 @@ describe(LeanplumInternal, () => {
     })
 
     it('works with value, info and params', () => {
-      lp.track('Foo', 1.23, 'test', { test: true })
+      lp.track('Test Event', 1.23, 'test', { test: true })
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
       const {event, value, params, info} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
-      expect(event).toEqual('Foo')
+      expect(event).toEqual('Test Event')
       expect(value).toEqual(1.23)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual('test')
@@ -128,14 +128,14 @@ describe(LeanplumInternal, () => {
 
     it('works in DEV mode', () => {
       lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
-      lp.track('Test Purchase', 0.99, 'Development', { dev: true })
+      lp.track('Test Event', 0.99, 'Development', { dev: true })
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
       const {event, value, params, info} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
-      expect(event).toEqual('Test Purchase')
+      expect(event).toEqual('Test Event')
       expect(value).toEqual(0.99)
       expect(params).toEqual(JSON.stringify({ dev: true }))
       expect(info).toEqual('Development')
@@ -205,7 +205,7 @@ describe(LeanplumInternal, () => {
       lp.trackPurchase(0.99, 'USD', { dev: true }, 'Test Purchase')
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
-      const {event, value, params, info} = args.buildDict()
+      const {event, value, params} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
