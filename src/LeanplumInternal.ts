@@ -326,6 +326,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this.setUserAttributes(userId)
   }
 
+  setUserAttributes(userAttributes: UserAttributes): void;
+  setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
   setUserAttributes(userId: string, userAttributes?: UserAttributes): void {
     if (userAttributes === undefined) {
       if (typeof userId === 'object') {

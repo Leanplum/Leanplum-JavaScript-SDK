@@ -161,6 +161,8 @@ export default class Leanplum {
     Leanplum.setUserAttributes(userId)
   }
 
+  static setUserAttributes(userAttributes: UserAttributes): void;
+  static setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
   static setUserAttributes(userId: string, userAttributes?: UserAttributes): void {
     Leanplum._lp.setUserAttributes(userId, userAttributes)
   }
