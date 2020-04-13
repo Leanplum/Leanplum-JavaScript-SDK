@@ -4,7 +4,9 @@
     "clean": "grunt clean",
     "lint": "grunt lint",
     "start": "grunt",
-    "e2e": "(cd test/e2e/ && cp ../../dist/{leanplum,sw/sw}.min.js ./ && python -m SimpleHTTPServer 8989)",
+    "e2e-build": "cp dist/{leanplum,sw/sw}.min.js test/e2e/",
+    "e2e-serve": "yarn run e2e-build && http-server test/e2e -p 8989 -a localhost",
+    "e2e-deploy": "yarn run e2e-build && now deploy test/e2e",
     "test": "jest"
   },
   "license": "Apache-2.0",
@@ -24,6 +26,7 @@
     "grunt-contrib-uglify": "^4.0.1",
     "grunt-eslint": "^19.0.0",
     "grunt-webpack": "^3.0.0",
+    "http-server": "^0.12.1",
     "jest": "^25.1.0",
     "jsdom": "^9.12.0",
     "lodash": "^4.16.6",
