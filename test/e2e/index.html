@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
     <title>Rondo Web</title>
+
+    <style>
+      .requires-setup { display: none; }
+    </style>
   </head>
   <body>
     <div class="container">
@@ -18,49 +22,31 @@
 
       <div class="row row-cols-md-2">
         <div class="col mb-3">
-          <div class="card bg-light">
+          <form data-action="setup" class="card bg-light">
             <div class="card-body">
               <h2 class="card-title">App Setup</h2>
               <div class="card-text">
                 <div class="form-group">
                   <label for="appId">App ID</label>
-                  <input type="text" class="form-control lp-config" id="appId" aria-label="App ID" placeholder="app_01234...">
+                  <input type="text" class="form-control" id="appId" aria-label="App ID" placeholder="app_01234...">
                 </div>
 
                 <div class="form-group">
                   <label for="accessKey">Access Key</label>
-                  <input type="text" class="form-control lp-config" id="accessKey" aria-label="Access Key" placeholder="dev_01234...">
+                  <input type="text" class="form-control" id="accessKey" aria-label="Access Key" placeholder="dev_01234...">
                 </div>
 
                 <div class="form-group">
-                  <label for="apiPath">API path (environment)</label>
-                  <input type="text" class="form-control lp-config" id="apiPath" aria-label="API path (environment)" placeholder="https://www.leanplum.com/api">
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <div class="col mb-3">
-        </div>
-
-        <div class="col mb-3">
-          <div class="card bg-light">
-            <div class="card-body">
-              <h2 class="card-title">Start</h2>
-              <div class="card-text">
-                <div class="form-group">
-                  <label for="userId">User ID (optional)</label>
-                  <input type="text" class="form-control" id="userId" aria-label="User ID">
+                  <label for="apiPath">API path / Environment (optional)</label>
+                  <input type="text" class="form-control" id="apiPath" aria-label="API path (environment)" placeholder="https://www.leanplum.com/api">
                 </div>
               </div>
 
               <div class="card-actions">
-                <button type="button" class="btn btn-primary" id="start">Start</button>
+                <button type="submit" class="btn btn-primary">Apply</button>
               </div>
             </div>
-          </div>
+          </form>
         </div>
 
         <div class="col mb-3">
@@ -78,7 +64,25 @@
           </div>
         </div>
 
-        <div class="col mb-3">
+        <div class="col mb-3 requires-setup">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Start</h2>
+              <div class="card-text">
+                <div class="form-group">
+                  <label for="userId">User ID (optional)</label>
+                  <input type="text" class="form-control" id="userId" aria-label="User ID">
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button type="button" class="btn btn-primary" id="start">Start</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col mb-3 requires-setup">
           <form data-action="track" class="card bg-light">
             <div class="card-body">
               <h2 class="card-title">Track event</h2>
@@ -106,8 +110,8 @@
           </form>
         </div>
 
-        <div class="col mb-3">
-          <form data-action="state" class="card bg-light">
+        <div class="col mb-3 requires-setup">
+          <form data-action="advanceToState" class="card bg-light">
             <div class="card-body">
               <h2 class="card-title">State</h2>
               <div class="card-text">
@@ -125,13 +129,68 @@
             </div>
           </form>
         </div>
+
+        <div class="col mb-3 requires-setup">
+          <form data-action="setUserId" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">User ID</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="setUserId">User ID</label>
+                  <input type="text" class="form-control" id="setUserId" required>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Set user ID</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <form data-action="setUserAttribute" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">User Attributes</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="attributeName">Attribute</label>
+                  <input type="text" class="form-control" id="attributeName" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="attributeValue">Value</label>
+                  <input type="text" class="form-control" id="attributeValue" required>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Set user attribute</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Variables</h2>
+              <div class="card-text">
+                <output id="variables"></output>
+              </div>
+
+              <div class="card-actions">
+                <button id="forceContentUpdate" class="btn btn-danger" type="button">Force Content Update</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <h3>User ID</h3>
-
-      <h3>User attribute</h3>
-
-      <button id="forceContentUpdate" class="btn btn-danger" type="button">Force Content Update</button>
     </div>
 
 
