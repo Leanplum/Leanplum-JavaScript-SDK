@@ -46,7 +46,8 @@ $("#forceContentUpdate")
     .click(() => Leanplum.forceContentUpdate());
 
 $("[data-action=track]")
-    .submit(() => {
+    .submit((e) => {
+        e.preventDefault();
         const event = $("#eventName").val();
         const key = $("#eventKey").val();
         const value = $("#eventValue").val();
@@ -61,19 +62,22 @@ $("[data-action=track]")
     });
 
 $("[data-action=advanceToState]")
-    .submit(() => {
+    .submit((e) => {
+        e.preventDefault();
         const state = $("#stateName").val();
         Leanplum.advanceToState(state);
     });
 
 $("[data-action=setUserId]")
-    .submit(() => {
+    .submit((e) => {
+        e.preventDefault();
         const userId = $("#setUserId").val();
         Leanplum.setUserId(userId);
     });
 
 $("[data-action=setUserAttribute]")
-    .submit(() => {
+    .submit((e) => {
+        e.preventDefault();
         const attribute = $("#attributeName").val();
         const value = $("#attributeValue").val();
         const attr = {};
