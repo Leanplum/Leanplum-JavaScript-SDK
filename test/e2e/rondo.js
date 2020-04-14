@@ -74,7 +74,20 @@ $("[data-action=advanceToState]")
     .submit((e) => {
         e.preventDefault();
         const state = $("#stateName").val();
-        Leanplum.advanceToState(state);
+        const paramKey = $("#eventParamKey").val();
+        const paramValue = $("#eventParamValue").val();
+
+        let params;
+        if (paramKey && paramValue) {
+            params = {};
+            params[paramKey] = paramValue;
+        }
+
+        if (params) {
+            Leanplum.advanceToState(state, params);
+        } else {
+            Leanplum.advanceToState(state);
+        }
     });
 
 $("[data-action=setUserId]")
