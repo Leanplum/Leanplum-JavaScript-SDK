@@ -18,9 +18,10 @@ import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { APP_ID, KEY_DEV } from '../data/constants'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, varCacheMock } from '../mocks/internal'
+import { lpRequestMock, pushManagerMock, varCacheMock } from '../mocks/internal'
 
 jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
+jest.mock('../../src/PushManager', () => jest.fn().mockImplementation(() => pushManagerMock))
 jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
 
 describe(LeanplumInternal, () => {
@@ -246,6 +247,67 @@ describe(LeanplumInternal, () => {
 
         expect(varCacheMock.removeVariablesChangedHandler).toHaveBeenCalledTimes(1)
         expect(varCacheMock.removeVariablesChangedHandler).toHaveBeenCalledWith(handler)
+      })
+    })
+  })
+
+  describe('WebPush', () => {
+    describe('isWebPushSupported', () => {
+      it('calls internal method', () => {
+        lp.isWebPushSupported()
+
+        expect(pushManagerMock.isWebPushSupported).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('isWebPushSubscribed', () => {
+      it('calls internal method', async () => {
+        await lp.isWebPushSubscribed()
+
+        expect(pushManagerMock.isWebPushSubscribed).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('registerForWebPush', () => {
+      it('fails when WebPush is not suported', async () => {
+        pushManagerMock.isWebPushSupported.mockReturnValueOnce(false)
+
+        await expect(lp.registerForWebPush()).rejects.toEqual('Leanplum: WebPush is not supported.')
+
+        expect(pushManagerMock.register).toHaveBeenCalledTimes(0)
+      })
+
+      it('returns `true` when already subscribed', async () => {
+        pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
+        pushManagerMock.register.mockImplementationOnce(async (url, callback) => callback(true))
+
+        const result = await lp.registerForWebPush('/sw.test.js')
+
+        expect(result).toBe(true)
+        expect(pushManagerMock.register).toHaveBeenCalledTimes(1)
+        expect(pushManagerMock.register.mock.calls[0][0]).toEqual('/sw.test.js')
+        expect(pushManagerMock.subscribeUser).toHaveBeenCalledTimes(0)
+      })
+
+      it('returns `true` and subscribes user when not subscribed', async () => {
+        pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
+        pushManagerMock.register.mockImplementationOnce(async (url, callback) => callback(false))
+        pushManagerMock.subscribeUser.mockReturnValueOnce(Promise.resolve(true))
+
+        const result = await lp.registerForWebPush('/sw.test.js')
+
+        expect(result).toBe(true)
+        expect(pushManagerMock.register).toHaveBeenCalledTimes(1)
+        expect(pushManagerMock.register.mock.calls[0][0]).toEqual('/sw.test.js')
+        expect(pushManagerMock.subscribeUser).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('unregisterFromWebPush', () => {
+      it('calls internal method', async () => {
+        await lp.unregisterFromWebPush()
+
+        expect(pushManagerMock.unsubscribeUser).toHaveBeenCalledTimes(1)
       })
     })
   })
