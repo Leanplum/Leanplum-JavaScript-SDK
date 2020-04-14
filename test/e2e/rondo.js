@@ -49,12 +49,21 @@ $("[data-action=track]")
     .submit((e) => {
         e.preventDefault();
         const event = $("#eventName").val();
-        const key = $("#eventKey").val();
-        const value = $("#eventValue").val();
+        const value = parseFloat($("#eventValue").val());
+        const paramKey = $("#eventParamKey").val();
+        const paramValue = $("#eventParamValue").val();
 
-        if (key && value) {
-            const params = {};
-            params[key] = value;
+        let params;
+        if (paramKey && paramValue) {
+            params = {};
+            params[paramKey] = paramValue;
+        }
+
+        if (params && value) {
+            Leanplum.track(event, value, params);
+        } else if (value) {
+            Leanplum.track(event, value);
+        } else if (params) {
             Leanplum.track(event, params);
         } else {
             Leanplum.track(event);
