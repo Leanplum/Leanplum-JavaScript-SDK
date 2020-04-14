@@ -18,6 +18,7 @@ import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import LeanplumRequest from '../../src/LeanplumRequest'
 import VarCache from '../../src/VarCache'
+import { startResponse } from '../data/responses'
 
 // Test data
 const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs'
@@ -31,14 +32,19 @@ const windowMock: Window = {
 } as Window
 
 const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
+  getLastResponse: jest.fn(),
+  isResponseSuccess: jest.fn().mockImplementation((response) => Boolean(response?.success)),
   request: jest.fn()
 }
 
 const varCacheMock: Partial<jest.Mocked<VarCache>> = {
-  setVariables: jest.fn(),
-  getVariables: jest.fn(),
+  applyDiffs: jest.fn(),
+  loadDiffs: jest.fn(),
   getVariable: jest.fn(),
+  getVariables: jest.fn(),
+  setVariables: jest.fn(),
   getVariantDebugInfo: jest.fn(),
+  setVariantDebugInfo: jest.fn(),
   addVariablesChangedHandler: jest.fn(),
   removeVariablesChangedHandler: jest.fn(),
   clearUserContent: jest.fn(),
@@ -275,6 +281,37 @@ describe(LeanplumInternal, () => {
 
         expect(varCacheMock.removeVariablesChangedHandler).toHaveBeenCalledTimes(1)
         expect(varCacheMock.removeVariablesChangedHandler).toHaveBeenCalledWith(handler)
+      })
+    })
+
+    describe('Flows', () => {
+      it('calls variable changed callback after start', (done) => {
+        const userId = '123'
+        const variables = {
+          gender: 'female',
+          age: 27
+        }
+
+        lpRequestMock.getLastResponse.mockImplementation(() => {
+          return startResponse.response[0]
+        })
+        lpRequestMock.request.mockImplementation((action, args, opts) => {
+          if (action === Constants.METHODS.START) {
+            if (opts?.response) {
+              opts.response(startResponse)
+            }
+          }
+        })
+
+        lp.setVariables(variables)
+        lp.addVariablesChangedHandler(() => {
+          expect(lp.getVariables().gender).toBe(variables.gender)
+          expect(lp.getVariables().age).toBe(variables.age)
+        })
+        lp.start(userId, {}, (success) => {
+          expect(success).toBe(true)
+          return done(success ? null : success)
+        })
       })
     })
   })

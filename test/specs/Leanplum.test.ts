@@ -286,26 +286,6 @@ Object.keys(testModes).forEach((mode) => {
       })
     })
 
-    describe('Test variable changed callback after start.', () => {
-      it('setVariable', (done) => {
-        interceptRequest((request) => {
-          request.respond(200, {
-            'Content-Type': 'application/json'
-          }, JSON.stringify(startResponse))
-        })
-        const variables = userAttributes
-        Leanplum.setVariables(variables)
-        Leanplum.addVariablesChangedHandler(() => {
-          expect(Leanplum.getVariables().gender).toBe(variables.gender)
-          expect(Leanplum.getVariables().age).toBe(variables.age)
-        })
-        Leanplum.start(userId, {}, (success) => {
-          expect(success).toBe(true)
-          return done(success ? null : success)
-        })
-      })
-    })
-
     describe('Test addStartResponseHandler callback after start.', () => {
       it('test addStartResponseHandler', (done) => {
         interceptRequest((request) => {
