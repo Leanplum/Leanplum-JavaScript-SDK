@@ -16,28 +16,12 @@
 
 import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
-import LeanplumRequest from '../../src/LeanplumRequest'
+import { APP_ID, KEY_DEV } from '../data/constants'
+import { windowMock } from '../mocks/external'
+import { lpRequestMock, varCacheMock } from '../mocks/internal'
 
-// Test data
-const APP_ID = 'app_BWTRIgOs0OoevDfSsBtabRiGffu5wOFU3mkxIxA7NBs'
-const KEY_DEV = 'dev_Bx8i3Bbz1OJBTBAu63NIifr3UwWqUBU5OhHtywo58RY'
-const KEY_PROD = 'prod_A1c7DfHO6XTo2BRwzhkkXKFJ6oaPtoMnRA9xpPSlx74'
-
-const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
-  request: jest.fn()
-}
-
-const windowMock: Window = {
-  navigator: {
-    userAgent: 'TestAgent'
-  }
-} as Window
-
-jest.mock('../../src/LeanplumRequest', () => {
-  return jest.fn().mockImplementation(() => {
-    return lpRequestMock
-  })
-})
+jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
+jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
 
 describe(LeanplumInternal, () => {
   let lp: LeanplumInternal
@@ -213,6 +197,74 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.99)
       expect(params).toEqual(JSON.stringify({ dev: true, currencyCode: 'USD' }))
       expect(options).toEqual({ devMode: true, queued: true })
+    })
+  })
+
+  describe('Variables', () => {
+    describe('setVariables', () => {
+      it('calls internal method', () => {
+        lp.setVariables({ items: [ '1st', '2nd' ] })
+
+        expect(varCacheMock.setVariables).toHaveBeenCalledTimes(1)
+        expect(varCacheMock.setVariables).toHaveBeenLastCalledWith({ items: [ '1st', '2nd' ] })
+      })
+    })
+
+    describe('getVariables', () => {
+      it('calls internal method', () => {
+        lp.getVariables()
+
+        expect(varCacheMock.getVariables).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('getVariable', () => {
+      it('calls internal method', () => {
+        lp.getVariable('items', 1)
+
+        expect(varCacheMock.getVariable).toHaveBeenCalledTimes(1)
+        expect(varCacheMock.getVariable).toHaveBeenLastCalledWith('items', 1)
+      })
+    })
+
+    describe('addVariablesChangedHandler', () => {
+      it('calls internal method', () => {
+        const handler = jest.fn()
+
+        lp.addVariablesChangedHandler(handler)
+
+        expect(varCacheMock.addVariablesChangedHandler).toHaveBeenCalledTimes(1)
+        expect(varCacheMock.addVariablesChangedHandler).toHaveBeenCalledWith(handler)
+      })
+    })
+
+    describe('removeVariablesChangedHandler', () => {
+      it('calls internal method', () => {
+        const handler = jest.fn()
+
+        lp.removeVariablesChangedHandler(handler)
+
+        expect(varCacheMock.removeVariablesChangedHandler).toHaveBeenCalledTimes(1)
+        expect(varCacheMock.removeVariablesChangedHandler).toHaveBeenCalledWith(handler)
+      })
+    })
+  })
+
+  describe('Misc', () => {
+    describe('getVariantDebugInfo', () => {
+      it('calls internal method', () => {
+        lp.getVariantDebugInfo()
+
+        expect(varCacheMock.getVariantDebugInfo).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('clearUserContent', () => {
+      it('calls internal method', () => {
+        lp.clearUserContent()
+
+        expect(varCacheMock.clearUserContent).toHaveBeenCalledTimes(1)
+      })
     })
   })
 })
