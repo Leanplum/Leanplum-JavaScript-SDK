@@ -147,13 +147,13 @@ describe(LeanplumInternal, () => {
       lp.trackPurchase(19.99, 'EUR')
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
-      const {event, value, params} = args.buildDict()
+      const {event, value, currencyCode} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
       expect(event).toEqual('Purchase')
       expect(value).toEqual(19.99)
-      expect(params).toEqual(JSON.stringify({ currencyCode: 'EUR' }))
+      expect(currencyCode).toEqual('EUR')
       expect(options).toEqual({ devMode: false, queued: true })
     })
 
@@ -161,13 +161,14 @@ describe(LeanplumInternal, () => {
       lp.trackPurchase(19.99, 'EUR', { test: true })
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
-      const {event, value, params} = args.buildDict()
+      const {event, value, params, currencyCode} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
       expect(event).toEqual('Purchase')
       expect(value).toEqual(19.99)
-      expect(params).toEqual(JSON.stringify({ test: true, currencyCode: 'EUR' }))
+      expect(params).toEqual(JSON.stringify({ test: true }))
+      expect(currencyCode).toEqual('EUR')
       expect(options).toEqual({ devMode: false, queued: true })
     })
 
@@ -175,13 +176,14 @@ describe(LeanplumInternal, () => {
       lp.trackPurchase(19.99, 'BGN', { itemsInCart: 4 }, 'Checkout')
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
-      const {event, value, params} = args.buildDict()
+      const {event, value, params, currencyCode} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
       expect(event).toEqual('Checkout')
       expect(value).toEqual(19.99)
-      expect(params).toEqual(JSON.stringify({ itemsInCart: 4, currencyCode: 'BGN' }))
+      expect(currencyCode).toEqual('BGN')
+      expect(params).toEqual(JSON.stringify({ itemsInCart: 4 }))
       expect(options).toEqual({ devMode: false, queued: true })
     })
 
@@ -190,13 +192,14 @@ describe(LeanplumInternal, () => {
       lp.trackPurchase(0.99, 'USD', { dev: true }, 'Test Purchase')
 
       const [action, args, options] = lpRequestMock.request.mock.calls[0]
-      const {event, value, params} = args.buildDict()
+      const {event, value, params, currencyCode} = args.buildDict()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       expect(action).toEqual(Constants.METHODS.TRACK)
       expect(event).toEqual('Test Purchase')
       expect(value).toEqual(0.99)
-      expect(params).toEqual(JSON.stringify({ dev: true, currencyCode: 'USD' }))
+      expect(currencyCode).toEqual('USD')
+      expect(params).toEqual(JSON.stringify({ dev: true }))
       expect(options).toEqual({ devMode: true, queued: true })
     })
   })

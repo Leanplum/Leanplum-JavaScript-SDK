@@ -44,6 +44,7 @@ export default {
     APP_ID: 'appId',
     CLIENT: 'client',
     CLIENT_KEY: 'clientKey',
+    CURRENCY_CODE: 'currencyCode',
     DEVICE_ID: 'deviceId',
     SDK_VERSION: 'sdkVersion',
     USER_ID: 'userId',
