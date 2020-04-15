@@ -16,7 +16,7 @@
     "@types/node": "^13.5.0",
     "chai": "^3.5.0",
     "dts-bundle": "^0.7.3",
-    "eslint": "^3.19.0",
+    "eslint": "^4.18.2",
     "eslint-config-google": "^0.7.1",
     "eslint-loader": "^1.6.1",
     "fork-ts-checker-webpack-plugin": "^4.0.4",
