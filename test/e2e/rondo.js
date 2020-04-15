@@ -22,7 +22,10 @@ $("[data-action=setup]")
     });
 
 $("#registerForWebPush")
-    .click(() => Leanplum.registerForWebPush());
+    .click(() => Leanplum.registerForWebPush().then(refreshWebPush));
+
+$("#unregisterFromWebPush")
+    .click(() => Leanplum.unregisterFromWebPush().then(refreshWebPush));
 
 // TODO: userAttributes
 $("#start")
@@ -110,5 +113,11 @@ $("[data-action=setUserAttribute]")
 $("#sdkVersion").text(Leanplum.VERSION);
 
 // populate initial info
-$("#isWebPushSupported").text(Leanplum.isWebPushSupported() ? "Yes" : "No");
 $("#userId").val(Leanplum._userId || '');
+refreshWebPush();
+
+function refreshWebPush() {
+    $("#isWebPushSupported").text(Leanplum.isWebPushSupported() ? "Yes" : "No");
+    Leanplum.isWebPushSubscribed()
+        .then(isSubscribed => $("#isWebPushSubscribed").text(isSubscribed ? "Yes" : "No"));
+}
