@@ -12,13 +12,13 @@ $("[data-action=setup]")
             } else {
                 Leanplum.setAppIdForDevelopmentMode(appId, accessKey);
             }
+
+            $(".requires-setup").removeClass("requires-setup");
         }
 
         if (apiPath) {
             Leanplum.setApiPath(apiPath);
         }
-
-        $(".requires-setup").removeClass("requires-setup");
     });
 
 $("#registerForWebPush")
