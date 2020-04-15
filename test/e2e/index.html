@@ -1,12 +1,263 @@
 <!doctype html>
-<html>
-<head>
-    <script src="../../dist/leanplum.js"></script>
-    <script src="js/index.js"></script>
-</head>
-<body>
-<h1>Leanplum E2E Test</h1>
-<a href="javascript:Leanplum.track('Clicks')">Track</a><br>
-<a href="javascript:Leanplum.pauseSession()">Pause</a>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Rondo Web</title>
+
+    <style>
+      .requires-setup { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="jumbotron">
+        <h1 class="display-4">Rondo Web</h1>
+        <p class="lead">Facilitates testing of the Leanplum Web SDK.</p>
+        <p>SDK version: <span id="sdkVersion"></span></p>
+      </div>
+
+      <div class="row row-cols-md-2">
+        <div class="col mb-3">
+          <form data-action="setup" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">App Setup</h2>
+              <div class="card-text">
+                <div class="form-group">
+                  <label for="appId">App ID</label>
+                  <input type="text" class="form-control" id="appId" aria-label="App ID" placeholder="app_01234...">
+                </div>
+
+                <div class="form-group">
+                  <label for="accessKey">Access Key</label>
+                  <input type="text" class="form-control" id="accessKey" aria-label="Access Key" placeholder="prod_01234... or dev_01234...">
+                </div>
+
+                <div class="form-group">
+                  <label for="apiPath">API path / Environment (optional)</label>
+                  <input type="text" class="form-control" id="apiPath" aria-label="API path (environment)" placeholder="https://www.leanplum.com/api">
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Apply</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="w-100"></div>
+
+        <div class="col mb-3 requires-setup">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Web Push</h2>
+              <div class="card-text">
+                <p>Is Web Push supported?: <span id="isWebPushSupported"></span></p>
+                <p>Is Web Push subscribed?: <span id="isWebPushSubscribed"></span></p>
+              </div>
+
+              <div class="card-actions">
+                <button type="button" class="btn btn-primary" id="registerForWebPush">Request Web Push Permission</button>
+
+                <button type="button" class="btn btn-danger" id="unregisterFromWebPush">Unregister</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Start</h2>
+              <div class="card-text">
+                <div class="form-group">
+                  <label for="userId">User ID (optional)</label>
+                  <input type="text" class="form-control" id="userId" aria-label="User ID">
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button type="button" class="btn btn-primary" id="start">Start</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <form data-action="track" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Track event</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="eventName">Event</label>
+                  <input type="text" class="form-control" id="eventName" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="eventValue">Value</label>
+                  <input type="number" class="form-control" id="eventValue" step="any">
+                </div>
+
+                <div class="form-group">
+                  <label for="eventParamKey">Params (optional)</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="eventParamKey" placeholder="Key">
+                    <input type="text" class="form-control" id="eventParamValue" placeholder="Value">
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Send Track</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <form data-action="trackPurchase" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Track purchase</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="purchaseEventValue">Value</label>
+                  <input type="number" class="form-control" id="purchaseEventValue" step="any" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="purchaseCurrency">Currency Code (optional)</label>
+                  <input type="text" class="form-control" id="purchaseCurrency">
+                </div>
+
+                <div class="form-group">
+                  <label for="purchaseEventParamKey">Params (optional)</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="purchaseEventParamKey" placeholder="Key">
+                    <input type="text" class="form-control" id="purchaseEventParamValue" placeholder="Value">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="eventName">Custom event name (optional)</label>
+                  <input type="text" class="form-control" id="purchaseEventName" placeholder="Purchase">
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Track Purchase</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <form data-action="advanceToState" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">State</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="stateName">State Name</label>
+                  <input type="text" class="form-control" id="stateName" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="stateParamKey">Params (optional)</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="stateParamKey" placeholder="Key">
+                    <input type="text" class="form-control" id="stateParamValue" placeholder="Value">
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Advance to State</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <form data-action="setUserId" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">User ID</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="setUserId">User ID</label>
+                  <input type="text" class="form-control" id="setUserId" required>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Set user ID</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <form data-action="setUserAttribute" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">User Attributes</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="attributeName">Attribute</label>
+                  <input type="text" class="form-control" id="attributeName" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="attributeValue">Value</label>
+                  <input type="text" class="form-control" id="attributeValue" required>
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Set user attribute</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Variables</h2>
+              <div class="card-text">
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <samp id="variables"></samp>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button id="forceContentUpdate" class="btn btn-danger" type="button">Force Content Update</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="leanplum.min.js"></script>
+    <script src="index.js"></script>
+  </body>
 </html>

@@ -96,7 +96,7 @@ export default class PushManager {
         null
       )
 
-      const subscription = this.serviceWorkerRegistration.pushManager.getSubscription()
+      const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription()
       const isSubscribed = subscription !== null
 
       if (isSubscribed) {

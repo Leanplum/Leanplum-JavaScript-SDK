@@ -14,11 +14,14 @@
  *  limitations under the License.
  */
 
+import Constants from './Constants';
 import LeanplumInternal from './LeanplumInternal'
 import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 
 export default class Leanplum {
   private static _lp: LeanplumInternal = new LeanplumInternal(window)
+
+  static VERSION = Constants.SDK_VERSION;
 
   static setApiPath(apiPath: string): void {
     Leanplum._lp.setApiPath(apiPath)
@@ -158,6 +161,8 @@ export default class Leanplum {
     Leanplum.setUserAttributes(userId)
   }
 
+  static setUserAttributes(userAttributes: UserAttributes): void;
+  static setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
   static setUserAttributes(userId: string, userAttributes?: UserAttributes): void {
     Leanplum._lp.setUserAttributes(userId, userAttributes)
   }

@@ -326,6 +326,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this.setUserAttributes(userId)
   }
 
+  setUserAttributes(userAttributes: UserAttributes): void;
+  setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
   setUserAttributes(userId: string, userAttributes?: UserAttributes): void {
     if (userAttributes === undefined) {
       if (typeof userId === 'object') {
@@ -382,11 +384,18 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   }
 
   trackPurchase(value: number, currencyCode?: string, params?: Object, event: string = 'Purchase'): void {
-    let parameters = params
+    const args = new ArgsBuilder()
+      .add(Constants.PARAMS.EVENT, event)
+      .add(Constants.PARAMS.VALUE, value || 0.0)
+      .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
+
     if (currencyCode) {
-      parameters = Object.assign({}, params, { currencyCode })
+      args.add(Constants.PARAMS.CURRENCY_CODE, currencyCode)
     }
-    this.track(event, value, parameters)
+
+    this.createRequest(Constants.METHODS.TRACK, args, {
+      queued: true
+    })
   }
 
   advanceTo(state: string, params?: Object): void;

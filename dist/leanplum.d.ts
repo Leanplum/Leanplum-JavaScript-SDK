@@ -15,6 +15,7 @@
  */
 
 export default class Leanplum {
+    static VERSION: string;
     static setApiPath(apiPath: string): void;
     static setEmail(email: string): void;
     /**
@@ -55,6 +56,7 @@ export default class Leanplum {
     static pauseState(): void;
     static resumeState(): void;
     static setUserId(userId: string): void;
+    static setUserAttributes(userAttributes: UserAttributes): void;
     static setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
     static track(event: string, value: number, params: Object): void;
     static track(event: string, params: Object): void;
