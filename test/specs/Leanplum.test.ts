@@ -300,64 +300,6 @@ Object.keys(testModes).forEach((mode) => {
       })
     })
 
-    describe('Web push', () => {
-      it('test isWebPushSupported', (done) => {
-        expect(!Leanplum.isWebPushSupported()).toBeTruthy()
-        done()
-      })
-
-      it('test isWebPushSubscribed', async () => {
-        let subscribed
-        try {
-          subscribed = await Leanplum.isWebPushSubscribed()
-        } catch (e) {
-          console.log(e)
-        }
-        expect(!subscribed).toBeTruthy()
-      })
-
-      describe('registerForWebPush', () => {
-        it('fails when WebPush is not suported', async () => {
-          try {
-            await Leanplum.registerForWebPush()
-          } catch (e) {
-            expect(e).toBeTruthy()
-          }
-        })
-
-        // TODO: Move this test to LeanplumInternal.test.ts.
-        it('works when WebPush is supported', async () => {
-          const winObject = globalThis.window
-          const windowMock = jest.spyOn(globalThis, 'window', 'get')
-
-          windowMock.mockReturnValue({
-            atob,
-            btoa,
-            navigator: {
-              serviceWorker: {
-                register: () => ({
-                  pushManager: {
-                    getSubscription: () => null,
-                    subscribe: () => ({
-                      endpoint: 'test'
-                    })
-                  }
-                })
-              }
-            },
-            PushManager: {}
-          } as any)
-
-          try {
-            expect(await Leanplum.registerForWebPush()).toBe(true)
-          } finally {
-            // Restore original value - `mockReset()` doesn't work as expected.
-            windowMock.mockReturnValue(winObject)
-          }
-        })
-      })
-    })
-
     describe('Test forceContentUpdate.', () => {
       it('forceContentUpdate', (done) => {
         interceptRequest((request) => {
