@@ -27,20 +27,20 @@ $("#registerForWebPush")
 $("#unregisterFromWebPush")
     .click(() => Leanplum.unregisterFromWebPush().then(refreshWebPush));
 
+Leanplum.addVariablesChangedHandler(() => {
+    const vars = Leanplum.getVariables();
+    const json = JSON.stringify(vars, null, 2);
+    $("#variables").text(json);
+});
+
 $("#start")
     .click(() => {
         const userId = $("startUserId").val();
 
-        const updateVars = () => {
-            const vars = Leanplum.getVariables();
-            const json = JSON.stringify(vars, null, 2);
-            $("#variables").text(json);
-        };
-
         if (userId) {
-            Leanplum.start(userId, updateVars);
+            Leanplum.start(userId);
         } else {
-            Leanplum.start(updateVars);
+            Leanplum.start();
         }
     });
 
