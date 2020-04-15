@@ -72,6 +72,30 @@ $("[data-action=track]")
         }
     });
 
+$("[data-action=trackPurchase]")
+    .submit((e) => {
+        e.preventDefault();
+        const value = parseFloat($("#purchaseEventValue").val());
+        const currencyCode = $("#purchaseCurrency").val();
+        const paramKey = $("#purchaseEventParamKey").val();
+        const paramValue = $("#purchaseEventParamValue").val();
+        const event = $("#purchaseEventName").val();
+
+        let params;
+        if (paramKey && paramValue) {
+            params = {}
+            params[paramKey] = paramValue;
+        }
+
+        if (event) {
+            Leanplum.trackPurchase(value, currencyCode || 'USD', params, event);
+        } else if (currencyCode) {
+            Leanplum.trackPurchase(value, currencyCode, params);
+        } else {
+            Leanplum.trackPurchase(value);
+        }
+    });
+
 $("[data-action=advanceToState]")
     .submit((e) => {
         e.preventDefault();

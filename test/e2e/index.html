@@ -121,6 +121,44 @@
         </div>
 
         <div class="col mb-3 requires-setup">
+          <form data-action="trackPurchase" class="card bg-light">
+            <div class="card-body">
+              <h2 class="card-title">Track purchase</h2>
+              <div class="card-text">
+
+                <div class="form-group">
+                  <label for="purchaseEventValue">Value</label>
+                  <input type="number" class="form-control" id="purchaseEventValue" step="any" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="purchaseCurrency">Currency Code (optional)</label>
+                  <input type="text" class="form-control" id="purchaseCurrency">
+                </div>
+
+                <div class="form-group">
+                  <label for="purchaseEventParamKey">Params (optional)</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="purchaseEventParamKey" placeholder="Key">
+                    <input type="text" class="form-control" id="purchaseEventParamValue" placeholder="Value">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="eventName">Custom event name (optional)</label>
+                  <input type="text" class="form-control" id="purchaseEventName" placeholder="Purchase">
+                </div>
+
+              </div>
+
+              <div class="card-actions">
+                <button type="submit" class="btn btn-primary">Track Purchase</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="col mb-3 requires-setup">
           <form data-action="advanceToState" class="card bg-light">
             <div class="card-body">
               <h2 class="card-title">State</h2>
