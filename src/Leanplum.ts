@@ -14,9 +14,9 @@
  *  limitations under the License.
  */
 
+import Constants from './Constants';
 import LeanplumInternal from './LeanplumInternal'
 import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
-import Constants from './Constants';
 
 export default class Leanplum {
   private static _lp: LeanplumInternal = new LeanplumInternal(window)
