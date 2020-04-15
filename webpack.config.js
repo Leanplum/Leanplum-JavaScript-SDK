@@ -40,6 +40,7 @@ class DtsBundlePlugin {
 
 const buildFile = (options) => {
     const commonOptions = {
+      devtool: 'inline-source-map',
       mode: 'production',
       resolve: {
         extensions: ['.js', '.ts']
