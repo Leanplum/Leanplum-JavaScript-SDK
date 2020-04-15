@@ -27,7 +27,6 @@ $("#registerForWebPush")
 $("#unregisterFromWebPush")
     .click(() => Leanplum.unregisterFromWebPush().then(refreshWebPush));
 
-// TODO: userAttributes
 $("#start")
     .click(() => {
         const userId = $("startUserId").val();
