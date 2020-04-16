@@ -11,9 +11,9 @@ describe(PushManager, () => {
   })
 
   afterEach(() => {
-    createRequestSpy.mockClear()
     windowMock.mockReset()
     localStorage.clear()
+    jest.clearAllMocks()
   })
 
   describe('isWebPushSupported', () => {
@@ -85,6 +85,7 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server with new subscription', async () => {
+      const stringifySpy = jest.spyOn(JSON, 'stringify')
       let subscription: any = null
       const registration = {
         pushManager: {
@@ -113,6 +114,12 @@ describe(PushManager, () => {
       await pushManager.isWebPushSubscribed()
 
       expect(createRequestSpy).toHaveBeenCalledTimes(2)
+      expect(stringifySpy).toHaveBeenCalledTimes(2)
+      expect(stringifySpy).toHaveBeenLastCalledWith({
+        endpoint: 'new_subscription',
+        key: '',
+        auth: ''
+      })
     })
   })
 
@@ -207,11 +214,13 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server when subscribed', async () => {
+      const stringifySpy = jest.spyOn(JSON, 'stringify')
       mockServiceWorker({
         register: () => ({
           pushManager: {
             getSubscription: () => ({
-              endpoint: 'test'
+              endpoint: 'test',
+              getKey: (name: string) => name.split('').map((x) => x.charCodeAt(0))
             })
           }
         })
@@ -220,6 +229,12 @@ describe(PushManager, () => {
       await pushManager.register('', (x) => Promise.resolve(x))
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
+      expect(stringifySpy).toHaveBeenCalledTimes(1)
+      expect(stringifySpy).toHaveBeenCalledWith({
+        endpoint: 'test',
+        key: 'cDI1NmRo',
+        auth: 'YXV0aA=='
+      })
     })
   })
 
@@ -288,12 +303,14 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server when subscribed', async () => {
+      const stringifySpy = jest.spyOn(JSON, 'stringify')
       mockServiceWorker({
         register: () => ({
           pushManager: {
             getSubscription: () => null,
             subscribe: () => ({
-              endpoint: 'test'
+              endpoint: 'test',
+              getKey: (name: string) => name.split('').map((x) => x.charCodeAt(0))
             })
           }
         })
@@ -303,6 +320,12 @@ describe(PushManager, () => {
       await pushManager.subscribeUser()
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
+      expect(stringifySpy).toHaveBeenCalledTimes(1)
+      expect(stringifySpy).toHaveBeenCalledWith({
+        endpoint: 'test',
+        key: 'cDI1NmRo',
+        auth: 'YXV0aA=='
+      })
     })
   })
 
