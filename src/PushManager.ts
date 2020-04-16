@@ -207,7 +207,7 @@ export default class PushManager {
     }
   }
 
-  private prepareSubscription(subscription: PushSubscription): PushSubscriptionObject {
+  private prepareSubscription(subscription: PushSubscription): PushSubscriptionMetadata {
     let key = ('getKey' in subscription) ? subscription.getKey('p256dh') : []
     let auth = ('getKey' in subscription) ? subscription.getKey('auth') : []
     let keyAscii = this.encodeData(String.fromCharCode.apply(null, new Uint8Array(key)))
@@ -244,7 +244,7 @@ export default class PushManager {
   }
 }
 
-interface PushSubscriptionObject {
+interface PushSubscriptionMetadata {
   endpoint: string,
   key: string,
   auth: string

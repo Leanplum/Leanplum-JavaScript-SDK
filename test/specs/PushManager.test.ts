@@ -1,3 +1,4 @@
+import Constants from '../../src/Constants'
 import PushManager from '../../src/PushManager'
 
 describe(PushManager, () => {
@@ -85,7 +86,6 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server with new subscription', async () => {
-      const stringifySpy = jest.spyOn(JSON, 'stringify')
       let subscription: any = null
       const registration = {
         pushManager: {
@@ -114,11 +114,20 @@ describe(PushManager, () => {
       await pushManager.isWebPushSubscribed()
 
       expect(createRequestSpy).toHaveBeenCalledTimes(2)
-      expect(stringifySpy).toHaveBeenCalledTimes(2)
-      expect(stringifySpy).toHaveBeenLastCalledWith({
-        endpoint: 'new_subscription',
-        key: '',
-        auth: ''
+
+      const [action, args, options] = createRequestSpy.mock.calls[1];
+
+      expect(action).toEqual(Constants.METHODS.SET_DEVICE_ATTRIBUTES)
+      expect(args.buildDict()).toEqual({
+        [Constants.PARAMS.WEB_PUSH_SUBSCRIPTION]: JSON.stringify({
+          endpoint: 'new_subscription',
+          key: '',
+          auth: ''
+        })
+      })
+      expect(options).toEqual({
+        queued: false,
+        sendNow: true
       })
     })
   })
@@ -214,7 +223,6 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server when subscribed', async () => {
-      const stringifySpy = jest.spyOn(JSON, 'stringify')
       mockServiceWorker({
         register: () => ({
           pushManager: {
@@ -229,11 +237,20 @@ describe(PushManager, () => {
       await pushManager.register('', (x) => Promise.resolve(x))
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
-      expect(stringifySpy).toHaveBeenCalledTimes(1)
-      expect(stringifySpy).toHaveBeenCalledWith({
-        endpoint: 'test',
-        key: 'cDI1NmRo',
-        auth: 'YXV0aA=='
+
+      const [action, args, options] = createRequestSpy.mock.calls[0];
+
+      expect(action).toEqual(Constants.METHODS.SET_DEVICE_ATTRIBUTES)
+      expect(args.buildDict()).toEqual({
+        [Constants.PARAMS.WEB_PUSH_SUBSCRIPTION]: JSON.stringify({
+          endpoint: 'test',
+          key: 'cDI1NmRo',
+          auth: 'YXV0aA=='
+        })
+      })
+      expect(options).toEqual({
+        queued: false,
+        sendNow: true
       })
     })
   })
@@ -303,7 +320,6 @@ describe(PushManager, () => {
     })
 
     it('updates subscription on server when subscribed', async () => {
-      const stringifySpy = jest.spyOn(JSON, 'stringify')
       mockServiceWorker({
         register: () => ({
           pushManager: {
@@ -320,11 +336,20 @@ describe(PushManager, () => {
       await pushManager.subscribeUser()
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
-      expect(stringifySpy).toHaveBeenCalledTimes(1)
-      expect(stringifySpy).toHaveBeenCalledWith({
-        endpoint: 'test',
-        key: 'cDI1NmRo',
-        auth: 'YXV0aA=='
+
+      const [action, args, options] = createRequestSpy.mock.calls[0];
+
+      expect(action).toEqual(Constants.METHODS.SET_DEVICE_ATTRIBUTES)
+      expect(args.buildDict()).toEqual({
+        [Constants.PARAMS.WEB_PUSH_SUBSCRIPTION]: JSON.stringify({
+          endpoint: 'test',
+          key: 'cDI1NmRo',
+          auth: 'YXV0aA=='
+        })
+      })
+      expect(options).toEqual({
+        queued: false,
+        sendNow: true
       })
     })
   })
