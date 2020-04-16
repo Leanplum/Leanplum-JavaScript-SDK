@@ -32,7 +32,7 @@ export default {
     SET_USER_ATTRIBUTES: 'setUserAttributes',
     SET_DEVICE_ATTRIBUTES: 'setDeviceAttributes',
     UPLOAD_FILE: 'uploadFile',
-    REGISTER_DEVICE: 'registerDevice'
+    REGISTER_DEVICE: 'registerDevice',
   },
 
   SDK_VERSION: '1.4.0',
@@ -80,7 +80,7 @@ export default {
     PARAMS: 'params',
     INCLUDE_DEFAULTS: 'includeDefaults',
     INCLUDE_VARIANT_DEBUG_INFO: 'includeVariantDebugInfo',
-    WEB_PUSH_SUBSCRIPTION: 'webPushSubscription'
+    WEB_PUSH_SUBSCRIPTION: 'webPushSubscription',
   },
 
   KEYS: {
@@ -90,7 +90,7 @@ export default {
     VARIANTS: 'variants',
     VARIANT_DEBUG_INFO: 'variantDebugInfo',
     ACTION_METADATA: 'actionMetadata',
-    TOKEN: 'token'
+    TOKEN: 'token',
   },
 
   DEFAULT_KEYS: {
@@ -103,10 +103,10 @@ export default {
     TOKEN: '__leanplum_token',
     DEVICE_ID: '__leanplum_device_id',
     USER_ID: '__leanplum_user_id',
-    PUSH_SUBSCRIPTION: '__leanplum_push_subscription'
+    PUSH_SUBSCRIPTION: '__leanplum_push_subscription',
   },
 
   VALUES: {
-    DETECT: '(detect)'
-  }
+    DETECT: '(detect)',
+  },
 }

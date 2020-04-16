@@ -19,24 +19,26 @@ import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
 import { CreateRequestFunction } from './types/internal'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export default class VarCache {
-  private actionMetadata: Object = {}
-  private hasReceivedDiffs: boolean = false
+  private actionMetadata: Record<string, any> = {}
+  private hasReceivedDiffs = false
   private merged = undefined
-  private variables: Object = null
+  private variables: Record<string, any> = null
   private variablesChangedHandlers: Function[] = []
-  private variantDebugInfo: Object = {}
+  private variantDebugInfo: Record<string, any> = {}
 
   public diffs = undefined
   public onUpdate?: () => void
-  public token: string = ''
+  public token = ''
   public variants = []
 
   public constructor(
     private createRequest: CreateRequestFunction
   ) {}
 
-  public applyDiffs(diffs, variants, actionMetadata) {
+  public applyDiffs(diffs, variants, actionMetadata): void {
     this.diffs = diffs
     this.variants = variants
     this.actionMetadata = actionMetadata
@@ -48,7 +50,7 @@ export default class VarCache {
     }
   }
 
-  public loadDiffs() {
+  public loadDiffs(): void {
     try {
       this.applyDiffs(
         JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.VARIABLES) || null),
@@ -62,7 +64,7 @@ export default class VarCache {
     }
   }
 
-  public saveDiffs() {
+  public saveDiffs(): void {
     this.saveLocal(Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(this.diffs || {}))
     this.saveLocal(Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(this.variants || []))
     this.saveLocal(Constants.DEFAULT_KEYS.ACTION_METADATA, JSON.stringify(this.actionMetadata || {}))
@@ -80,51 +82,51 @@ export default class VarCache {
     return current
   }
 
-  public getVariables() {
+  public getVariables(): Record<string, any> {
     return this.merged !== undefined ? this.merged : this.variables
   }
 
-  public setVariables(variables: Object) {
+  public setVariables(variables: Record<string, any>): void {
     this.variables = variables
   }
 
-  public addVariablesChangedHandler(handler) {
+  public addVariablesChangedHandler(handler): void {
     this.variablesChangedHandlers.push(handler)
     if (this.hasReceivedDiffs) {
       handler()
     }
   }
 
-  public removeVariablesChangedHandler(handler) {
-    let idx = this.variablesChangedHandlers.indexOf(handler)
+  public removeVariablesChangedHandler(handler): void {
+    const idx = this.variablesChangedHandlers.indexOf(handler)
     if (idx >= 0) {
       this.variablesChangedHandlers.splice(idx, 1)
     }
   }
 
-  public triggerVariablesChangedHandlers() {
+  public triggerVariablesChangedHandlers(): void {
     for (let i = 0; i < this.variablesChangedHandlers.length; i++) {
       this.variablesChangedHandlers[i]()
     }
   }
 
-  public getVariantDebugInfo() {
+  public getVariantDebugInfo(): any {
     return this.variantDebugInfo
   }
 
-  public setVariantDebugInfo(value: Object) {
+  public setVariantDebugInfo(value: Record<string, any>): void {
     this.variantDebugInfo = value
   }
 
-  public sendVariables() {
+  public sendVariables(): void {
     const body = { [Constants.PARAMS.VARIABLES]: this.variables }
     const args = new ArgsBuilder().body(JSON.stringify(body)) as ArgsBuilder
     this.createRequest(Constants.METHODS.SET_VARS, args, {
-      sendNow: true
+      sendNow: true,
     })
   }
 
-  public clearUserContent() {
+  public clearUserContent(): void {
     this.diffs = undefined
     this.variables = null
     this.variants = []
@@ -141,7 +143,7 @@ export default class VarCache {
   }
 }
 
-function mergeHelper(vars, diff) {
+function mergeHelper(vars, diff): boolean | number | string | Record<string, any> {
   if (typeof diff === 'number' || typeof diff === 'boolean' || typeof diff === 'string') {
     return diff
   }
@@ -150,14 +152,14 @@ function mergeHelper(vars, diff) {
     return vars
   }
 
-  let objIterator = function(obj) {
+  const objIterator = function(obj) {
     return function iterate(f) {
       if (obj instanceof Array) {
         for (let i = 0; i < obj.length; i++) {
           f(obj[i])
         }
       } else {
-        for (let attr in obj) {
+        for (const attr in obj) {
           // This seems to be best practice: https://github.com/eslint/eslint/issues/7071
           // eslint-disable-next-line prefer-reflect
           if ({}.hasOwnProperty.call(obj, attr)) {
@@ -167,15 +169,15 @@ function mergeHelper(vars, diff) {
       }
     }
   }
-  let varsIterator = objIterator(vars)
-  let diffIterator = objIterator(diff)
+  const varsIterator = objIterator(vars)
+  const diffIterator = objIterator(diff)
 
   // Infer that the diffs is an array if the vars value doesn't exist to tell us the type.
   let isArray = false
   if (vars === null) {
     if (!(diff instanceof Array)) {
       isArray = null
-      for (let attribute in diff) {
+      for (const attribute in diff) {
         if (!diff.hasOwnProperty(attribute)) {
           continue
         }
@@ -197,14 +199,14 @@ function mergeHelper(vars, diff) {
 
   // Merge arrays.
   if (vars instanceof Array || isArray) {
-    let merged = []
+    const merged = []
     varsIterator(function(attr) {
       merged.push(attr)
     })
     diffIterator(function(varSubscript) {
-      let subscript =
+      const subscript =
           parseInt(varSubscript.substring(1, varSubscript.length - 1))
-      let diffValue = diff[varSubscript]
+      const diffValue = diff[varSubscript]
       while (subscript >= merged.length) {
         merged.push(null)
       }
@@ -214,7 +216,7 @@ function mergeHelper(vars, diff) {
   }
 
   // Merge dictionaries.
-  let merged = {}
+  const merged = {}
   varsIterator(function(attr) {
     if (diff[attr] === null || diff[attr] === undefined) {
       merged[attr] = vars[attr]

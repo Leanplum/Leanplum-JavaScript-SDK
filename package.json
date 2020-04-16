@@ -2,7 +2,7 @@
   "scripts": {
     "build": "grunt build",
     "clean": "grunt clean",
-    "lint": "yarn eslint 'src/**/*.{js,ts,tsx}'",
+    "lint": "yarn eslint 'src/**/*.{ts,tsx}'",
     "start": "grunt",
     "e2e-build": "cp dist/{leanplum,sw/sw}.min.js test/e2e/",
     "e2e-serve": "yarn run e2e-build && http-server test/e2e -p 8989 -a localhost",

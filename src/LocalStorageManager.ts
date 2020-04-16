@@ -17,21 +17,24 @@
  */
 
 let localStorageEnabled
-let alternateLocalStorage = {}
+const alternateLocalStorage = {}
 
 export default class LocalStorageManager {
-  static getFromLocalStorage(key) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static getFromLocalStorage(key): any {
     if (localStorageEnabled === false) {
       return alternateLocalStorage[key]
     }
+
     return localStorage[key]
   }
 
-  static saveToLocalStorage(key, value) {
+  static saveToLocalStorage(key, value): void {
     if (localStorageEnabled === false) {
       alternateLocalStorage[key] = value
       return
     }
+
     try {
       localStorage[key] = value
     } catch (e) {
@@ -40,11 +43,12 @@ export default class LocalStorageManager {
     }
   }
 
-  static removeFromLocalStorage(key) {
+  static removeFromLocalStorage(key): void {
     if (localStorageEnabled === false) {
       delete alternateLocalStorage[key]
       return
     }
+
     try {
       localStorage.removeItem(key)
     } catch (e) {

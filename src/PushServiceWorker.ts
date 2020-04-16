@@ -34,23 +34,23 @@
  *
  */
 
-/* global self, clients */
-
+// eslint-disable-next-line no-var
 declare var clients
+// eslint-disable-next-line no-var
 declare var registration
 
 const ACTION_NAME_KEY = '__name__'
 const OPEN_URL_ACTION = 'Open URL'
 const ARG_URL = 'URL'
 
-let openActions = {}
+const openActions = {}
 
 /**
  * Triggered on push message received.
  * @param {object} event The push payload that the browser received.
  */
-function pushListener(event) {
-  let jsonString = event.data && event.data.text() ? event.data.text() : null
+function pushListener(event): void {
+  const jsonString = event.data && event.data.text() ? event.data.text() : null
 
   if (!jsonString) {
     console.log('Leanplum: Push received without payload, skipping display.')
@@ -58,7 +58,7 @@ function pushListener(event) {
   }
 
   // noinspection JSCheckFunctionSignatures
-  let options = JSON.parse(jsonString)
+  const options = JSON.parse(jsonString)
 
   /** @namespace options.title The title of the push notification. **/
   /** @namespace options.tag The id of the push notification **/
@@ -78,8 +78,8 @@ function pushListener(event) {
   }
 
   // Extract title and delete from options.
-  let title = options.title
-  delete options.title;
+  const title = options.title
+  delete options.title
   /** @namespace self.registration **/
   /** @namespace self.registration.showNotification **/
   event.waitUntil(self.registration.showNotification(title, options))
@@ -92,7 +92,7 @@ function pushListener(event) {
  * @param {function} event.waitUntil The browser will keep the service worker running until the
  * promise you passed in has settled.
  */
-function notificationClickListener(event) {
+function notificationClickListener(event): void {
   console.log('Leanplum: [Service Worker] Notification click received.')
 
   event.notification.close()
@@ -102,14 +102,14 @@ function notificationClickListener(event) {
     return
   }
 
-  let notificationId = event.notification.tag
-  let openActionUrl = openActions[notificationId]
+  const notificationId = event.notification.tag
+  const openActionUrl = openActions[notificationId]
   if (!openActionUrl) {
     console.log('Leanplum: [Service Worker] No action defined, doing nothing.')
     return
   }
 
-  delete openActions[notificationId];
+  delete openActions[notificationId]
 
   /** @namespace clients.openWindow **/
   event.waitUntil(clients.openWindow(openActionUrl))

@@ -18,18 +18,18 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-declare var XDomainRequest
+declare let XDomainRequest
 
 export default class Network {
-  private networkTimeoutSeconds: number = 10
+  private networkTimeoutSeconds = 10
   private requestQueue = []
-  private runningRequest: boolean = false
+  private runningRequest = false
 
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  public setNetworkTimeout(seconds: number) {
+  public setNetworkTimeout(seconds: number): void {
     this.networkTimeoutSeconds = seconds
   }
 
@@ -44,7 +44,7 @@ export default class Network {
    * @param {boolean} [plainText] Whether the response should be returned as plain text or json.
    * @return {*}
    */
-  public ajax(method, url, data, success, error, queued, plainText?) {
+  public ajax(method, url, data, success, error, queued, plainText?): void {
     if (queued) {
       if (this.runningRequest) {
         // eslint-disable-next-line prefer-rest-params
@@ -65,7 +65,7 @@ export default class Network {
 
     let handled = false
 
-    let xhr = new XMLHttpRequest()
+    const xhr = new XMLHttpRequest()
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
         if (handled) {
@@ -132,8 +132,8 @@ export default class Network {
    * @param {boolean} queued Whether the request should be queued or immediately sent.
    * @param {boolean} plainText Whether the response should be returned as plain text or json.
    */
-  private ajaxIE8(method, url, data, success, error, queued, plainText) {
-    let xdr = new XDomainRequest()
+  private ajaxIE8(method, url, data, success, error, queued, plainText): void {
+    const xdr = new XDomainRequest()
     xdr.onload = () => {
       let response
       let ranCallback = false
@@ -174,8 +174,7 @@ export default class Network {
         this.dequeueRequest()
       }
     }
-    xdr.onprogress = () => {
-    }
+    xdr.onprogress = () => { /* noop */ }
     xdr.open(method, url)
     xdr.timeout = this.networkTimeoutSeconds * 1000
     xdr.send(data)
@@ -186,7 +185,7 @@ export default class Network {
    * @param {Arguments} requestArguments The request arguments from the initial method call.
    * @private
    */
-  private enqueueRequest(requestArguments) {
+  private enqueueRequest(requestArguments): void {
     this.requestQueue.push(requestArguments)
   }
 
@@ -194,8 +193,8 @@ export default class Network {
    * Removes the request from the request queue.
    * @private
    */
-  private dequeueRequest() {
-    let args = this.requestQueue.shift()
+  private dequeueRequest(): void {
+    const args = this.requestQueue.shift()
     if (args) {
       this.ajax.call(this, args)
     }

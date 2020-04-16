@@ -25,6 +25,9 @@ import PushManager from './PushManager'
 import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 import VarCache from './VarCache'
 
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export default class LeanplumInternal {
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
@@ -108,7 +111,7 @@ export default class LeanplumInternal {
     this._systemVersion = systemVersion
   }
 
-  setVariables(variables: Object): void {
+  setVariables(variables: Record<string, any>): void {
     this._varCache.setVariables(variables)
   }
 
@@ -116,7 +119,7 @@ export default class LeanplumInternal {
     this._internalState.variantDebugInfoEnabled = variantDebugInfoEnabled
   }
 
-  getVariantDebugInfo(): Object {
+  getVariantDebugInfo(): Record<string, any> {
     return this._varCache.getVariantDebugInfo()
   }
 
@@ -157,8 +160,8 @@ export default class LeanplumInternal {
       queued: false,
       sendNow: true,
       response: (response) => {
-        let getVarsResponse = this._lpRequest.getLastResponse(response)
-        let isSuccess = this._lpRequest.isResponseSuccess(getVarsResponse)
+        const getVarsResponse = this._lpRequest.getLastResponse(response)
+        const isSuccess = this._lpRequest.isResponseSuccess(getVarsResponse)
         if (isSuccess) {
           this._varCache.applyDiffs(
             getVarsResponse[Constants.KEYS.VARS],
@@ -225,13 +228,13 @@ export default class LeanplumInternal {
       sendNow: true,
       response: (response) => {
         this._internalState.hasStarted = true
-        let startResponse = this._lpRequest.getLastResponse(response)
+        const startResponse = this._lpRequest.getLastResponse(response)
 
         if (this._lpRequest.isResponseSuccess(startResponse)) {
           this._internalState.startSuccessful = true
 
           if (this._internalState.devMode) {
-            let latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
+            const latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
               console.log(`A newer version of Leanplum, ${latestVersion}, is available.
 Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
@@ -251,7 +254,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
         }
 
         this._internalState.triggerStartHandlers()
-      }
+      },
     })
   }
 
@@ -292,33 +295,33 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   stop(): void {
     this.createRequest(Constants.METHODS.STOP, undefined, {
       sendNow: true,
-      queued: true
+      queued: true,
     })
   }
 
   pauseSession(): void {
     this.createRequest(Constants.METHODS.PAUSE_SESSION, undefined, {
       sendNow: true,
-      queued: true
+      queued: true,
     })
   }
 
   resumeSession(): void {
     this.createRequest(Constants.METHODS.RESUME_SESSION, undefined, {
       sendNow: true,
-      queued: true
+      queued: true,
     })
   }
 
   pauseState(): void {
     this.createRequest(Constants.METHODS.PAUSE_STATE, undefined, {
-      queued: true
+      queued: true,
     })
   }
 
   resumeState(): void {
     this.createRequest(Constants.METHODS.RESUME_STATE, undefined, {
-      queued: true
+      queued: true,
     })
   }
 
@@ -346,7 +349,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.NEW_USER_ID, userId)
 
     this.createRequest(Constants.METHODS.SET_USER_ATTRIBUTES, args, {
-      queued: true
+      queued: true,
     })
 
     if (userId) {
@@ -379,11 +382,11 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
 
     this.createRequest(Constants.METHODS.TRACK, args, {
-      queued: true
+      queued: true,
     })
   }
 
-  trackPurchase(value: number, currencyCode?: string, params?: Object, event: string = 'Purchase'): void {
+  trackPurchase(value: number, currencyCode?: string, params?: Record<string, any>, event = 'Purchase'): void {
     const args = new ArgsBuilder()
       .add(Constants.PARAMS.EVENT, event)
       .add(Constants.PARAMS.VALUE, value || 0.0)
@@ -394,7 +397,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     }
 
     this.createRequest(Constants.METHODS.TRACK, args, {
-      queued: true
+      queued: true,
     })
   }
 
@@ -412,7 +415,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
 
     this.createRequest(Constants.METHODS.ADVANCE, args, {
-      queued: true
+      queued: true,
     })
   }
 
@@ -472,7 +475,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   private createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
     this._lpRequest.request(action, args, {
       devMode: this._internalState.devMode,
-      ...options
+      ...options,
     })
   }
 
@@ -481,7 +484,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       this._varCache,
       {
         appId: this._lpRequest.appId,
-        deviceId: this._lpRequest.deviceId
+        deviceId: this._lpRequest.deviceId,
       },
       this.createRequest,
       this._lpRequest.getLastResponse
