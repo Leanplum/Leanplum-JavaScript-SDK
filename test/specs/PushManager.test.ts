@@ -1,3 +1,4 @@
+import Constants from '../../src/Constants'
 import PushManager from '../../src/PushManager'
 
 describe(PushManager, () => {
@@ -11,9 +12,9 @@ describe(PushManager, () => {
   })
 
   afterEach(() => {
-    createRequestSpy.mockClear()
     windowMock.mockReset()
     localStorage.clear()
+    jest.clearAllMocks()
   })
 
   describe('isWebPushSupported', () => {
@@ -113,6 +114,21 @@ describe(PushManager, () => {
       await pushManager.isWebPushSubscribed()
 
       expect(createRequestSpy).toHaveBeenCalledTimes(2)
+
+      const [action, args, options] = createRequestSpy.mock.calls[1];
+
+      expect(action).toEqual(Constants.METHODS.SET_DEVICE_ATTRIBUTES)
+      expect(args.buildDict()).toEqual({
+        [Constants.PARAMS.WEB_PUSH_SUBSCRIPTION]: JSON.stringify({
+          endpoint: 'new_subscription',
+          key: '',
+          auth: ''
+        })
+      })
+      expect(options).toEqual({
+        queued: false,
+        sendNow: true
+      })
     })
   })
 
@@ -211,7 +227,8 @@ describe(PushManager, () => {
         register: () => ({
           pushManager: {
             getSubscription: () => ({
-              endpoint: 'test'
+              endpoint: 'test',
+              getKey: (name: string) => name.split('').map((x) => x.charCodeAt(0))
             })
           }
         })
@@ -220,6 +237,21 @@ describe(PushManager, () => {
       await pushManager.register('', (x) => Promise.resolve(x))
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
+
+      const [action, args, options] = createRequestSpy.mock.calls[0];
+
+      expect(action).toEqual(Constants.METHODS.SET_DEVICE_ATTRIBUTES)
+      expect(args.buildDict()).toEqual({
+        [Constants.PARAMS.WEB_PUSH_SUBSCRIPTION]: JSON.stringify({
+          endpoint: 'test',
+          key: 'cDI1NmRo',
+          auth: 'YXV0aA=='
+        })
+      })
+      expect(options).toEqual({
+        queued: false,
+        sendNow: true
+      })
     })
   })
 
@@ -293,7 +325,8 @@ describe(PushManager, () => {
           pushManager: {
             getSubscription: () => null,
             subscribe: () => ({
-              endpoint: 'test'
+              endpoint: 'test',
+              getKey: (name: string) => name.split('').map((x) => x.charCodeAt(0))
             })
           }
         })
@@ -303,6 +336,21 @@ describe(PushManager, () => {
       await pushManager.subscribeUser()
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
+
+      const [action, args, options] = createRequestSpy.mock.calls[0];
+
+      expect(action).toEqual(Constants.METHODS.SET_DEVICE_ATTRIBUTES)
+      expect(args.buildDict()).toEqual({
+        [Constants.PARAMS.WEB_PUSH_SUBSCRIPTION]: JSON.stringify({
+          endpoint: 'test',
+          key: 'cDI1NmRo',
+          auth: 'YXV0aA=='
+        })
+      })
+      expect(options).toEqual({
+        queued: false,
+        sendNow: true
+      })
     })
   })
 

@@ -31,7 +31,7 @@ export default class PushManager {
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null
 
   private get serviceWorker(): ServiceWorkerContainer {
-    return window.navigator.serviceWorker;
+    return window.navigator.serviceWorker
   }
 
   public constructor(
@@ -79,7 +79,7 @@ export default class PushManager {
    * Register for WebPush.
    * @param  {String}   serviceWorkerUrl The url that serves the service worker on your domain.
    * @param  {Function} callback         The callback to be called with result.
-   * @return {object} nothing
+   * @return {Promise} True if subscribed, else false.
    */
   public async register(
     serviceWorkerUrl: string,
@@ -111,7 +111,7 @@ export default class PushManager {
   }
 
   /**
-   * Subscribe the user(browser) to push.
+   * Subscribe the user (browser) to push.
    * @return {Promise} Resolves if subscription successful, otherwise rejects.
    */
   public async subscribeUser(): Promise<boolean> {
@@ -170,11 +170,9 @@ export default class PushManager {
   }
 
   /**
-   * Encodes a base64 url string to an uint8 arrary.
-   * @param  {string} base64String
-   * @return {Uint8Array}
+   * Encodes a base64 URL string to an Uint8 array.
    */
-  private urlB64ToUint8Array(base64String) {
+  private urlB64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
     const rawData = this.decodeData(base64)
@@ -188,37 +186,16 @@ export default class PushManager {
   }
 
   /**
-   * [prepareSubscription description]
-   * @param  {object} subscription The raw subscription from browser.
-   * @param  {Function} subscription.getKey The subscription key.
-   * @param  {string} subscription.endpoint The subscription key.
-   * @return {object} The subscription object to be sent to server.
-   */
-  private prepareSubscription(subscription) {
-    let apply = Function.prototype.apply
-    let key = subscription.getKey ? subscription.getKey('p256dh') : ''
-    let auth = subscription.getKey ? subscription.getKey('auth') : ''
-    let keyAscii = this.encodeData(apply.call(String.fromCharCode, null, new Uint8Array(key)))
-    let authAscii = this.encodeData(apply.call(String.fromCharCode, null, new Uint8Array(auth)))
-
-    return {
-      endpoint: subscription.endpoint,
-      key: keyAscii,
-      auth: authAscii
-    }
-  }
-
-  /**
    * Send a new subscription object to the Leanplum server.
    * @param {object} subscription The subscription.
    */
-  private updateNewSubscriptionOnServer(subscription) {
+  private updateNewSubscriptionOnServer(subscription: PushSubscription): void {
     if (subscription) {
       let preparedSubscription = this.prepareSubscription(subscription)
       let preparedSubscriptionString = JSON.stringify(preparedSubscription)
       let existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
         Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION
-      )
+      ) as string
 
       if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
         LocalStorageManager.saveToLocalStorage(
@@ -230,11 +207,24 @@ export default class PushManager {
     }
   }
 
+  private prepareSubscription(subscription: PushSubscription): PushSubscriptionMetadata {
+    let key = ('getKey' in subscription) ? subscription.getKey('p256dh') : []
+    let auth = ('getKey' in subscription) ? subscription.getKey('auth') : []
+    let keyAscii = this.encodeData(String.fromCharCode.apply(null, new Uint8Array(key)))
+    let authAscii = this.encodeData(String.fromCharCode.apply(null, new Uint8Array(auth)))
+
+    return {
+      endpoint: subscription.endpoint,
+      key: keyAscii,
+      auth: authAscii
+    }
+  }
+
   /**
    * Send the subscription to the Leanplum server.
-   * @param {String/Object} subscription The subscription string.
+   * @param {String} subscription The subscription string.
    */
-  private setSubscription(subscription) {
+  private setSubscription(subscription: string): void {
     if (subscription) {
       const args = new ArgsBuilder().add(Constants.PARAMS.WEB_PUSH_SUBSCRIPTION, subscription)
 
@@ -252,4 +242,10 @@ export default class PushManager {
   private decodeData(data: string): string {
     return window.atob(data)
   }
+}
+
+interface PushSubscriptionMetadata {
+  endpoint: string,
+  key: string,
+  auth: string
 }
