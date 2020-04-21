@@ -2,7 +2,7 @@
 
 root = true
 
-[**.{ts,tsx,html}]
+[**.{js,ts,tsx,html}]
 indent_style = space
 indent_size = 2
 insert_final_newline = true

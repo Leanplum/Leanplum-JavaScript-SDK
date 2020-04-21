@@ -120,7 +120,7 @@ export default class PushManager {
     try {
       const subscription = await this.serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey
+        applicationServerKey,
       })
 
       if (!subscription) {
@@ -140,7 +140,7 @@ export default class PushManager {
    * @return {Promise} Resolves if unsubscribed, otherwise rejects.
    */
   public async unsubscribeUser(): Promise<void> {
-    let subscribed = await this.isWebPushSubscribed()
+    const subscribed = await this.isWebPushSubscribed()
 
     if (subscribed) {
       try {
@@ -191,9 +191,9 @@ export default class PushManager {
    */
   private updateNewSubscriptionOnServer(subscription: PushSubscription): void {
     if (subscription) {
-      let preparedSubscription = this.prepareSubscription(subscription)
-      let preparedSubscriptionString = JSON.stringify(preparedSubscription)
-      let existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
+      const preparedSubscription = this.prepareSubscription(subscription)
+      const preparedSubscriptionString = JSON.stringify(preparedSubscription)
+      const existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
         Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION
       ) as string
 
@@ -208,15 +208,15 @@ export default class PushManager {
   }
 
   private prepareSubscription(subscription: PushSubscription): PushSubscriptionMetadata {
-    let key = ('getKey' in subscription) ? subscription.getKey('p256dh') : []
-    let auth = ('getKey' in subscription) ? subscription.getKey('auth') : []
-    let keyAscii = this.encodeData(String.fromCharCode.apply(null, new Uint8Array(key)))
-    let authAscii = this.encodeData(String.fromCharCode.apply(null, new Uint8Array(auth)))
+    const key = ('getKey' in subscription) ? subscription.getKey('p256dh') : []
+    const auth = ('getKey' in subscription) ? subscription.getKey('auth') : []
+    const keyAscii = this.encodeData(String.fromCharCode.apply(null, new Uint8Array(key)))
+    const authAscii = this.encodeData(String.fromCharCode.apply(null, new Uint8Array(auth)))
 
     return {
       endpoint: subscription.endpoint,
       key: keyAscii,
-      auth: authAscii
+      auth: authAscii,
     }
   }
 
@@ -230,7 +230,7 @@ export default class PushManager {
 
       this.createRequest(Constants.METHODS.SET_DEVICE_ATTRIBUTES, args, {
         queued: false,
-        sendNow: true
+        sendNow: true,
       })
     }
   }
@@ -245,7 +245,7 @@ export default class PushManager {
 }
 
 interface PushSubscriptionMetadata {
-  endpoint: string,
-  key: string,
-  auth: string
+  endpoint: string;
+  key: string;
+  auth: string;
 }

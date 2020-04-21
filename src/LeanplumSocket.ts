@@ -24,14 +24,15 @@ import { CreateRequestFunction } from './types/internal'
 import VarCache from './VarCache'
 
 export default class LeanplumSocket {
-  private networkTimeoutSeconds: number = 10
+  private networkTimeoutSeconds = 10
   private socketClient: SocketIoClient | null = null
   private socketHost = 'dev.leanplum.com'
 
   public connect(
     cache: VarCache,
-    auth: { appId: string, deviceId: string },
+    auth: { appId: string; deviceId: string },
     createRequest: CreateRequestFunction,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getLastResponse: (response: any) => any
   ): void {
     if (!WebSocket) {
@@ -49,7 +50,7 @@ export default class LeanplumSocket {
         console.log('Leanplum: Connected to development server.')
         this.socketClient.send('auth', {
           [Constants.PARAMS.APP_ID]: auth.appId,
-          [Constants.PARAMS.DEVICE_ID]: auth.deviceId
+          [Constants.PARAMS.DEVICE_ID]: auth.deviceId,
         })
         authSent = true
       }
@@ -65,25 +66,25 @@ export default class LeanplumSocket {
         createRequest(Constants.METHODS.GET_VARS, args, {
           queued: false,
           sendNow: true,
-          response: function (response) {
-            let getVarsResponse = getLastResponse(response)
-            let values = getVarsResponse[Constants.KEYS.VARS]
-            let variants = getVarsResponse[Constants.KEYS.VARIANTS]
-            let actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
+          response: function(response) {
+            const getVarsResponse = getLastResponse(response)
+            const values = getVarsResponse[Constants.KEYS.VARS]
+            const variants = getVarsResponse[Constants.KEYS.VARIANTS]
+            const actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
             if (!isEqual(values, cache.diffs)) {
               cache.applyDiffs(values, variants, actionMetadata)
             }
-          }
+          },
         })
       } else if (event === 'getVariables') {
         cache.sendVariables()
         this.socketClient.send('getContentResponse', {
-          'updated': true
+          'updated': true,
         })
       } else if (event === 'getActions') {
         // Unsupported in JavaScript SDK.
         this.socketClient.send('getContentResponse', {
-          'updated': false
+          'updated': false,
         })
       } else if (event === 'registerDevice') {
         // eslint-disable-next-line no-alert
@@ -113,7 +114,7 @@ export default class LeanplumSocket {
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  public setNetworkTimeout(seconds) {
+  public setNetworkTimeout(seconds): void {
     this.networkTimeoutSeconds = seconds
     this.socketClient?.setNetworkTimeout(seconds)
   }

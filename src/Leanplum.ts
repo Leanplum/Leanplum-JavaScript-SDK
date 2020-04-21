@@ -14,9 +14,12 @@
  *  limitations under the License.
  */
 
-import Constants from './Constants';
+import Constants from './Constants'
 import LeanplumInternal from './LeanplumInternal'
 import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default class Leanplum {
   private static _lp: LeanplumInternal = new LeanplumInternal(window)
@@ -79,7 +82,7 @@ export default class Leanplum {
     Leanplum._lp.setSystemVersion(systemVersion)
   }
 
-  static setVariables(variables: Object): void {
+  static setVariables(variables: Record<string, any>): void {
     Leanplum._lp.setVariables(variables)
   }
 
@@ -87,7 +90,7 @@ export default class Leanplum {
     Leanplum._lp.setVariantDebugInfoEnabled(variantDebugInfoEnabled)
   }
 
-  static getVariantDebugInfo(): Object {
+  static getVariantDebugInfo(): Record<string, any> {
     return Leanplum._lp.getVariantDebugInfo()
   }
 
@@ -174,7 +177,7 @@ export default class Leanplum {
     Leanplum._lp.track(event, value, info, params)
   }
 
-  static trackPurchase(value: number, currencyCode?: string, params?: Object, event: string = 'Purchase'): void {
+  static trackPurchase(value: number, currencyCode?: string, params?: Object, event = 'Purchase'): void {
     Leanplum._lp.trackPurchase(value, currencyCode, params, event)
   }
 

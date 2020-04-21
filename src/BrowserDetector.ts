@@ -14,6 +14,8 @@
  *  limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface StringMatchingEntry {
   string: string;
   subString: string;
@@ -57,10 +59,10 @@ export default class BrowserDetector {
    * @param {object} data The data object to scan.
    * @return {string} The found identity string.
    */
-  private searchString(data) {
+  private searchString(data): string | undefined {
     for (let i = 0; i < data.length; i++) {
-      let dataString = data[i].string
-      let dataProp = data[i].prop
+      const dataString = data[i].string
+      const dataProp = data[i].prop
       this.versionSearchString = data[i].versionSearch || data[i].identity
       if (dataString) {
         if (dataString.indexOf(data[i].subString) !== -1) {
@@ -78,13 +80,13 @@ export default class BrowserDetector {
    * @return {number} The found number.
    * @private
    */
-  private searchVersion(dataString) {
+  private searchVersion(dataString): number | undefined {
     if (!dataString) {
-      return
+      return undefined
     }
-    let index = dataString.indexOf(this.versionSearchString)
+    const index = dataString.indexOf(this.versionSearchString)
     if (index === -1) {
-      return
+      return undefined
     }
     return parseFloat(dataString.substring(index + this.versionSearchString.length + 1))
   }
@@ -94,74 +96,74 @@ export default class BrowserDetector {
       {
         string: wnd.navigator.userAgent,
         subString: 'Chrome',
-        identity: 'Chrome'
+        identity: 'Chrome',
       },
       {
         string: wnd.navigator.userAgent,
         subString: 'OmniWeb',
         identity: 'OmniWeb',
-        versionSearch: 'OmniWeb/'
+        versionSearch: 'OmniWeb/',
       },
       {
         string: wnd.navigator.vendor,
         subString: 'Apple',
         identity: 'Safari',
-        versionSearch: 'Version'
+        versionSearch: 'Version',
       },
       {
         prop: (wnd as any).opera,
         identity: 'Opera',
-        versionSearch: 'Version'
+        versionSearch: 'Version',
       },
       {
         string: wnd.navigator.vendor,
         subString: 'iCab',
-        identity: 'iCab'
+        identity: 'iCab',
       },
       {
         string: wnd.navigator.vendor,
         subString: 'KDE',
-        identity: 'Konqueror'
+        identity: 'Konqueror',
       },
       {
         string: wnd.navigator.userAgent,
         subString: 'Firefox',
-        identity: 'Firefox'
+        identity: 'Firefox',
       },
       {
         string: wnd.navigator.vendor,
         subString: 'Camino',
-        identity: 'Camino'
+        identity: 'Camino',
       },
       { // for newer Netscape (6+)
         string: wnd.navigator.userAgent,
         subString: 'Netscape',
-        identity: 'Netscape'
+        identity: 'Netscape',
       },
       {
         string: wnd.navigator.userAgent,
         subString: 'MSIE',
         identity: 'Explorer',
-        versionSearch: 'MSIE'
+        versionSearch: 'MSIE',
       },
       {
         string: wnd.navigator.userAgent,
         subString: 'Android',
         identity: 'Android Browser',
-        versionSearch: 'Version'
+        versionSearch: 'Version',
       },
       {
         string: wnd.navigator.userAgent,
         subString: 'Gecko',
         identity: 'Mozilla',
-        versionSearch: 'rv'
+        versionSearch: 'rv',
       },
       { // for older Netscape (4-)
         string: wnd.navigator.userAgent,
         subString: 'Mozilla',
         identity: 'Netscape',
-        versionSearch: 'Mozilla'
-      }
+        versionSearch: 'Mozilla',
+      },
     ]
   }
 
@@ -170,28 +172,28 @@ export default class BrowserDetector {
       {
         string: wnd.navigator.platform,
         subString: 'Win',
-        identity: 'Windows'
+        identity: 'Windows',
       },
       {
         string: wnd.navigator.platform,
         subString: 'Mac',
-        identity: 'Mac OS'
+        identity: 'Mac OS',
       },
       {
         string: wnd.navigator.userAgent,
         subString: 'iPhone',
-        identity: 'iOS'
+        identity: 'iOS',
       },
       {
         string: wnd.navigator.userAgent,
         subString: 'Android',
-        identity: 'Android'
+        identity: 'Android',
       },
       {
         string: wnd.navigator.platform,
         subString: 'Linux',
-        identity: 'Linux'
-      }
+        identity: 'Linux',
+      },
     ]
   }
 }

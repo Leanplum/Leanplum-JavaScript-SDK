@@ -33,9 +33,9 @@ export default class Leanplum {
     static setRequestBatching(batchEnabled?: boolean, cooldownSeconds?: number): void;
     static setSystemName(systemName: string): void;
     static setSystemVersion(systemVersion: string): void;
-    static setVariables(variables: Object): void;
+    static setVariables(variables: Record<string, any>): void;
     static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean): void;
-    static getVariantDebugInfo(): Object;
+    static getVariantDebugInfo(): Record<string, any>;
     static getVariables(): any;
     static getVariable(...args: string[]): any;
     static getVariants(): any[];

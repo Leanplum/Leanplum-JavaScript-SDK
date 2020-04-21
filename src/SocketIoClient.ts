@@ -1,10 +1,9 @@
 /*
- *
  *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ *  You may obtain a copy of the License at:
  *
  *      https://www.apache.org/licenses/LICENSE-2.0
  *
@@ -12,8 +11,7 @@
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
- *  limitations under the License
- *
+ *  limitations under the License.
  */
 
 import Network from './Network'
@@ -25,13 +23,13 @@ export default class SocketIoClient {
   private network: Network = new Network()
   private socket: WebSocket | undefined
 
-  connected: boolean = false
-  connecting: boolean = false
+  public connected = false
+  public connecting = false
 
-  onopen: Function | undefined
-  onclose: Function | undefined
-  onmessage: Function | undefined
-  onerror: Function | undefined
+  public onopen: Function | undefined
+  public onclose: Function | undefined
+  public onmessage: Function | undefined
+  public onerror: Function | undefined
 
   /**
    * Initializes a new SocketIoClient, not connected by default.
@@ -45,57 +43,55 @@ export default class SocketIoClient {
    * Connects to the given socketHost.
    * @param  {string} socketHost The host to connect to.
    */
-  connect(socketHost) {
-    // eslint-disable-next-line consistent-this
-    let self = this
-    self.connecting = true
+  public connect(socketHost): void {
+    this.connecting = true
     this.network.ajax('POST', `https://${socketHost}/socket.io/1`, '',
-        function(line) {
-          let parts = line.split(':')
-          let session = parts[0]
-          let heartbeat = parseInt(parts[1]) / 2 * 1000
-          self.socket = new WebSocket(`wss://${socketHost}/socket.io/1/websocket/${session}`)
+        (line) => {
+          const parts = line.split(':')
+          const session = parts[0]
+          const heartbeat = parseInt(parts[1]) / 2 * 1000
+          this.socket = new WebSocket(`wss://${socketHost}/socket.io/1/websocket/${session}`)
           let heartbeatInterval = null
-          self.socket.onopen = function() {
-            self.connected = true
-            self.connecting = false
-            if (self.onopen) {
-              self.onopen()
+          this.socket.onopen = () => {
+            this.connected = true
+            this.connecting = false
+            if (this.onopen) {
+              this.onopen()
             }
-            heartbeatInterval = setInterval(function() {
-              self.socket.send('2:::')
+            heartbeatInterval = setInterval(() => {
+              this.socket.send('2:::')
             }, heartbeat)
           }
-          self.socket.onclose = function() {
-            self.connected = false
+          this.socket.onclose = () => {
+            this.connected = false
             clearInterval(heartbeatInterval)
-            if (self.onclose) {
-              self.onclose()
+            if (this.onclose) {
+              this.onclose()
             }
           }
-          self.socket.onmessage = function(event) {
-            let messageParts = event.data.split(':')
-            let code = parseInt(messageParts[0])
+          this.socket.onmessage = (event) => {
+            const messageParts = event.data.split(':')
+            const code = parseInt(messageParts[0])
             if (code === 2) {
-              self.socket.send('2::')
+              this.socket.send('2::')
             } else if (code === 5) {
-              let messageId = messageParts[1]
-              let data = JSON.parse(messageParts.slice(3).join(':'))
-              let messageEvent = data.name
-              let args = data.args
+              const messageId = messageParts[1]
+              const data = JSON.parse(messageParts.slice(3).join(':'))
+              const messageEvent = data.name
+              const args = data.args
               if (messageId) {
-                self.socket.send(`6:::${messageId}`)
+                this.socket.send(`6:::${messageId}`)
               }
-              if (self.onmessage) {
-                self.onmessage(messageEvent, args)
+              if (this.onmessage) {
+                this.onmessage(messageEvent, args)
               }
             } else if (code === 7) {
               console.log(`Socket error: ${event.data}`)
             }
           }
-          self.socket.onerror = function(event) {
-            self.socket.close()
-            if (self.onerror) {
+          this.socket.onerror = (event) => {
+            this.socket.close()
+            if (this.onerror) {
               self.onerror(event)
             }
           }
@@ -108,14 +104,14 @@ export default class SocketIoClient {
    * @param  {string} name Name of the event.
    * @param  {*} args Arguments to send.
    */
-  send(name, args) {
+  public send(name, args): void {
     if (!this.connected) {
       console.log('Leanplum: Socket is not connected.')
       return
     }
-    let argsJson = JSON.stringify({
+    const argsJson = JSON.stringify({
       name,
-      args
+      args,
     })
     this.socket.send(`5:::${argsJson}`)
   }
@@ -124,7 +120,7 @@ export default class SocketIoClient {
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
    */
-  setNetworkTimeout(seconds) {
+  public setNetworkTimeout(seconds): void {
     this.network.setNetworkTimeout(seconds)
   }
 }
