@@ -9,7 +9,13 @@
     <title>Rondo Web</title>
 
     <style>
-      .requires-setup { display: none; }
+      .requires-setup, .requires-start { display: none; }
+      .session-status {
+        position: fixed;
+        top: 1em;
+        right: 1em;
+        z-index: 1;
+      }
     </style>
   </head>
   <body>
@@ -19,6 +25,15 @@
         <p class="lead">Facilitates testing of the Leanplum Web SDK.</p>
         <p>SDK version: <span id="sdkVersion"></span></p>
       </div>
+
+      <div class="session-status">
+        <span class="requires-setup badge badge-warning">
+          Session not started
+        </span>
+        <span class="requires-start badge badge-success">
+          Session started, user ID: <span class="current-user-id"></span>
+        </span>
+    </div>
 
       <div class="row row-cols-md-2">
         <div class="col mb-3">
