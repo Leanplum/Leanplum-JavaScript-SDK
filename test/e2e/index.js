@@ -42,6 +42,10 @@ $("#start")
         } else {
             Leanplum.start();
         }
+
+      $(".requires-start").removeClass("requires-start");
+      $(".session-status .badge-warning").remove();
+      updateUserId();
     });
 
 $("#forceContentUpdate")
@@ -121,6 +125,7 @@ $("[data-action=setUserId]")
         e.preventDefault();
         const userId = $("#setUserId").val();
         Leanplum.setUserId(userId);
+        updateUserId();
     });
 
 $("[data-action=setUserAttribute]")
@@ -136,11 +141,17 @@ $("[data-action=setUserAttribute]")
 $("#sdkVersion").text(Leanplum.VERSION);
 
 // populate initial info
-$("#userId").val(Leanplum._userId || '');
+updateUserId();
 refreshWebPush();
 
 function refreshWebPush() {
     $("#isWebPushSupported").text(Leanplum.isWebPushSupported() ? "Yes" : "No");
     Leanplum.isWebPushSubscribed()
         .then(isSubscribed => $("#isWebPushSubscribed").text(isSubscribed ? "Yes" : "No"));
+}
+function updateUserId() {
+  // TODO: Leanplum.getUserId
+  const userId = Leanplum._lp._lpRequest.userId;
+  $(".current-user-id").text(userId);
+  $("#setUserId").val(userId);
 }
