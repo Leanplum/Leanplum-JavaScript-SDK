@@ -110,9 +110,9 @@ $("[data-action=advanceToState]")
         }
 
         if (params) {
-            Leanplum.advanceToState(state, params);
+            Leanplum.advanceTo(state, params);
         } else {
-            Leanplum.advanceToState(state);
+            Leanplum.advanceTo(state);
         }
     });
 
