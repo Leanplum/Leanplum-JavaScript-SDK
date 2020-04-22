@@ -7,3 +7,12 @@ before_script:
 
 cache:
   yarn: true
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GH_TOKEN
+  keep_history: true
+  local_dir: test/e2e/
+  on:
+    branch: rondo-on-gh-pages # test
