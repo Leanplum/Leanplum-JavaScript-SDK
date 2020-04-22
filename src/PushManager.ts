@@ -15,7 +15,6 @@
  *
  */
 
-import isEqual from 'lodash/isEqual'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
@@ -197,7 +196,7 @@ export default class PushManager {
         Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION
       ) as string
 
-      if (!isEqual(existingSubscriptionString, preparedSubscriptionString)) {
+      if (existingSubscriptionString !== preparedSubscriptionString) {
         LocalStorageManager.saveToLocalStorage(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
           preparedSubscriptionString
