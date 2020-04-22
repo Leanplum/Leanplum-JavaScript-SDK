@@ -16,7 +16,7 @@
  *
  */
 
-import isEqual from 'lodash/isEqual'
+import isEqual from 'lodash.isequal'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import SocketIoClient from './SocketIoClient'
