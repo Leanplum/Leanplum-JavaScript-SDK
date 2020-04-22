@@ -5,8 +5,15 @@ node_js:
 before_script:
   - yarn lint
 
+script:
+  - yarn build
+  - yarn test
+
 cache:
   yarn: true
+
+before_deploy:
+  - yarn e2e-build
 
 deploy:
   provider: pages
