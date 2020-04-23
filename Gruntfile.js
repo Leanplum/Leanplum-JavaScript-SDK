@@ -29,7 +29,7 @@ module.exports = function (grunt) {
       },
       dev: Object.assign({
         watch: true
-      }, webpackConfig),
+      }, webpackConfig.find((x) => x.output.filename === 'leanplum.js')),
       prod: webpackConfig
     }
   })
