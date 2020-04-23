@@ -22,4 +22,4 @@ deploy:
   keep_history: true
   local_dir: test/e2e/
   on:
-    branch: rondo-on-pages # test
+    branch: develop
