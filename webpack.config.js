@@ -1,5 +1,6 @@
 const path = require('path')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const UglifyJS = require('uglifyjs-webpack-plugin')
 
 const libraryName = 'Leanplum'
 
@@ -38,46 +39,77 @@ class DtsBundlePlugin {
   }
 }
 
-const buildFile = (options) => {
-    const commonOptions = {
-      devtool: 'inline-source-map',
-      mode: 'production',
-      resolve: {
-        extensions: ['.js', '.ts']
-      },
-      module: {
-        rules: [{
-          test: /\.ts$/,
-          include: [path.resolve(__dirname, './src')],
-          loader: 'ts-loader'
-        }]
+const optimization = {
+  minimize: true,
+  minimizer: [
+    new UglifyJS({
+      cache: true,
+      parallel: true,
+      uglifyOptions: {
+        compress: {
+          drop_console: true
+        },
+        ecma: 5,
+        mangle: true,
+        output: {
+          beautify: false,
+          comments: false,
+        },
+        warnings: false
       }
-    }
+    })
+  ],
+  noEmitOnErrors: true,
+  sideEffects: true,
+  usedExports: true
+}
 
-    return Object.assign({}, commonOptions, options)
+const buildFile = (options) => {
+  const commonOptions = {
+    devtool: 'inline-source-map',
+    mode: 'production',
+    resolve: {
+      extensions: ['.js', '.ts']
+    },
+    module: {
+      rules: [{
+        test: /\.ts$/,
+        include: [path.resolve(__dirname, './src')],
+        loader: 'ts-loader'
+      }]
+    }
+  }
+
+  if (options.output.filename.includes('.min.')) {
+    commonOptions.devtool = false
+    commonOptions.optimization = optimization
+  }
+
+  return Object.assign({}, commonOptions, options)
 }
 
 module.exports = [
-    buildFile({
-        entry: './src/bundles/leanplum.full.ts',
-        output: {
-            path: path.resolve(__dirname, './dist'),
-            filename: 'leanplum.js',
-            library: libraryName,
-            libraryTarget: 'umd'
-        },
-        plugins: [
-            new ForkTsCheckerWebpackPlugin(),
-            new DtsBundlePlugin(),
-        ]
-    }),
-    buildFile({
-        entry: './src/PushServiceWorker.ts',
-        output: {
-            path: path.resolve(__dirname, './dist'),
-            filename: 'sw/sw.js'
-        },
-        plugins: [
-            new ForkTsCheckerWebpackPlugin(),
-        ]
-    })];
+  ...['leanplum.js', 'leanplum.min.js'].map(name => buildFile({
+    entry: './src/bundles/leanplum.full.ts',
+    output: {
+      path: path.resolve(__dirname, './dist'),
+      filename: name,
+      library: libraryName,
+      libraryTarget: 'umd'
+    },
+    plugins: [
+      new ForkTsCheckerWebpackPlugin({ silent: true }),
+      name.includes('.min.') ? () => { /* noop */ } : new DtsBundlePlugin()
+    ]
+  })),
+  ...['sw/sw.js', 'sw/sw.min.js'].map(name => buildFile({
+    entry: './src/PushServiceWorker.ts',
+    output: {
+      path: path.resolve(__dirname, './dist'),
+      filename: name
+    },
+    plugins: [
+      new ForkTsCheckerWebpackPlugin({ silent: true }),
+    ]
+  }))
+];
