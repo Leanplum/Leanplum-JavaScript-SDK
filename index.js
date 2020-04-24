@@ -22,7 +22,10 @@ $("[data-action=setup]")
     });
 
 $("#registerForWebPush")
-    .click(() => Leanplum.registerForWebPush().then(refreshWebPush));
+    .click(() => {
+      const swLocation = window.origin + window.pathname + "/sw.min.js";
+      Leanplum.registerForWebPush(swLocation).then(refreshWebPush);
+    });
 
 $("#unregisterFromWebPush")
     .click(() => Leanplum.unregisterFromWebPush().then(refreshWebPush));
