@@ -6,14 +6,6 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
     clean: ['dist'],
-    watch: {
-      js: {
-        files: [
-          'lib/leanplum.js'
-        ],
-        tasks: ['build']
-      }
-    },
     webpack: {
       options: {
         stats: (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') && {
