@@ -1,3 +1,5 @@
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const clone = require('lodash.clonedeep')
 const webpackConfig = require('./webpack.config')
 
 module.exports = function (grunt) {
@@ -22,13 +24,33 @@ module.exports = function (grunt) {
           warnings: false,
         }
       },
-      dev: Object.assign({
-        watch: true
-      }, webpackConfig.find((x) => x.output.filename === 'leanplum.js')),
+      dev: getWebpackDevConfig(webpackConfig),
       prod: webpackConfig
     }
   })
 
   grunt.registerTask('build', ['clean', 'webpack:prod'])
   grunt.registerTask('default', ['webpack:dev'])
+}
+
+function getWebpackDevConfig(webpackConfig) {
+  const config = clone(webpackConfig.find((x) => x.output.filename === 'leanplum.js'))
+
+  config.plugins = [new ForkTsCheckerWebpackPlugin({
+    compilerOptions: {
+      declaration: false,
+    },
+    silent: false,
+  })]
+
+  const loader = config.module.rules.find((x) => x.loader === 'ts-loader')
+
+  loader.options = {
+    compilerOptions: {
+      declaration: false,
+    },
+    transpileOnly: true
+  }
+
+  return Object.assign(config, { watch: true })
 }
