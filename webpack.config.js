@@ -1,3 +1,4 @@
+const merge = require('lodash.merge')
 const path = require('path')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const UglifyJS = require('uglifyjs-webpack-plugin')
@@ -64,10 +65,17 @@ const optimization = {
   usedExports: true
 }
 
-const buildFile = (options) => {
+const buildFile = (filename, options) => {
   const commonOptions = {
     devtool: 'inline-source-map',
     mode: 'production',
+    output: {
+      path: path.resolve(__dirname, './dist'),
+      filename: filename
+    },
+    plugins: [
+      new ForkTsCheckerWebpackPlugin({ silent: true }),
+    ],
     resolve: {
       extensions: ['.js', '.ts']
     },
@@ -80,36 +88,27 @@ const buildFile = (options) => {
     }
   }
 
-  if (options.output.filename.includes('.min.')) {
+  if (filename.includes('.min.')) {
     commonOptions.devtool = false
     commonOptions.optimization = optimization
   }
 
-  return Object.assign({}, commonOptions, options)
+  if (filename === 'leanplum.js') {
+    commonOptions.plugins.push(new DtsBundlePlugin())
+  }
+
+  return merge({}, commonOptions, options)
 }
 
 module.exports = [
-  ...['leanplum.js', 'leanplum.min.js'].map(name => buildFile({
+  ...['leanplum.js', 'leanplum.min.js'].map(name => buildFile(name, {
     entry: './src/bundles/leanplum.full.ts',
     output: {
-      path: path.resolve(__dirname, './dist'),
-      filename: name,
       library: libraryName,
       libraryTarget: 'umd'
-    },
-    plugins: [
-      new ForkTsCheckerWebpackPlugin({ silent: true }),
-      name.includes('.min.') ? () => { /* noop */ } : new DtsBundlePlugin()
-    ]
+    }
   })),
-  ...['sw/sw.js', 'sw/sw.min.js'].map(name => buildFile({
+  ...['sw/sw.js', 'sw/sw.min.js'].map(name => buildFile(name, {
     entry: './src/PushServiceWorker.ts',
-    output: {
-      path: path.resolve(__dirname, './dist'),
-      filename: name
-    },
-    plugins: [
-      new ForkTsCheckerWebpackPlugin({ silent: true }),
-    ]
   }))
 ];
