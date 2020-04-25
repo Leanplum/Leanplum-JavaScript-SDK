@@ -315,6 +315,20 @@ describe(LeanplumInternal, () => {
     })
   })
 
+  describe('inbox', () => {
+    it('returns inbox', () => {
+      const inbox = lp.inbox()
+
+      expect(inbox).toBeDefined()
+    })
+
+    it('returns the same instance every time', () => {
+      const inbox = lp.inbox()
+
+      expect(lp.inbox()).toBe(inbox)
+    })
+  })
+
   describe('Misc', () => {
     describe('getVariantDebugInfo', () => {
       it('calls internal method', () => {

@@ -18,6 +18,7 @@ import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import Constants from './Constants'
 import InternalState from './InternalState'
+import LeanplumInbox from './Inbox'
 import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
@@ -31,6 +32,7 @@ import VarCache from './VarCache'
 export default class LeanplumInternal {
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
+  private _lpInbox: LeanplumInbox = new LeanplumInbox(this.createRequest)
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
   private _lpSocket: LeanplumSocket = new LeanplumSocket()
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
@@ -133,6 +135,10 @@ export default class LeanplumInternal {
 
   getVariants(): any[] {
     return this._varCache.variants || []
+  }
+
+  inbox(): LeanplumInbox {
+    return this._lpInbox
   }
 
   addStartResponseHandler(handler: StatusHandler): void {
