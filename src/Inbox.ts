@@ -1,7 +1,8 @@
 import { CreateRequestFunction } from './types/internal'
 
 export default class LeanplumInbox {
-  private messageMap: { [key: string]: any };
+  private messageMap: { [key: string]: any }
+  private changeHandlers: Function[] = []
 
   constructor(
     private createRequest: CreateRequestFunction
@@ -17,16 +18,21 @@ export default class LeanplumInbox {
         }
 
         this.messageMap = response.response[0].newsfeedMessages;
+
+        this.changeHandlers.forEach(handler => handler())
       }
     })
 
   }
 
   //TODO/////
-  public onChanged(handler: Function): void {}
   public read(messageId: string): void {} // Promise?
   public remove(messageId: string): void {} // Promise?
   ///////////
+  //
+  public onChanged(handler: Function): void {
+    this.changeHandlers.push(handler)
+  }
 
   public count(): number {
     return Object.values(this.messageMap).length

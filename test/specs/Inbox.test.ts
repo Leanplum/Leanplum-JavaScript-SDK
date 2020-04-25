@@ -17,6 +17,18 @@ describe(Inbox, () => {
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
       expect(createRequestSpy.mock.calls[0][0]).toEqual('getNewsfeedMessages')
     })
+
+    it('triggers change handler on success', () => {
+      const handler = jest.fn()
+
+      inbox.onChanged(handler)
+
+      mockMessages({
+        '123##1': {}
+      })
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('allMessages', () => {
