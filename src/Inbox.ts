@@ -1,7 +1,7 @@
 import { CreateRequestFunction } from './types/internal'
 
 export default class LeanplumInbox {
-  private messageMap: { [key: string]: any }
+  private messageMap: { [key: string]: any } = {}
   private changeHandlers: Function[] = []
 
   constructor(
@@ -11,13 +11,13 @@ export default class LeanplumInbox {
   public downloadMessages() {
     this.createRequest('getNewsfeedMessages', undefined, {
       // TODO: queued? sendNow?
-      response: (response) => {
-        if (!response.success) {
+      response: (data) => {
+        if (!data.success) {
           // TODO: error handling
           return
         }
 
-        this.messageMap = response.response[0].newsfeedMessages;
+        this.messageMap = data.response[0].newsfeedMessages;
 
         this.changeHandlers.forEach(handler => handler())
       }
@@ -29,7 +29,7 @@ export default class LeanplumInbox {
   public read(messageId: string): void {} // Promise?
   public remove(messageId: string): void {} // Promise?
   ///////////
-  //
+
   public onChanged(handler: Function): void {
     this.changeHandlers.push(handler)
   }

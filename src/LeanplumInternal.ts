@@ -32,7 +32,7 @@ import VarCache from './VarCache'
 export default class LeanplumInternal {
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
-  private _lpInbox: LeanplumInbox = new LeanplumInbox(this.createRequest)
+  private _lpInbox: LeanplumInbox = new LeanplumInbox(this.createRequest.bind(this))
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
   private _lpSocket: LeanplumSocket = new LeanplumSocket()
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
@@ -224,6 +224,7 @@ export default class LeanplumInternal {
         .add(Constants.PARAMS.DEVICE_NAME, this._deviceName ||
             `${this._browserDetector.browser} ${this._browserDetector.version}`)
         .add(Constants.PARAMS.DEVICE_MODEL, this._deviceModel || 'Web Browser')
+        .add(Constants.PARAMS.NEWSFEED_MESSAGES, this._lpInbox.messageIds())
         .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
         .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, this._internalState.variantDebugInfoEnabled)
 
@@ -478,7 +479,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this._varCache.clearUserContent()
   }
 
-  private createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
+  public createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
     this._lpRequest.request(action, args, {
       devMode: this._internalState.devMode,
       ...options,

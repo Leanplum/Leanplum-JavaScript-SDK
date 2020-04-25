@@ -71,6 +71,10 @@ describe(Inbox, () => {
         '345##1'
       ])
     })
+
+    it('returns an empty array if no messages are loaded', () => {
+      expect(inbox.messageIds()).toEqual([])
+    })
   })
 
   describe('unreadMessages', () => {

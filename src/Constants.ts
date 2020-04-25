@@ -80,6 +80,7 @@ export default {
     PARAMS: 'params',
     INCLUDE_DEFAULTS: 'includeDefaults',
     INCLUDE_VARIANT_DEBUG_INFO: 'includeVariantDebugInfo',
+    NEWSFEED_MESSAGES: 'newsfeedMessages',
     WEB_PUSH_SUBSCRIPTION: 'webPushSubscription',
   },
 

@@ -40,7 +40,7 @@ export default class ArgsBuilder {
    * @param {string|boolean} value The value for given key.
    * @return {ArgsBuilder} Returns an object of ArgsBuilder.
    */
-  add(key: string, value?: string | number | boolean): ArgsBuilder {
+  add(key: string, value?: string | number | boolean | string[]): ArgsBuilder {
     if (typeof value === 'undefined') {
       return this
     }
@@ -49,7 +49,9 @@ export default class ArgsBuilder {
       this.argString += '&'
     }
 
-    this.argString += `${key}=${encodeURIComponent(value)}`
+    const val = encodeURIComponent(JSON.stringify(value))
+
+    this.argString += `${key}=${val}`
     this.argValues[key] = value
 
     return this

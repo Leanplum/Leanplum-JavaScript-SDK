@@ -35,6 +35,32 @@ describe(LeanplumInternal, () => {
     jest.clearAllMocks()
   })
 
+  describe('start', () => {
+    it('passes available message IDs to API', () => {
+      const inbox = lp.inbox()
+      lpRequestMock.request.mockImplementationOnce(
+        (method, args, options) => {
+          options.response({
+            success: true,
+            response: [ { newsfeedMessages: {
+              '123##1': {},
+              '234##1': {}
+            } } ]
+          })
+        }
+      )
+      inbox.downloadMessages()
+
+      lp.start()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      const [method, args] = lpRequestMock.request.mock.calls[1]
+      const { newsfeedMessages } = args.buildDict()
+      expect(method).toBe('start')
+      expect(newsfeedMessages).toEqual(['123##1', '234##1'])
+    })
+  })
+
   describe('track', () => {
     it('works with event name only', () => {
       lp.track('Test Event')
