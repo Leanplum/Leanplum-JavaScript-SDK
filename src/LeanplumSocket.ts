@@ -93,7 +93,7 @@ export default class LeanplumSocket {
     }
 
     this.socketClient.onclose = () => {
-      console.log('Leanplum: Disconnected to development server.')
+      console.log('Leanplum: Disconnected from development server.')
       authSent = false
     }
 
