@@ -35,14 +35,27 @@ export default class LeanplumInbox {
 
     message.isRead = true
     this.triggerChangeHandlers()
+
+    // TODO: trigger open action?
     const args = new ArgsBuilder()
     args.add('newsfeedMessageId', messageId)
     this.createRequest('markNewsfeedMessageAsRead', args, {})
   }
 
-  //TODO/////
-  public remove(messageId: string): void {} // Promise?
-  ///////////
+  public remove(messageId: string): void {
+    const message = this.messageMap[messageId];
+
+    if (!message) {
+      return
+    }
+
+    delete this.messageMap[messageId]
+    this.triggerChangeHandlers()
+
+    const args = new ArgsBuilder()
+    args.add('newsfeedMessageId', messageId)
+    this.createRequest('deleteNewsfeedMessage', args, {})
+  }
 
   public onChanged(handler: Function): void {
     this.changeHandlers.push(handler)

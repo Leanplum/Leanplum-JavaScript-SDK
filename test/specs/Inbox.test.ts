@@ -179,6 +179,59 @@ describe(Inbox, () => {
       inbox.read(id)
 
       expect(handler).toHaveBeenCalledTimes(1)
+      expect(inbox.count()).toEqual(1)
+    })
+
+    it('does not trigger request / change handlers for missing message', () => {
+      const handler = jest.fn()
+      inbox.onChanged(handler)
+
+      inbox.read('foo')
+
+      expect(handler).not.toHaveBeenCalled()
+      expect(createRequestSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('delete', () => {
+    it('calls the deleteNewsfeedMessage API method', () => {
+      const id = '123##1'
+      mockMessages({
+        [id]: { isRead: true }
+      })
+
+      inbox.remove(id)
+
+      expect(createRequestSpy).toHaveBeenCalledTimes(2)
+      const markAsReadCall = createRequestSpy.mock.calls[1]
+      expect(markAsReadCall[0]).toEqual('deleteNewsfeedMessage')
+      expect(markAsReadCall[1].argValues).toEqual({
+        newsfeedMessageId: id
+      })
+    })
+
+    it('triggers onChange handler', () => {
+      const handler = jest.fn()
+      const id = '123##1'
+      mockMessages({
+        [id]: { isRead: true }
+      })
+      inbox.onChanged(handler)
+
+      inbox.remove(id)
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(inbox.count()).toEqual(0)
+    })
+
+    it('does not trigger request / change handlers for missing message', () => {
+      const handler = jest.fn()
+      inbox.onChanged(handler)
+
+      inbox.remove('foo')
+
+      expect(handler).not.toHaveBeenCalled()
+      expect(createRequestSpy).not.toHaveBeenCalled()
     })
   })
 
