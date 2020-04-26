@@ -59,6 +59,26 @@ describe(LeanplumInternal, () => {
       expect(method).toBe('start')
       expect(newsfeedMessages).toEqual(['123##1', '234##1'])
     })
+
+    it('synchronizes message inbox, if requested by API', () => {
+      // TODO: improve mocking of reqests, same pattern in integration tests
+      const response = {
+        success: true,
+        syncNewsfeed: true
+      }
+      lpRequestMock.request.mockImplementationOnce(
+        (method, args, options) => {
+          options.response(response)
+        }
+      )
+      lpRequestMock.getLastResponse
+        .mockImplementationOnce(() => response)
+      lp.start()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      const [method] = lpRequestMock.request.mock.calls[1]
+      expect(method).toEqual('getNewsfeedMessages')
+    })
   })
 
   describe('track', () => {

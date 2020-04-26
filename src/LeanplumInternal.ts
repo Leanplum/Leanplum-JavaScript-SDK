@@ -240,10 +240,14 @@ export default class LeanplumInternal {
         if (this._lpRequest.isResponseSuccess(startResponse)) {
           this._internalState.startSuccessful = true
 
+          if (startResponse[Constants.KEYS.SYNC_INBOX]) {
+            this._lpInbox.downloadMessages()
+          }
+
           if (this._internalState.devMode) {
             const latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
-              console.log(`A newer version of Leanplum, ${latestVersion}, is available.
+              console.log(`A newer version of the Leanplum SDK, ${latestVersion}, is available.
 Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
             this.connectSocket()

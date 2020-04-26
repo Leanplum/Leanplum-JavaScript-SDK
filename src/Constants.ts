@@ -87,6 +87,7 @@ export default {
   KEYS: {
     IS_REGISTERED: 'isRegistered',
     LATEST_VERSION: 'latestVersion',
+    SYNC_INBOX: 'syncNewsfeed',
     VARS: 'vars',
     VARIANTS: 'variants',
     VARIANT_DEBUG_INFO: 'variantDebugInfo',
