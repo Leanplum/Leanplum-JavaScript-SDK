@@ -1,4 +1,5 @@
 import { CreateRequestFunction } from './types/internal'
+import ArgsBuilder from './ArgsBuilder'
 
 export default class LeanplumInbox {
   private messageMap: { [key: string]: any } = {}
@@ -19,19 +20,36 @@ export default class LeanplumInbox {
 
         this.messageMap = data.response[0].newsfeedMessages;
 
-        this.changeHandlers.forEach(handler => handler())
+        this.triggerChangeHandlers()
       }
     })
 
   }
 
+  public read(messageId: string): void {
+    const message = this.messageMap[messageId];
+
+    if (!message || message.isRead) {
+      return
+    }
+
+    message.isRead = true
+    this.triggerChangeHandlers()
+    const args = new ArgsBuilder()
+    args.add('newsfeedMessageId', messageId)
+    this.createRequest('markNewsfeedMessageAsRead', args, {})
+  }
+
   //TODO/////
-  public read(messageId: string): void {} // Promise?
   public remove(messageId: string): void {} // Promise?
   ///////////
 
   public onChanged(handler: Function): void {
     this.changeHandlers.push(handler)
+  }
+
+  private triggerChangeHandlers(): void {
+    this.changeHandlers.forEach(handler => handler())
   }
 
   public count(): number {

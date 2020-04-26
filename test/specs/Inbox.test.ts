@@ -140,6 +140,48 @@ describe(Inbox, () => {
     })
   })
 
+  describe('read', () => {
+    it('calls the markNewsfeedMessageAsRead API method', () => {
+      const id = '123##1'
+      mockMessages({
+        [id]: { isRead: false }
+      })
+
+      inbox.read(id)
+
+      expect(createRequestSpy).toHaveBeenCalledTimes(2)
+      const markAsReadCall = createRequestSpy.mock.calls[1]
+      expect(markAsReadCall[0]).toEqual('markNewsfeedMessageAsRead')
+      expect(markAsReadCall[1].argValues).toEqual({
+        newsfeedMessageId: id
+      })
+    })
+
+    it('marks the message as read', () => {
+      const id = '123##1'
+      mockMessages({
+        [id]: { isRead: false }
+      })
+
+      inbox.read(id)
+
+      expect(inbox.message(id).isRead()).toBe(true)
+    })
+
+    it('triggers onChange handler', () => {
+      const handler = jest.fn()
+      const id = '123##1'
+      mockMessages({
+        [id]: { isRead: false }
+      })
+      inbox.onChanged(handler)
+
+      inbox.read(id)
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+  })
+
   function mockMessages(newsfeedMessages: any) {
     createRequestSpy.mockImplementationOnce(
       (method, args, options) => {
