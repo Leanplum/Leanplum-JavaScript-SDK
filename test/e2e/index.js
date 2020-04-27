@@ -187,7 +187,7 @@ inbox.onChanged(function renderAppInbox() {
           </small>
         </div>
 <div class="float-right ml-3">
-          <button class="btn btn-sm m-1" data-action="markAsRead" title="Mark as read" ${message.isRead() ? 'hidden' : ''}>✓</button>
+          <button class="btn btn-sm btn-outline-secondary m-1" data-action="markAsRead" title="Mark as read" ${message.isRead() ? 'hidden' : ''}>✓</button>
           <button class="btn btn-sm btn-outline-danger" data-action="delete" title="Delete">×</button>
         </div>
         <p>${message.subtitle()}</p>
