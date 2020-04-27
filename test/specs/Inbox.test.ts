@@ -18,7 +18,7 @@ describe(Inbox, () => {
       expect(createRequestSpy.mock.calls[0][0]).toEqual('getNewsfeedMessages')
     })
 
-    it('triggers change handler on success', () => {
+    it('triggers change handlers', () => {
       const handler = jest.fn()
 
       inbox.onChanged(handler)
@@ -239,7 +239,6 @@ describe(Inbox, () => {
     createRequestSpy.mockImplementationOnce(
       (method, args, options) => {
         options.response({
-          success: true,
           response: [ { newsfeedMessages } ]
         })
       }

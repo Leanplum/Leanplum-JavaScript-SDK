@@ -13,11 +13,6 @@ export default class LeanplumInbox {
     this.createRequest('getNewsfeedMessages', undefined, {
       // TODO: queued? sendNow?
       response: (data) => {
-        if (!data.success) {
-          // TODO: error handling
-          return
-        }
-
         this.messageMap = data.response[0].newsfeedMessages;
 
         this.triggerChangeHandlers()

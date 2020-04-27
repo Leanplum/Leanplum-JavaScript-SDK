@@ -158,3 +158,62 @@ function updateUserId() {
   $(".current-user-id").text(userId);
   $("#setUserId").val(userId);
 }
+
+const inbox = Leanplum.inbox()
+inbox.onChanged(function renderAppInbox() {
+  if (inbox.count() === 0) {
+    $("#appInbox").html(`<p class="m-1">No messages</p>`);
+  }
+
+  const friendlyText = (timestamp) => {
+    const MS_IN_DAY = 24*60*60*1000;
+    const diff = Math.floor((Date.now() - timestamp) / MS_IN_DAY);
+    return (
+      diff > 1 ? `${diff} days ago` :
+      diff > 0 ? `yesterday` :
+      `today`
+    )
+  }
+
+  const html =
+    '<ul class="list-group mb-3">' +
+    inbox.allMessages().map(message => `
+      <li class="list-group-item" data-id="${message.id()}">
+        <img width=64 class="rounded float-left mr-3" src="${message.imageUrl()}" />
+        <div class="d-flex justify-content-between">
+          <h5 class="mb-1">${message.title()}</h5>
+          <small title="${new Date(message.timestamp()).toLocaleDateString()}">
+            ${friendlyText(message.timestamp())}
+          </small>
+        </div>
+<div class="float-right ml-3">
+          <button class="btn btn-sm m-1" data-action="markAsRead" title="Mark as read" ${message.isRead() ? 'hidden' : ''}>✓</button>
+          <button class="btn btn-sm btn-outline-danger" data-action="delete" title="Delete">×</button>
+        </div>
+        <p>${message.subtitle()}</p>
+      </li>
+    `).join('') +
+    '</ul>';
+
+  $("#appInbox").html(html);
+  const unreadCount = inbox.unreadCount();
+  $("#appInboxUnreadCount")
+    .text(unreadCount)
+    .removeClass('d-none')
+    .toggleClass('badge-secondary', unreadCount === 0)
+    .toggleClass('badge-primary', unreadCount > 0)
+});
+
+$("#appInboxDownload")
+    .click(() => inbox.downloadMessages());
+$("#appInbox")
+  .on("click", "[data-action=markAsRead]", (e) => {
+    e.preventDefault();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.read(messageId);
+  })
+  .on("click", "[data-action=delete]", (e) => {
+    e.preventDefault();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.remove(messageId);
+  })
