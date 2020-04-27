@@ -1,11 +1,18 @@
+// @ts-check
+
 const merge = require('lodash.merge')
 const path = require('path')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const UglifyJS = require('uglifyjs-webpack-plugin')
 
+let configuration = null
+const isInDevMode = !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
 const libraryName = 'Leanplum'
 
 class DtsBundlePlugin {
+  /**
+   * @param {webpack.Compiler} compiler
+   */
   apply(compiler) {
     compiler.hooks.done.tap('DtsBundlePlugin', (stats) => {
       // Do not bundle TypeScript declaration files if there are errors.
@@ -40,6 +47,9 @@ class DtsBundlePlugin {
   }
 }
 
+/**
+ * @type {webpack.Options.Optimization}
+ */
 const optimization = {
   minimize: true,
   minimizer: [
@@ -65,10 +75,25 @@ const optimization = {
   usedExports: true
 }
 
+/**
+ * @param {string} filename
+ * @param {Partial<webpack.Configuration>} options
+ * @returns {webpack.Configuration}
+ */
 const buildFile = (filename, options) => {
+  /**
+   * @type {Partial<webpack.Configuration>}
+   */
   const commonOptions = {
     devtool: 'inline-source-map',
-    mode: 'production',
+    mode: isInDevMode ? 'development' : 'production',
+    module: {
+      rules: [{
+        test: /\.ts$/,
+        include: [path.resolve(__dirname, './src')],
+        loader: 'ts-loader'
+      }]
+    },
     output: {
       path: path.resolve(__dirname, './dist'),
       filename: filename
@@ -79,12 +104,17 @@ const buildFile = (filename, options) => {
     resolve: {
       extensions: ['.js', '.ts']
     },
-    module: {
-      rules: [{
-        test: /\.ts$/,
-        include: [path.resolve(__dirname, './src')],
-        loader: 'ts-loader'
-      }]
+    stats: !isInDevMode && {
+      all: false,
+      assets: true,
+      chunks: false,
+      entrypoints: false,
+      errorDetails: false,
+      errors: true,
+      excludeAssets: [ /\.d\.ts$/ ],
+      hash: false,
+      performance: false,
+      warnings: false,
     }
   }
 
@@ -100,15 +130,44 @@ const buildFile = (filename, options) => {
   return merge({}, commonOptions, options)
 }
 
-module.exports = [
-  ...['leanplum.js', 'leanplum.min.js'].map(name => buildFile(name, {
-    entry: './src/bundles/leanplum.full.ts',
-    output: {
-      library: libraryName,
-      libraryTarget: 'umd'
-    }
-  })),
-  ...['sw/sw.js', 'sw/sw.min.js'].map(name => buildFile(name, {
-    entry: './src/PushServiceWorker.ts',
-  }))
-];
+/**
+ * @type {Partial<webpack.Configuration>}
+ */
+const lpConfig = {
+  entry: './src/bundles/leanplum.full.ts',
+  output: {
+    library: libraryName,
+    libraryTarget: 'umd'
+  }
+}
+
+/**
+ * @type {Partial<webpack.Configuration>}
+ */
+const swConfig = {
+  entry: './src/PushServiceWorker.ts',
+}
+
+if (isInDevMode) {
+  configuration = buildFile('leanplum.js', lpConfig)
+  configuration.plugins = [new ForkTsCheckerWebpackPlugin({
+    compilerOptions: {
+      declaration: false,
+    },
+    silent: false,
+  })]
+  configuration.module.rules.find((x) => x.loader === 'ts-loader').options = {
+    compilerOptions: {
+      declaration: false,
+    },
+    transpileOnly: true
+  }
+  configuration.watch = true
+} else {
+  configuration = [
+    ...['leanplum.js', 'leanplum.min.js'].map(name => buildFile(name, lpConfig)),
+    ...['sw/sw.js', 'sw/sw.min.js'].map(name => buildFile(name, swConfig))
+  ]
+}
+
+module.exports = configuration
