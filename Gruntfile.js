@@ -1,40 +1,56 @@
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const clone = require('lodash.clonedeep')
 const webpackConfig = require('./webpack.config')
 
 module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean')
-  grunt.loadNpmTasks('grunt-contrib-uglify')
   grunt.loadNpmTasks('grunt-webpack')
 
   grunt.initConfig({
     clean: ['dist'],
-    uglify: {
-      my_target: {
-        files: {
-          'dist/leanplum.min.js': 'dist/leanplum.js',
-          'dist/sw/sw.min.js': 'dist/sw/sw.js'
-        }
-      }
-    },
-    watch: {
-      js: {
-        files: [
-          'lib/leanplum.js'
-        ],
-        tasks: ['lint', 'compile']
-      }
-    },
     webpack: {
       options: {
-        stats: !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
+        stats: (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') && {
+          all: false,
+          assets: true,
+          chunks: false,
+          entrypoints: false,
+          errorDetails: false,
+          errors: true,
+          excludeAssets: [ /\.d\.ts$/ ],
+          hash: false,
+          logging: 'error',
+          performance: false,
+          warnings: false,
+        }
       },
-      dev: Object.assign({
-        watch: true
-      }, webpackConfig),
+      dev: getWebpackDevConfig(webpackConfig),
       prod: webpackConfig
     }
   })
 
-  grunt.registerTask('compile', ['clean', 'webpack:prod'])
-  grunt.registerTask('build', ['clean', 'webpack:prod', 'uglify'])
+  grunt.registerTask('build', ['clean', 'webpack:prod'])
   grunt.registerTask('default', ['webpack:dev'])
+}
+
+function getWebpackDevConfig(webpackConfig) {
+  const config = clone(webpackConfig.find((x) => x.output.filename === 'leanplum.js'))
+
+  config.plugins = [new ForkTsCheckerWebpackPlugin({
+    compilerOptions: {
+      declaration: false,
+    },
+    silent: false,
+  })]
+
+  const loader = config.module.rules.find((x) => x.loader === 'ts-loader')
+
+  loader.options = {
+    compilerOptions: {
+      declaration: false,
+    },
+    transpileOnly: true
+  }
+
+  return Object.assign(config, { watch: true })
 }

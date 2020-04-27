@@ -6,6 +6,7 @@ module.exports = {
   extends: [
     'plugin:@typescript-eslint/recommended'
   ],
+  ignorePatterns: ['*.js'],
   parser: '@typescript-eslint/parser', // Specifies the ESLint parser
   parserOptions: {
     'ecmaVersion': 6,
