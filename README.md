@@ -84,10 +84,10 @@ yarn install
 
 ### Tasks
 
-- `yarn start` - Starts the grunt watch daemon for development.
-- `yarn run lint` - Lints all files.
-- `yarn run build` - Builds a distribution version of the library.
-- `yarn run test` - Runs the unit tests.
+- `yarn start` - Starts Webpack in development/watch mode.
+- `yarn lint` - Lints all files.
+- `yarn build` - Builds a distribution version of the library.
+- `yarn test` - Runs the unit tests.
 
 ## Contributing
 
@@ -107,8 +107,8 @@ Once you have done that:
 git flow release start "NEW_VERSION"
 yarn install
 ./bump_version.sh OLD_VERSION NEW_VERSION
-yarn run build
-yarn run test
+yarn build
+yarn test
 git flow release finish "NEW_VERSION"
 ```
 
@@ -116,7 +116,7 @@ git flow release finish "NEW_VERSION"
 
 Run:
 ```bash
-yarn run test --coverage
+yarn test --coverage
 ```
 
 ## License
