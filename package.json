@@ -32,6 +32,7 @@
     "sinon": "^2.1.0",
     "ts-jest": "^25.4.0",
     "ts-loader": "^7.0.1",
+    "ts-node": "^8.9.1",
     "typescript": "^3.8.3",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.43.0",

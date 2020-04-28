@@ -1,30 +1,27 @@
-// @ts-check
+/* eslint-disable @typescript-eslint/camelcase */
 
-const merge = require('lodash.merge')
-const path = require('path')
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
-const UglifyJS = require('uglifyjs-webpack-plugin')
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
+import fs from 'fs'
+import merge from 'lodash.merge'
+import path from 'path'
+import UglifyJS from 'uglifyjs-webpack-plugin'
+import webpack from 'webpack'
 
 let configuration = null
 const isInDevMode = !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
 const libraryName = 'Leanplum'
 
 class DtsBundlePlugin {
-  /**
-   * @param {webpack.Compiler} compiler
-   */
-  apply(compiler) {
+  private outFileName = 'leanplum.d.ts'
+
+  apply(compiler: webpack.Compiler): void {
     compiler.hooks.done.tap('DtsBundlePlugin', (stats) => {
       // Do not bundle TypeScript declaration files if there are errors.
-      if (stats.compilation.errors && stats.compilation.errors.length) {
+      if (stats.compilation.errors?.length) {
         return
       }
 
       require('dts-bundle').bundle({
-        name: libraryName,
-        main: './dist/src/Leanplum.d.ts',
-        out: '../leanplum.d.ts',
-        removeSource: true,
         headerText: `
  *  Copyright 2020 Leanplum Inc. All rights reserved.
  *
@@ -41,16 +38,29 @@ class DtsBundlePlugin {
  *  limitations under the License.
  `,
         indent: '  ',
-        outputAsModuleFolder: true
+        main: './dist/src/Leanplum.d.ts',
+        name: libraryName,
+        out: '../' + this.outFileName,
+        outputAsModuleFolder: true,
+        verbose: true,
       })
+
+      this.removeSourceDefs(path.resolve(__dirname, './dist'))
     })
+  }
+
+  removeSourceDefs(rootPath: string): void {
+    for (const item of fs.readdirSync(rootPath, { withFileTypes: true })) {
+      if (item.isFile() && item.name.endsWith('.d.ts') && item.name !== this.outFileName) {
+        fs.unlink(path.join(rootPath, item.name), () => { /* noop */ })
+      } else if (item.isDirectory()) {
+        this.removeSourceDefs(path.join(rootPath, item.name))
+      }
+    }
   }
 }
 
-/**
- * @type {webpack.Options.Optimization}
- */
-const optimization = {
+const optimization: webpack.Options.Optimization = {
   minimize: true,
   minimizer: [
     new UglifyJS({
@@ -58,7 +68,7 @@ const optimization = {
       parallel: true,
       uglifyOptions: {
         compress: {
-          drop_console: true
+          drop_console: true,
         },
         ecma: 5,
         mangle: true,
@@ -66,43 +76,38 @@ const optimization = {
           beautify: false,
           comments: false,
         },
-        warnings: false
-      }
-    })
+        warnings: false,
+      },
+    }),
   ],
   noEmitOnErrors: true,
   sideEffects: true,
-  usedExports: true
+  usedExports: true,
 }
 
-/**
- * @param {string} filename
- * @param {Partial<webpack.Configuration>} options
- * @returns {webpack.Configuration}
- */
-const buildFile = (filename, options) => {
-  /**
-   * @type {Partial<webpack.Configuration>}
-   */
-  const commonOptions = {
+function createConfig(
+  filename: string,
+  options: Partial<webpack.Configuration>
+): webpack.Configuration {
+  const commonOptions: webpack.Configuration = {
     devtool: 'inline-source-map',
     mode: isInDevMode ? 'development' : 'production',
     module: {
       rules: [{
         test: /\.ts$/,
         include: [path.resolve(__dirname, './src')],
-        loader: 'ts-loader'
-      }]
+        loader: 'ts-loader',
+      }],
     },
     output: {
       path: path.resolve(__dirname, './dist'),
-      filename: filename
+      filename: filename,
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({ silent: true }),
     ],
     resolve: {
-      extensions: ['.js', '.ts']
+      extensions: ['.js', '.ts'],
     },
     stats: !isInDevMode && {
       all: false,
@@ -115,7 +120,7 @@ const buildFile = (filename, options) => {
       hash: false,
       performance: false,
       warnings: false,
-    }
+    },
   }
 
   if (filename.includes('.min.')) {
@@ -130,26 +135,20 @@ const buildFile = (filename, options) => {
   return merge({}, commonOptions, options)
 }
 
-/**
- * @type {Partial<webpack.Configuration>}
- */
-const lpConfig = {
+const lpConfig: Partial<webpack.Configuration> = {
   entry: './src/bundles/leanplum.full.ts',
   output: {
     library: libraryName,
-    libraryTarget: 'umd'
-  }
+    libraryTarget: 'umd',
+  },
 }
 
-/**
- * @type {Partial<webpack.Configuration>}
- */
-const swConfig = {
+const swConfig: Partial<webpack.Configuration> = {
   entry: './src/PushServiceWorker.ts',
 }
 
 if (isInDevMode) {
-  configuration = buildFile('leanplum.js', lpConfig)
+  configuration = createConfig('leanplum.js', lpConfig)
   configuration.plugins = [new ForkTsCheckerWebpackPlugin({
     compilerOptions: {
       declaration: false,
@@ -160,13 +159,13 @@ if (isInDevMode) {
     compilerOptions: {
       declaration: false,
     },
-    transpileOnly: true
+    transpileOnly: true,
   }
   configuration.watch = true
 } else {
   configuration = [
-    ...['leanplum.js', 'leanplum.min.js'].map(name => buildFile(name, lpConfig)),
-    ...['sw/sw.js', 'sw/sw.min.js'].map(name => buildFile(name, swConfig))
+    ...['leanplum.js', 'leanplum.min.js'].map(name => createConfig(name, lpConfig)),
+    ...['sw/sw.js', 'sw/sw.min.js'].map(name => createConfig(name, swConfig)),
   ]
 }
 
