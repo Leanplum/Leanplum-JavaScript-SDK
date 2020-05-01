@@ -12,7 +12,8 @@ export default class LeanplumInbox {
 
   public downloadMessages() {
     this.createRequest('getNewsfeedMessages', undefined, {
-      // TODO: queued? sendNow?
+      queued: true,
+      sendNow: true,
       response: (data) => {
         this.messageMap = data.response[0].newsfeedMessages;
 
