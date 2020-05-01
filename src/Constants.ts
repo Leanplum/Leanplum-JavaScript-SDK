@@ -103,6 +103,7 @@ export default {
     VARIANTS: '__leanplum_variants',
     VARIANT_DEBUG_INFO: '__leanplum_variant_debug_info',
     ACTION_METADATA: '__leanplum_action_metadata',
+    INBOX_MESSAGES: '__leanplum_inbox_messages',
     TOKEN: '__leanplum_token',
     DEVICE_ID: '__leanplum_device_id',
     USER_ID: '__leanplum_user_id',

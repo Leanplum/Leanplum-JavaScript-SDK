@@ -8,6 +8,7 @@ describe(Inbox, () => {
   beforeEach(() => inbox = new Inbox(createRequestSpy, onActionSpy))
 
   afterEach(() => {
+    sessionStorage.clear()
     jest.clearAllMocks()
   })
 
@@ -279,6 +280,30 @@ describe(Inbox, () => {
 
       expect(handler).not.toHaveBeenCalled()
       expect(createRequestSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('persistence', () => {
+    it('stores fetched messages in session', () => {
+      const messages = {
+        '123##1': { foo: 'bar' }
+      }
+      mockMessages(messages)
+
+      const persisted = sessionStorage.getItem('__leanplum_inbox_messages')
+      expect(persisted).toEqual(JSON.stringify(messages))
+    })
+
+    it('loads messages from session', () => {
+      const id = '234##1'
+      const messages = {
+        [id]: { foo: 'bar' }
+      }
+      sessionStorage.setItem('__leanplum_inbox_messages', JSON.stringify(messages))
+
+      inbox = new Inbox(createRequestSpy, onActionSpy)
+
+      expect(inbox.allMessages().length).toEqual(1)
     })
   })
 

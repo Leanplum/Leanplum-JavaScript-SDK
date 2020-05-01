@@ -1,4 +1,5 @@
 import { Action, CreateRequestFunction } from './types/internal'
+import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 
 export default class LeanplumInbox {
@@ -8,7 +9,9 @@ export default class LeanplumInbox {
   constructor(
     private createRequest: CreateRequestFunction,
     private onAction: Function
-  ) { }
+  ) {
+    this.load()
+  }
 
   public downloadMessages() {
     this.createRequest('getNewsfeedMessages', undefined, {
@@ -64,6 +67,19 @@ export default class LeanplumInbox {
 
   private triggerChangeHandlers(): void {
     this.changeHandlers.forEach(handler => handler())
+    this.save()
+  }
+
+  private save(): void {
+    sessionStorage.setItem(
+      Constants.DEFAULT_KEYS.INBOX_MESSAGES,
+      JSON.stringify(this.messageMap)
+    )
+  }
+
+  private load(): void {
+    const state = sessionStorage.getItem(Constants.DEFAULT_KEYS.INBOX_MESSAGES)
+    this.messageMap = JSON.parse(state) || {}
   }
 
   public count(): number {
