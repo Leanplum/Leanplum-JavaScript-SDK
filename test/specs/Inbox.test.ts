@@ -196,12 +196,35 @@ describe(Inbox, () => {
     it('requests execution of open action upon reading', () => {
       const openAction = {
         __name__: "Chain to Existing Message",
-        "Chained message": "912875249"
+        "Chained message": "12345"
       }
       const id = '123##1'
       mockMessages({
         [id]: {
           isRead: false,
+          messageData: {
+            vars: {
+              'Open action': openAction
+            }
+          }
+        }
+      })
+
+      inbox.read(id)
+
+      expect(onActionSpy).toHaveBeenCalledTimes(1)
+      expect(onActionSpy).toHaveBeenLastCalledWith(openAction)
+    })
+
+    it('allows re-reading of messages, triggering open action', () => {
+      const openAction = {
+        __name__: "Open URL",
+        URL: "https://example.com"
+      }
+      const id = '123##1'
+      mockMessages({
+        [id]: {
+          isRead: true,
           messageData: {
             vars: {
               'Open action': openAction

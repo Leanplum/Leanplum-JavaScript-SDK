@@ -25,7 +25,7 @@ export default class LeanplumInbox {
   public read(messageId: string): void {
     const message = this.messageMap[messageId];
 
-    if (!message || message.isRead) {
+    if (!message) {
       return
     }
 
