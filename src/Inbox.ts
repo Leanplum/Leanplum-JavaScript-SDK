@@ -4,6 +4,7 @@ import ArgsBuilder from './ArgsBuilder'
 export default class LeanplumInbox {
   private messageMap: { [key: string]: any } = {}
   private changeHandlers: Function[] = []
+  private actionHandlers: Function[] = []
 
   constructor(
     private createRequest: CreateRequestFunction
@@ -31,10 +32,14 @@ export default class LeanplumInbox {
     message.isRead = true
     this.triggerChangeHandlers()
 
-    // TODO: trigger open action?
     const args = new ArgsBuilder()
     args.add('newsfeedMessageId', messageId)
     this.createRequest('markNewsfeedMessageAsRead', args, {})
+
+    const inboxMessage = this.message(messageId);
+    if (inboxMessage.openAction()) {
+      this.triggerActionHandlers(inboxMessage.openAction());
+    }
   }
 
   public remove(messageId: string): void {
@@ -58,6 +63,14 @@ export default class LeanplumInbox {
 
   private triggerChangeHandlers(): void {
     this.changeHandlers.forEach(handler => handler())
+  }
+
+  public onAction(handler: Function): void {
+    this.actionHandlers.push(handler)
+  }
+
+  private triggerActionHandlers(action: Action): void {
+    this.actionHandlers.forEach(handler => handler(action))
   }
 
   public count(): number {
@@ -94,6 +107,9 @@ export default class LeanplumInbox {
   }
 }
 
+// Open action, used in messages
+type Action = any;
+
 class InboxMessage {
   static create(id: string, messageInfo: any): InboxMessage {
     return new InboxMessage(
@@ -102,7 +118,8 @@ class InboxMessage {
       messageInfo.messageData?.vars?.Subtitle,
       messageInfo.deliveryTimestamp,
       messageInfo.isRead,
-      messageInfo.messageData?.vars?.Image
+      messageInfo.messageData?.vars?.Image,
+      messageInfo.messageData?.vars?.['Open action']
     )
   }
 
@@ -112,7 +129,8 @@ class InboxMessage {
     private _subtitle: string,
     private _timestamp: number,
     private _isRead: boolean,
-    private _imageUrl: string
+    private _imageUrl: string,
+    private _openAction: Action
   ) { }
 
   public id(): string {
@@ -132,5 +150,8 @@ class InboxMessage {
   }
   public imageUrl(): string {
     return this._imageUrl
+  }
+  public openAction(): Action {
+    return this._openAction
   }
 }

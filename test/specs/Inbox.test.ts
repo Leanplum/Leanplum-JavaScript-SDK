@@ -191,6 +191,32 @@ describe(Inbox, () => {
       expect(handler).not.toHaveBeenCalled()
       expect(createRequestSpy).not.toHaveBeenCalled()
     })
+
+    it('requests execution of open action upon reading', () => {
+      const handler = jest.fn()
+      inbox.onAction(handler)
+
+      const openAction = {
+        __name__: "Chain to Existing Message",
+        "Chained message": "912875249"
+      }
+      const id = '123##1'
+      mockMessages({
+        [id]: {
+          isRead: false,
+          messageData: {
+            vars: {
+              'Open action': openAction
+            }
+          }
+        }
+      })
+
+      inbox.read(id)
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenLastCalledWith(openAction)
+    })
   })
 
   describe('delete', () => {
