@@ -49,13 +49,14 @@ export default class ArgsBuilder {
       this.argString += '&'
     }
 
-    // TODO: test
-    let val: any = value
-    if (typeof val === 'object' && val.hasOwnProperty('length')) {
-      val = JSON.stringify(val)
+    let val: string = ''
+    if (value instanceof Array) {
+      val = JSON.stringify(value)
+    } else {
+      val = encodeURIComponent(value)
     }
 
-    this.argString += `${key}=${encodeURIComponent(val)}`
+    this.argString += `${key}=${val}`
     this.argValues[key] = value
 
     return this
