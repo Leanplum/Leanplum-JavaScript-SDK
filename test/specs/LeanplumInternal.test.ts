@@ -373,6 +373,40 @@ describe(LeanplumInternal, () => {
 
       expect(lp.inbox()).toBe(inbox)
     })
+
+    it('handles inbox action requests', () => {
+      // TODO: improve mocking of reqests, same pattern in integration tests
+      const response = {
+        success: true,
+        messages: {
+          "12345": {
+            action: "Open URL",
+            vars: {
+              __name__: "Open URL",
+              URL: "https://example.com"
+            }
+          }
+        }
+      }
+      lpRequestMock.request.mockImplementationOnce(
+        (method, args, options) => {
+          options.response(response)
+        }
+      )
+      lpRequestMock.getLastResponse
+        .mockImplementationOnce(() => response)
+      lp.start()
+
+      windowMock.location = { assign: jest.fn() } as any
+
+      lp.onInboxAction({
+        __name__: "Chain to Existing Message",
+        "Chained message": "12345"
+      })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
+      expect(windowMock.location.assign).toHaveBeenCalledWith('https://example.com')
+    })
   })
 
   describe('Misc', () => {

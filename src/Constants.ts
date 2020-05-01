@@ -88,6 +88,7 @@ export default {
     IS_REGISTERED: 'isRegistered',
     LATEST_VERSION: 'latestVersion',
     SYNC_INBOX: 'syncNewsfeed',
+    MESSAGES: 'messages',
     VARS: 'vars',
     VARIANTS: 'variants',
     VARIANT_DEBUG_INFO: 'variantDebugInfo',

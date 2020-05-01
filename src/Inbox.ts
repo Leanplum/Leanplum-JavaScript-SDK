@@ -1,13 +1,13 @@
-import { CreateRequestFunction } from './types/internal'
+import { Action, CreateRequestFunction } from './types/internal'
 import ArgsBuilder from './ArgsBuilder'
 
 export default class LeanplumInbox {
   private messageMap: { [key: string]: any } = {}
   private changeHandlers: Function[] = []
-  private actionHandlers: Function[] = []
 
   constructor(
-    private createRequest: CreateRequestFunction
+    private createRequest: CreateRequestFunction,
+    private onAction: Function
   ) { }
 
   public downloadMessages() {
@@ -38,7 +38,7 @@ export default class LeanplumInbox {
 
     const inboxMessage = this.message(messageId);
     if (inboxMessage.openAction()) {
-      this.triggerActionHandlers(inboxMessage.openAction());
+      this.onAction(inboxMessage.openAction());
     }
   }
 
@@ -63,14 +63,6 @@ export default class LeanplumInbox {
 
   private triggerChangeHandlers(): void {
     this.changeHandlers.forEach(handler => handler())
-  }
-
-  public onAction(handler: Function): void {
-    this.actionHandlers.push(handler)
-  }
-
-  private triggerActionHandlers(action: Action): void {
-    this.actionHandlers.forEach(handler => handler(action))
   }
 
   public count(): number {
@@ -107,10 +99,7 @@ export default class LeanplumInbox {
   }
 }
 
-// Open action, used in messages
-type Action = any;
-
-class InboxMessage {
+export class InboxMessage {
   static create(id: string, messageInfo: any): InboxMessage {
     return new InboxMessage(
       id,

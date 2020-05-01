@@ -3,8 +3,9 @@ import Inbox from '../../src/Inbox'
 describe(Inbox, () => {
   let inbox: Inbox
   const createRequestSpy: jest.Mock<void> = jest.fn()
+  const onActionSpy: jest.Mock<void> = jest.fn();
 
-  beforeEach(() => inbox = new Inbox(createRequestSpy))
+  beforeEach(() => inbox = new Inbox(createRequestSpy, onActionSpy))
 
   afterEach(() => {
     jest.clearAllMocks()
@@ -193,9 +194,6 @@ describe(Inbox, () => {
     })
 
     it('requests execution of open action upon reading', () => {
-      const handler = jest.fn()
-      inbox.onAction(handler)
-
       const openAction = {
         __name__: "Chain to Existing Message",
         "Chained message": "912875249"
@@ -214,8 +212,8 @@ describe(Inbox, () => {
 
       inbox.read(id)
 
-      expect(handler).toHaveBeenCalledTimes(1)
-      expect(handler).toHaveBeenLastCalledWith(openAction)
+      expect(onActionSpy).toHaveBeenCalledTimes(1)
+      expect(onActionSpy).toHaveBeenLastCalledWith(openAction)
     })
   })
 
