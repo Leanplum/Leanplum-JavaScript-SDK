@@ -160,7 +160,24 @@ function updateUserId() {
 }
 
 const inbox = Leanplum.inbox()
-inbox.onChanged(function renderAppInbox() {
+inbox.onChanged(renderAppInbox);
+renderAppInbox();
+
+$("#appInboxDownload")
+    .click(() => inbox.downloadMessages());
+$("#appInbox")
+  .on("click", "[data-action=markAsRead]", (e) => {
+    e.preventDefault();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.read(messageId);
+  })
+  .on("click", "[data-action=delete]", (e) => {
+    e.preventDefault();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.remove(messageId);
+  })
+
+function renderAppInbox() {
   if (inbox.count() === 0) {
     $("#appInbox").html(`<p class="m-1">No messages</p>`);
   }
@@ -202,18 +219,4 @@ inbox.onChanged(function renderAppInbox() {
     .removeClass('d-none')
     .toggleClass('badge-secondary', unreadCount === 0)
     .toggleClass('badge-primary', unreadCount > 0)
-});
-
-$("#appInboxDownload")
-    .click(() => inbox.downloadMessages());
-$("#appInbox")
-  .on("click", "[data-action=markAsRead]", (e) => {
-    e.preventDefault();
-    const messageId = $(e.target).closest("[data-id]").data("id");
-    inbox.read(messageId);
-  })
-  .on("click", "[data-action=delete]", (e) => {
-    e.preventDefault();
-    const messageId = $(e.target).closest("[data-id]").data("id");
-    inbox.remove(messageId);
-  })
+}
