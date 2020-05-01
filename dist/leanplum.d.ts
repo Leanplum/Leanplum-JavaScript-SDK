@@ -39,6 +39,7 @@ export default class Leanplum {
     static getVariables(): any;
     static getVariable(...args: string[]): any;
     static getVariants(): any[];
+    static inbox(): LeanplumInbox;
     static addStartResponseHandler(handler: StatusHandler): void;
     static removeStartResponseHandler(handler: StatusHandler): void;
     static addVariablesChangedHandler(handler: SimpleHandler): void;
@@ -96,7 +97,114 @@ export default class Leanplum {
     static __destroy(): void;
 }
 
+export default class LeanplumInbox {
+  constructor(createRequest: CreateRequestFunction, onAction: Function);
+  downloadMessages(): void;
+  read(messageId: string): void;
+  remove(messageId: string): void;
+  onChanged(handler: Function): void;
+  count(): number;
+  unreadCount(): number;
+  allMessages(): InboxMessage[];
+  unreadMessages(): InboxMessage[];
+  messageIds(): string[];
+  message(id: string): InboxMessage;
+}
+export class InboxMessage {
+  static create(id: string, messageInfo: any): InboxMessage;
+  constructor(_id: string, _title: string, _subtitle: string, _timestamp: number, _isRead: boolean, _imageUrl: string, _openAction: Action);
+  id(): string;
+  title(): string;
+  subtitle(): string;
+  timestamp(): number;
+  isRead(): boolean;
+  imageUrl(): string;
+  openAction(): Action;
+}
+
 export type SimpleHandler = () => void;
 export type StatusHandler = (success: boolean) => void;
 export type UserAttributes = any;
+
+export type CreateRequestFunction = (action: string, args: ArgsBuilder, options: LeanplumRequestOptions) => void;
+interface ChainMessage {
+  __name__: 'Chain to Existing Message';
+  'Chained message': string;
+}
+interface OpenURLAction {
+  __name__: 'Open URL';
+  URL: string;
+}
+export type Action = ChainMessage | OpenURLAction;
+export {};
+
+/**
+  * Leanplum ArgsBuilder, use to construct request payload.
+  */
+export default class ArgsBuilder {
+    /**
+      * Create a new empty request argument.
+      */
+    constructor();
+    /**
+      * Add given key, value to the payload.
+      * @param {string} key The key for the value.
+      * @param {string|boolean} value The value for given key.
+      * @return {ArgsBuilder} Returns an object of ArgsBuilder.
+      */
+    add(key: string, value?: string | number | boolean | string[]): ArgsBuilder;
+    /**
+      * Cache the given body.
+      * @param  {String} [body] A given body.
+      * @return {ArgsBuilder|String} Returns ArgsBuilder if body given, else the
+      *                              body.
+      */
+    body(body?: string): ArgsBuilder | string;
+    /**
+      * Convenience method to attach given appId and appKey to request.
+      * @param  {String} appId The appId to attach.
+      * @param  {String} clientKey The appKey to attach.
+      * @return {ArgsBuilder} Returns an object of ArgsBuilder.
+      */
+    attachApiKeys(appId: string, clientKey: string): ArgsBuilder;
+    /**
+      * Return the arguments.
+      * @return {String} Arguments string.
+      */
+    build(): string;
+    /**
+      * Return the argument values.
+      * @return {Object} The argument values.
+      */
+    buildDict(): {
+        [key: string]: any;
+    };
+}
+
+export default class LeanplumRequest {
+  apiPath: string;
+  appId: string;
+  batchCooldown: number;
+  batchEnabled: boolean;
+  clientKey: string;
+  deviceId: string;
+  userId: string;
+  versionName: string;
+  request(action: string, params: ArgsBuilder, options?: LeanplumRequestOptions): void;
+  /**
+    * Sets the network timeout.
+    * @param {number} seconds The timeout in seconds.
+    */
+  setNetworkTimeout(seconds: any): void;
+  getLastResponse(response: any): any;
+  isResponseSuccess(response: any): boolean;
+}
+export interface LeanplumRequestOptions {
+  success?: Function;
+  error?: Function;
+  response?: Function;
+  queued?: boolean;
+  sendNow?: boolean;
+  devMode?: boolean;
+}
 
