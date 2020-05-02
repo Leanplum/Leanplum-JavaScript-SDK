@@ -18,7 +18,7 @@ import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { APP_ID, KEY_DEV } from '../data/constants'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, pushManagerMock, varCacheMock } from '../mocks/internal'
+import { lpRequestMock, mockNextResponse, pushManagerMock, varCacheMock } from '../mocks/internal'
 
 jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
 jest.mock('../../src/PushManager', () => jest.fn().mockImplementation(() => pushManagerMock))
@@ -61,18 +61,12 @@ describe(LeanplumInternal, () => {
     })
 
     it('synchronizes message inbox, if requested by API', () => {
-      // TODO: improve mocking of reqests, same pattern in integration tests
-      const response = {
-        success: true,
-        syncNewsfeed: true
-      }
-      lpRequestMock.request.mockImplementationOnce(
-        (method, args, options) => {
-          options.response(response)
-        }
-      )
-      lpRequestMock.getLastResponse
-        .mockImplementationOnce(() => response)
+      mockNextResponse({
+        response: [{
+          success: true,
+          syncNewsfeed: true
+        }]
+      })
       lp.start()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
@@ -375,26 +369,20 @@ describe(LeanplumInternal, () => {
     })
 
     it('handles inbox action requests', () => {
-      // TODO: improve mocking of reqests, same pattern in integration tests
-      const response = {
-        success: true,
-        messages: {
-          "12345": {
-            action: "Open URL",
-            vars: {
-              __name__: "Open URL",
-              URL: "https://example.com"
+      mockNextResponse({
+        response: [{
+          success: true,
+          messages: {
+            "12345": {
+              action: "Open URL",
+              vars: {
+                __name__: "Open URL",
+                URL: "https://example.com"
+              }
             }
           }
-        }
-      }
-      lpRequestMock.request.mockImplementationOnce(
-        (method, args, options) => {
-          options.response(response)
-        }
-      )
-      lpRequestMock.getLastResponse
-        .mockImplementationOnce(() => response)
+        }]
+      })
       lp.start()
 
       windowMock.location = { assign: jest.fn() } as any

@@ -18,7 +18,7 @@ import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { startResponse } from '../data/responses'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, varCacheMock } from '../mocks/internal'
+import { lpRequestMock, mockNextResponse, varCacheMock } from '../mocks/internal'
 
 jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
 jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
@@ -41,16 +41,7 @@ describe('Integration Tests', () => {
       age: 27
     }
 
-    lpRequestMock.getLastResponse.mockImplementation(() => {
-      return startResponse.response[0]
-    })
-    lpRequestMock.request.mockImplementation((action, args, opts) => {
-      if (action === Constants.METHODS.START) {
-        if (opts?.response) {
-          opts.response(startResponse)
-        }
-      }
-    })
+    mockNextResponse(startResponse)
 
     lp.setVariables(variables)
     lp.addVariablesChangedHandler(() => {
