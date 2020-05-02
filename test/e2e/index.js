@@ -166,7 +166,7 @@ renderAppInbox();
 $("#appInboxDownload")
     .click(() => inbox.downloadMessages());
 $("#appInbox")
-  .on("click", "[data-action=markAsRead]", (e) => {
+  .on("click", "[data-id]", (e) => {
     e.preventDefault();
     const messageId = $(e.target).closest("[data-id]").data("id");
     inbox.read(messageId);
@@ -193,9 +193,10 @@ function renderAppInbox() {
   }
 
   const html =
-    '<ul class="list-group mb-3">' +
+    '<div class="list-group mb-3">' +
     inbox.allMessages().map(message => `
-      <li class="list-group-item" data-id="${message.id()}">
+      <button type="button" class="list-group-item list-group-item-action" data-id="${message.id()}">
+        <span class="unread-indicator bg-primary" ${message.isRead() ? 'hidden' : ''}></span>
         <img width=64 class="rounded float-left mr-3" src="${message.imageUrl()}" />
         <div class="d-flex justify-content-between">
           <h5 class="mb-1">${message.title()}</h5>
@@ -204,13 +205,13 @@ function renderAppInbox() {
           </small>
         </div>
 <div class="float-right ml-3">
-          <button class="btn btn-sm btn-outline-secondary m-1" data-action="markAsRead" title="Mark as read" ${message.isRead() ? 'hidden' : ''}>✓</button>
-          <button class="btn btn-sm btn-outline-danger" data-action="delete" title="Delete">×</button>
+          <a href="#" class="btn btn-sm btn-outline-secondary m-1" data-action="markAsRead" title="Mark as read" ${message.isRead() ? 'hidden' : ''}>✓</a>
+          <a href="#" class="btn btn-sm btn-outline-danger" data-action="delete" title="Delete">×</a>
         </div>
-        <p>${message.subtitle()}</p>
-      </li>
+        <p class="text-left">${message.subtitle()}</p>
+      </button>
     `).join('') +
-    '</ul>';
+    '</div>';
 
   $("#appInbox").html(html);
   const unreadCount = inbox.unreadCount();
