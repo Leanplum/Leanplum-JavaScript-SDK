@@ -44,7 +44,8 @@ export default class LeanplumInbox {
 
     const inboxMessage = this.message(messageId);
     if (inboxMessage.openAction()) {
-      this.onAction(inboxMessage.openAction());
+      const id = messageId.split('##')[0]
+      this.onAction(id, inboxMessage.openAction());
     }
   }
 
@@ -127,7 +128,7 @@ export class InboxMessage {
       messageInfo.deliveryTimestamp,
       messageInfo.isRead,
       messageInfo.messageData?.vars?.Image,
-      messageInfo.messageData?.vars?.['Open action']
+      messageInfo.messageData?.vars?.[Constants.VALUES.DEFAULT_PUSH_ACTION]
     )
   }
 

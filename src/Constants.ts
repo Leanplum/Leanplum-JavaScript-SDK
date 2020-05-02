@@ -81,6 +81,7 @@ export default {
     INCLUDE_DEFAULTS: 'includeDefaults',
     INCLUDE_VARIANT_DEBUG_INFO: 'includeVariantDebugInfo',
     NEWSFEED_MESSAGES: 'newsfeedMessages',
+    MESSAGE_ID: 'messageId',
     WEB_PUSH_SUBSCRIPTION: 'webPushSubscription',
   },
 
@@ -112,5 +113,6 @@ export default {
 
   VALUES: {
     DETECT: '(detect)',
+    DEFAULT_PUSH_ACTION: 'Open action',
   },
 }

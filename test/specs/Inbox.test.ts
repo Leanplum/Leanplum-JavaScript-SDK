@@ -214,7 +214,7 @@ describe(Inbox, () => {
       inbox.read(id)
 
       expect(onActionSpy).toHaveBeenCalledTimes(1)
-      expect(onActionSpy).toHaveBeenLastCalledWith(openAction)
+      expect(onActionSpy).toHaveBeenLastCalledWith('123', openAction)
     })
 
     it('allows re-reading of messages, triggering open action', () => {
@@ -237,7 +237,7 @@ describe(Inbox, () => {
       inbox.read(id)
 
       expect(onActionSpy).toHaveBeenCalledTimes(1)
-      expect(onActionSpy).toHaveBeenLastCalledWith(openAction)
+      expect(onActionSpy).toHaveBeenLastCalledWith('123', openAction)
     })
 
     it('does not trigger request / change handlers for read message', () => {

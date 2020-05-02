@@ -385,15 +385,32 @@ describe(LeanplumInternal, () => {
       })
       lp.start()
 
+      mockNextResponse({ response: [{ success: true }] })
       windowMock.location = { assign: jest.fn() } as any
-
-      lp.onInboxAction({
+      lp.onInboxAction('123##1', {
         __name__: "Chain to Existing Message",
         "Chained message": "12345"
       })
 
       expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
       expect(windowMock.location.assign).toHaveBeenCalledWith('https://example.com')
+    })
+
+    it('tracks triggered actions', () => {
+      windowMock.location = { assign: jest.fn() } as any
+
+      lp.onInboxAction('123', {
+        __name__: "Open URL",
+        URL: "https://example.com"
+      })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+
+      const [action, args] = lpRequestMock.request.mock.calls[0]
+      const {messageId, event} = args.buildDict()
+      expect(action).toEqual('track')
+      expect(messageId).toEqual('123')
+      expect(event).toEqual('Open')
     })
   })
 
