@@ -239,6 +239,20 @@ describe(Inbox, () => {
       expect(onActionSpy).toHaveBeenCalledTimes(1)
       expect(onActionSpy).toHaveBeenLastCalledWith(openAction)
     })
+
+    it('does not trigger request / change handlers for read message', () => {
+      const handler = jest.fn()
+      const id = '123##1'
+      mockMessages({
+        [id]: { isRead: true }
+      })
+      inbox.onChanged(handler)
+
+      inbox.read(id)
+
+      expect(createRequestSpy).toHaveBeenCalledTimes(1)
+      expect(handler).not.toHaveBeenCalled()
+    })
   })
 
   describe('delete', () => {

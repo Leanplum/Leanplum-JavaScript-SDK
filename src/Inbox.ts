@@ -33,12 +33,14 @@ export default class LeanplumInbox {
       return
     }
 
-    message.isRead = true
-    this.triggerChangeHandlers()
+    if (!message.isRead) {
+      message.isRead = true
+      this.triggerChangeHandlers()
 
-    const args = new ArgsBuilder()
-    args.add('newsfeedMessageId', messageId)
-    this.createRequest('markNewsfeedMessageAsRead', args, {})
+      const args = new ArgsBuilder()
+      args.add('newsfeedMessageId', messageId)
+      this.createRequest('markNewsfeedMessageAsRead', args, {})
+    }
 
     const inboxMessage = this.message(messageId);
     if (inboxMessage.openAction()) {
