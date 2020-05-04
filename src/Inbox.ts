@@ -26,7 +26,7 @@ export default class LeanplumInbox {
 
   }
 
-  public read(messageId: string): void {
+  public markAsRead(messageId: string) {
     const message = this.messageMap[messageId];
 
     if (!message) {
@@ -41,11 +41,16 @@ export default class LeanplumInbox {
       args.add('newsfeedMessageId', messageId)
       this.createRequest('markNewsfeedMessageAsRead', args, {})
     }
+  }
 
-    const inboxMessage = this.message(messageId);
-    if (inboxMessage.openAction()) {
+  public read(messageId: string): void {
+    this.markAsRead(messageId)
+
+    const inboxMessage = this.message(messageId)
+    const openAction = inboxMessage?.openAction()
+    if (openAction) {
       const id = messageId.split('##')[0]
-      this.onAction(id, inboxMessage.openAction());
+      this.onAction(id, openAction)
     }
   }
 
