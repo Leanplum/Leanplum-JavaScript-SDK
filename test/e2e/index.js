@@ -176,6 +176,12 @@ $("#appInbox")
     const messageId = $(e.target).closest("[data-id]").data("id");
     inbox.remove(messageId);
   })
+  .on("click", "[data-action=markAsRead]", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.markAsRead(messageId);
+  })
 
 function renderAppInbox() {
   if (inbox.count() === 0) {
