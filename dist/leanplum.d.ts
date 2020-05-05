@@ -97,6 +97,18 @@ export default class Leanplum {
     static __destroy(): void;
 }
 
+type MessageObject = {
+  deliveryTimestamp: number;
+  isRead: boolean;
+  messageData?: {
+    vars?: {
+      Title: string;
+      Subtitle: string;
+      Image: string;
+      'Open action': Action;
+    };
+  };
+};
 export default class LeanplumInbox {
   constructor(createRequest: CreateRequestFunction, onAction: Function);
   downloadMessages(): void;
@@ -112,7 +124,7 @@ export default class LeanplumInbox {
   message(id: string): InboxMessage;
 }
 export class InboxMessage {
-  static create(id: string, messageInfo: any): InboxMessage;
+  static create(id: string, messageInfo: MessageObject): InboxMessage;
   constructor(_id: string, _title: string, _subtitle: string, _timestamp: number, _isRead: boolean, _imageUrl: string, _openAction: Action);
   id(): string;
   title(): string;
@@ -122,6 +134,7 @@ export class InboxMessage {
   imageUrl(): string;
   openAction(): Action;
 }
+export {};
 
 export type SimpleHandler = () => void;
 export type StatusHandler = (success: boolean) => void;
