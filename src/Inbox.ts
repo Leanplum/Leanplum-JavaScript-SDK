@@ -1,6 +1,7 @@
-import { Action, CreateRequestFunction } from './types/internal'
-import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
+import Constants from './Constants'
+import { CreateRequestFunction } from './types/internal'
+import { Action, LeanplumInbox, LeanplumInboxMessage } from './types/public'
 
 type MessageObject = {
   deliveryTimestamp: number;
@@ -15,7 +16,7 @@ type MessageObject = {
   };
 }
 
-export default class LeanplumInbox {
+export default class Inbox implements LeanplumInbox {
   private messageMap: { [key: string]: MessageObject } = {}
   private changeHandlers: Function[] = []
 
@@ -137,7 +138,7 @@ export default class LeanplumInbox {
   }
 }
 
-export class InboxMessage {
+export class InboxMessage implements LeanplumInboxMessage {
   static create(id: string, messageInfo: MessageObject): InboxMessage {
     return new InboxMessage(
       id,

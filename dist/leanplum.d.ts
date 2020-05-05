@@ -97,20 +97,7 @@ export default class Leanplum {
     static __destroy(): void;
 }
 
-type MessageObject = {
-  deliveryTimestamp: number;
-  isRead: boolean;
-  messageData?: {
-    vars?: {
-      Title: string;
-      Subtitle: string;
-      Image: string;
-      'Open action': Action;
-    };
-  };
-};
-export default class LeanplumInbox {
-  constructor(createRequest: CreateRequestFunction, onAction: Function);
+export interface LeanplumInbox {
   downloadMessages(): void;
   markAsRead(messageId: string): void;
   read(messageId: string): void;
@@ -118,14 +105,12 @@ export default class LeanplumInbox {
   onChanged(handler: Function): void;
   count(): number;
   unreadCount(): number;
-  allMessages(): InboxMessage[];
-  unreadMessages(): InboxMessage[];
+  allMessages(): LeanplumInboxMessage[];
+  unreadMessages(): LeanplumInboxMessage[];
   messageIds(): string[];
-  message(id: string): InboxMessage;
+  message(id: string): LeanplumInboxMessage;
 }
-export class InboxMessage {
-  static create(id: string, messageInfo: MessageObject): InboxMessage;
-  constructor(_id: string, _title: string, _subtitle: string, _timestamp: number, _isRead: boolean, _imageUrl: string, _openAction: Action);
+export interface LeanplumInboxMessage {
   id(): string;
   title(): string;
   subtitle(): string;
@@ -134,91 +119,16 @@ export class InboxMessage {
   imageUrl(): string;
   openAction(): Action;
 }
-export {};
-
-export type SimpleHandler = () => void;
-export type StatusHandler = (success: boolean) => void;
-export type UserAttributes = any;
-
-export type CreateRequestFunction = (action: string, args: ArgsBuilder, options: LeanplumRequestOptions) => void;
-interface ChainMessage {
+export interface ChainMessage {
   __name__: 'Chain to Existing Message';
   'Chained message': string;
 }
-interface OpenURLAction {
+export interface OpenURLAction {
   __name__: 'Open URL';
   URL: string;
 }
 export type Action = ChainMessage | OpenURLAction;
-export {};
-
-/**
-  * Leanplum ArgsBuilder, use to construct request payload.
-  */
-export default class ArgsBuilder {
-    /**
-      * Create a new empty request argument.
-      */
-    constructor();
-    /**
-      * Add given key, value to the payload.
-      * @param {string} key The key for the value.
-      * @param {string|boolean} value The value for given key.
-      * @return {ArgsBuilder} Returns an object of ArgsBuilder.
-      */
-    add(key: string, value?: string | number | boolean | string[]): ArgsBuilder;
-    /**
-      * Cache the given body.
-      * @param  {String} [body] A given body.
-      * @return {ArgsBuilder|String} Returns ArgsBuilder if body given, else the
-      *                              body.
-      */
-    body(body?: string): ArgsBuilder | string;
-    /**
-      * Convenience method to attach given appId and appKey to request.
-      * @param  {String} appId The appId to attach.
-      * @param  {String} clientKey The appKey to attach.
-      * @return {ArgsBuilder} Returns an object of ArgsBuilder.
-      */
-    attachApiKeys(appId: string, clientKey: string): ArgsBuilder;
-    /**
-      * Return the arguments.
-      * @return {String} Arguments string.
-      */
-    build(): string;
-    /**
-      * Return the argument values.
-      * @return {Object} The argument values.
-      */
-    buildDict(): {
-        [key: string]: any;
-    };
-}
-
-export default class LeanplumRequest {
-  apiPath: string;
-  appId: string;
-  batchCooldown: number;
-  batchEnabled: boolean;
-  clientKey: string;
-  deviceId: string;
-  userId: string;
-  versionName: string;
-  request(action: string, params: ArgsBuilder, options?: LeanplumRequestOptions): void;
-  /**
-    * Sets the network timeout.
-    * @param {number} seconds The timeout in seconds.
-    */
-  setNetworkTimeout(seconds: any): void;
-  getLastResponse(response: any): any;
-  isResponseSuccess(response: any): boolean;
-}
-export interface LeanplumRequestOptions {
-  success?: Function;
-  error?: Function;
-  response?: Function;
-  queued?: boolean;
-  sendNow?: boolean;
-  devMode?: boolean;
-}
+export type SimpleHandler = () => void;
+export type StatusHandler = (success: boolean) => void;
+export type UserAttributes = any;
 

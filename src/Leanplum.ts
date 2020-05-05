@@ -16,8 +16,7 @@
 
 import Constants from './Constants'
 import LeanplumInternal from './LeanplumInternal'
-import LeanplumInbox from './Inbox'
-import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import { LeanplumInbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
