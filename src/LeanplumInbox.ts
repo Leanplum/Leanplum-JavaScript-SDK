@@ -1,20 +1,7 @@
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import { CreateRequestFunction } from './types/internal'
+import { CreateRequestFunction, MessageObject } from './types/internal'
 import { Action, Inbox, InboxMessage } from './types/public'
-
-type MessageObject = {
-  deliveryTimestamp: number;
-  isRead: boolean;
-  messageData?: {
-    vars?: {
-      Title: string;
-      Subtitle: string;
-      Image: string;
-      'Open action': Action;
-    };
-  };
-}
 
 export default class LeanplumInbox implements Inbox {
   private messageMap: { [key: string]: MessageObject } = {}
