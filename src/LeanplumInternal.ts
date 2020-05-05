@@ -512,7 +512,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this._varCache.clearUserContent()
   }
 
-  public createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
+  private createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
     this._lpRequest.request(action, args, {
       devMode: this._internalState.devMode,
       ...options,
