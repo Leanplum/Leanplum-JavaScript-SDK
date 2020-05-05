@@ -14,6 +14,8 @@
  *  limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { APP_ID, KEY_DEV } from '../data/constants'
@@ -44,8 +46,8 @@ describe(LeanplumInternal, () => {
             success: true,
             response: [ { newsfeedMessages: {
               '123##1': {},
-              '234##1': {}
-            } } ]
+              '234##1': {},
+            } } ],
           })
         }
       )
@@ -64,8 +66,8 @@ describe(LeanplumInternal, () => {
       mockNextResponse({
         response: [{
           success: true,
-          syncNewsfeed: true
-        }]
+          syncNewsfeed: true,
+        }],
       })
       lp.start()
 
@@ -304,7 +306,7 @@ describe(LeanplumInternal, () => {
     })
 
     describe('isWebPushSubscribed', () => {
-      it('calls internal method', async () => {
+      it('calls internal method', async() => {
         await lp.isWebPushSubscribed()
 
         expect(pushManagerMock.isWebPushSubscribed).toHaveBeenCalledTimes(1)
@@ -312,7 +314,7 @@ describe(LeanplumInternal, () => {
     })
 
     describe('registerForWebPush', () => {
-      it('fails when WebPush is not suported', async () => {
+      it('fails when WebPush is not suported', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(false)
 
         await expect(lp.registerForWebPush()).rejects.toEqual('Leanplum: WebPush is not supported.')
@@ -320,9 +322,9 @@ describe(LeanplumInternal, () => {
         expect(pushManagerMock.register).toHaveBeenCalledTimes(0)
       })
 
-      it('returns `true` when already subscribed', async () => {
+      it('returns `true` when already subscribed', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
-        pushManagerMock.register.mockImplementationOnce(async (url, callback) => callback(true))
+        pushManagerMock.register.mockImplementationOnce(async(url, callback) => callback(true))
 
         const result = await lp.registerForWebPush('/sw.test.js')
 
@@ -332,9 +334,9 @@ describe(LeanplumInternal, () => {
         expect(pushManagerMock.subscribeUser).toHaveBeenCalledTimes(0)
       })
 
-      it('returns `true` and subscribes user when not subscribed', async () => {
+      it('returns `true` and subscribes user when not subscribed', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
-        pushManagerMock.register.mockImplementationOnce(async (url, callback) => callback(false))
+        pushManagerMock.register.mockImplementationOnce(async(url, callback) => callback(false))
         pushManagerMock.subscribeUser.mockReturnValueOnce(Promise.resolve(true))
 
         const result = await lp.registerForWebPush('/sw.test.js')
@@ -347,7 +349,7 @@ describe(LeanplumInternal, () => {
     })
 
     describe('unregisterFromWebPush', () => {
-      it('calls internal method', async () => {
+      it('calls internal method', async() => {
         await lp.unregisterFromWebPush()
 
         expect(pushManagerMock.unsubscribeUser).toHaveBeenCalledTimes(1)
@@ -373,23 +375,23 @@ describe(LeanplumInternal, () => {
         response: [{
           success: true,
           messages: {
-            "12345": {
-              action: "Open URL",
+            '12345': {
+              action: 'Open URL',
               vars: {
-                __name__: "Open URL",
-                URL: "https://example.com"
-              }
-            }
-          }
-        }]
+                __name__: 'Open URL',
+                URL: 'https://example.com',
+              },
+            },
+          },
+        }],
       })
       lp.start()
 
       mockNextResponse({ response: [{ success: true }] })
       windowMock.location = { assign: jest.fn() } as any
       lp.onInboxAction('123##1', {
-        __name__: "Chain to Existing Message",
-        "Chained message": "12345"
+        __name__: 'Chain to Existing Message',
+        'Chained message': '12345',
       })
 
       expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
@@ -400,8 +402,8 @@ describe(LeanplumInternal, () => {
       windowMock.location = { assign: jest.fn() } as any
 
       lp.onInboxAction('123', {
-        __name__: "Open URL",
-        URL: "https://example.com"
+        __name__: 'Open URL',
+        URL: 'https://example.com',
       })
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
