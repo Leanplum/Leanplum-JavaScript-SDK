@@ -18,12 +18,12 @@ import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import Constants from './Constants'
 import InternalState from './InternalState'
-import Inbox from './Inbox'
+import LeanplumInbox from './LeanplumInbox'
 import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
-import { Action, LeanplumInbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import { Action, Inbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 import VarCache from './VarCache'
 
 /* eslint-disable @typescript-eslint/ban-types */
@@ -32,7 +32,7 @@ import VarCache from './VarCache'
 export default class LeanplumInternal {
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
-  private _lpInbox: LeanplumInbox = new Inbox(
+  private _lpInbox: Inbox = new LeanplumInbox(
     this.createRequest.bind(this),
     this.onInboxAction.bind(this)
   )
@@ -141,7 +141,7 @@ export default class LeanplumInternal {
     return this._varCache.variants || []
   }
 
-  inbox(): LeanplumInbox {
+  inbox(): Inbox {
     return this._lpInbox
   }
 

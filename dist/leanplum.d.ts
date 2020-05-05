@@ -39,7 +39,7 @@ export default class Leanplum {
     static getVariables(): any;
     static getVariable(...args: string[]): any;
     static getVariants(): any[];
-    static inbox(): LeanplumInbox;
+    static inbox(): Inbox;
     static addStartResponseHandler(handler: StatusHandler): void;
     static removeStartResponseHandler(handler: StatusHandler): void;
     static addVariablesChangedHandler(handler: SimpleHandler): void;
@@ -97,7 +97,7 @@ export default class Leanplum {
     static __destroy(): void;
 }
 
-export interface LeanplumInbox {
+export interface Inbox {
   downloadMessages(): void;
   markAsRead(messageId: string): void;
   read(messageId: string): void;
@@ -105,12 +105,12 @@ export interface LeanplumInbox {
   onChanged(handler: Function): void;
   count(): number;
   unreadCount(): number;
-  allMessages(): LeanplumInboxMessage[];
-  unreadMessages(): LeanplumInboxMessage[];
+  allMessages(): InboxMessage[];
+  unreadMessages(): InboxMessage[];
   messageIds(): string[];
-  message(id: string): LeanplumInboxMessage;
+  message(id: string): InboxMessage;
 }
-export interface LeanplumInboxMessage {
+export interface InboxMessage {
   id(): string;
   title(): string;
   subtitle(): string;

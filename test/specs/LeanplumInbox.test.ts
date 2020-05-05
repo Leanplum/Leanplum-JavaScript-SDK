@@ -1,11 +1,11 @@
-import Inbox from '../../src/Inbox'
+import LeanplumInbox from '../../src/LeanplumInbox'
 
-describe(Inbox, () => {
-  let inbox: Inbox
+describe(LeanplumInbox, () => {
+  let inbox: LeanplumInbox
   const createRequestSpy: jest.Mock<void> = jest.fn()
   const onActionSpy: jest.Mock<void> = jest.fn();
 
-  beforeEach(() => inbox = new Inbox(createRequestSpy, onActionSpy))
+  beforeEach(() => inbox = new LeanplumInbox(createRequestSpy, onActionSpy))
 
   afterEach(() => {
     sessionStorage.clear()
@@ -372,7 +372,7 @@ describe(Inbox, () => {
       }
       sessionStorage.setItem('__leanplum_inbox_messages', JSON.stringify(messages))
 
-      inbox = new Inbox(createRequestSpy, onActionSpy)
+      inbox = new LeanplumInbox(createRequestSpy, onActionSpy)
 
       expect(inbox.allMessages().length).toEqual(1)
     })

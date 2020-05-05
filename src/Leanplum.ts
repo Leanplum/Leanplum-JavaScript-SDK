@@ -16,7 +16,7 @@
 
 import Constants from './Constants'
 import LeanplumInternal from './LeanplumInternal'
-import { LeanplumInbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import { Inbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -106,7 +106,7 @@ export default class Leanplum {
     return Leanplum._lp.getVariants()
   }
 
-  static inbox(): LeanplumInbox {
+  static inbox(): Inbox {
     return Leanplum._lp.inbox()
   }
 
