@@ -18,7 +18,7 @@ import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import Constants from './Constants'
 import InternalState from './InternalState'
-import LeanplumInbox, { InboxMessage } from './Inbox'
+import LeanplumInbox from './Inbox'
 import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
@@ -163,7 +163,7 @@ export default class LeanplumInternal {
         this.createRequest(Constants.METHODS.TRACK, args, {
           queued: false,
           sendNow: true,
-          response: () => this.wnd.location.assign(action.URL)
+          response: () => this.wnd.location.assign(action.URL),
         })
         break
     }

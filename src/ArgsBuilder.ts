@@ -49,7 +49,7 @@ export default class ArgsBuilder {
       this.argString += '&'
     }
 
-    let val: string = ''
+    let val = ''
     if (value instanceof Array) {
       val = JSON.stringify(value)
     } else {

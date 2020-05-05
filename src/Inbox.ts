@@ -2,8 +2,21 @@ import { Action, CreateRequestFunction } from './types/internal'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 
+type MessageObject = {
+  deliveryTimestamp: number;
+  isRead: boolean;
+  messageData?: {
+    vars?: {
+      Title: string;
+      Subtitle: string;
+      Image: string;
+      'Open action': Action;
+    };
+  };
+}
+
 export default class LeanplumInbox {
-  private messageMap: { [key: string]: any } = {}
+  private messageMap: { [key: string]: MessageObject } = {}
   private changeHandlers: Function[] = []
 
   constructor(
@@ -13,21 +26,21 @@ export default class LeanplumInbox {
     this.load()
   }
 
-  public downloadMessages() {
+  public downloadMessages(): void {
     this.createRequest('getNewsfeedMessages', undefined, {
       queued: true,
       sendNow: true,
       response: (data) => {
-        this.messageMap = data.response[0].newsfeedMessages;
+        this.messageMap = data.response[0].newsfeedMessages
 
         this.triggerChangeHandlers()
-      }
+      },
     })
 
   }
 
-  public markAsRead(messageId: string) {
-    const message = this.messageMap[messageId];
+  public markAsRead(messageId: string): void {
+    const message = this.messageMap[messageId]
 
     if (!message) {
       return
@@ -55,7 +68,7 @@ export default class LeanplumInbox {
   }
 
   public remove(messageId: string): void {
-    const message = this.messageMap[messageId];
+    const message = this.messageMap[messageId]
 
     if (!message) {
       return
@@ -96,9 +109,9 @@ export default class LeanplumInbox {
   public unreadCount(): number {
     return Object.values(this.messageMap).filter(x => !x.isRead).length
   }
-  private messages(filter: Function) {
+  private messages(filter: Function): InboxMessage[] {
     const result = []
-    for (let id in this.messageMap) {
+    for (const id in this.messageMap) {
       const data = this.messageMap[id]
       if (filter(data)) {
         result.push(InboxMessage.create(id, data))
@@ -125,7 +138,7 @@ export default class LeanplumInbox {
 }
 
 export class InboxMessage {
-  static create(id: string, messageInfo: any): InboxMessage {
+  static create(id: string, messageInfo: MessageObject): InboxMessage {
     return new InboxMessage(
       id,
       messageInfo.messageData?.vars?.Title,
