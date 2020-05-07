@@ -18,11 +18,12 @@ import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import Constants from './Constants'
 import InternalState from './InternalState'
+import LeanplumInbox from './LeanplumInbox'
 import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
-import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import { Action, Inbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 import VarCache from './VarCache'
 
 /* eslint-disable @typescript-eslint/ban-types */
@@ -31,6 +32,10 @@ import VarCache from './VarCache'
 export default class LeanplumInternal {
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
+  private _lpInbox: Inbox = new LeanplumInbox(
+    this.createRequest.bind(this),
+    this.onInboxAction.bind(this)
+  )
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
   private _lpSocket: LeanplumSocket = new LeanplumSocket()
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
@@ -41,8 +46,9 @@ export default class LeanplumInternal {
   private _deviceModel: string
   private _systemName: string
   private _systemVersion: string
+  private _messageCache: { [key: string]: any }
 
-  constructor(wnd: Window) {
+  constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
   }
 
@@ -135,6 +141,33 @@ export default class LeanplumInternal {
     return this._varCache.variants || []
   }
 
+  inbox(): Inbox {
+    return this._lpInbox
+  }
+
+  onInboxAction(messageId: string, action: Action): void {
+    switch (action.__name__) {
+      case 'Chain to Existing Message':
+        const message = this._messageCache[action['Chained message']]
+        if (message) {
+          this.onInboxAction(messageId, message.vars)
+        }
+        break
+
+      case 'Open URL':
+        const args = new ArgsBuilder()
+          .add(Constants.PARAMS.MESSAGE_ID, messageId)
+          .add(Constants.PARAMS.EVENT, 'Open')
+
+        this.createRequest(Constants.METHODS.TRACK, args, {
+          queued: false,
+          sendNow: true,
+          response: () => this.wnd.location.assign(action.URL),
+        })
+        break
+    }
+  }
+
   addStartResponseHandler(handler: StatusHandler): void {
     this._internalState.addStartResponseHandler(handler)
   }
@@ -218,6 +251,7 @@ export default class LeanplumInternal {
         .add(Constants.PARAMS.DEVICE_NAME, this._deviceName ||
             `${this._browserDetector.browser} ${this._browserDetector.version}`)
         .add(Constants.PARAMS.DEVICE_MODEL, this._deviceModel || 'Web Browser')
+        .add(Constants.PARAMS.NEWSFEED_MESSAGES, this._lpInbox.messageIds())
         .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
         .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, this._internalState.variantDebugInfoEnabled)
 
@@ -233,10 +267,16 @@ export default class LeanplumInternal {
         if (this._lpRequest.isResponseSuccess(startResponse)) {
           this._internalState.startSuccessful = true
 
+          this._messageCache = startResponse[Constants.KEYS.MESSAGES]
+
+          if (startResponse[Constants.KEYS.SYNC_INBOX]) {
+            this._lpInbox.downloadMessages()
+          }
+
           if (this._internalState.devMode) {
             const latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
             if (latestVersion) {
-              console.log(`A newer version of Leanplum, ${latestVersion}, is available.
+              console.log(`A newer version of the Leanplum SDK, ${latestVersion}, is available.
 Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
             }
             this.connectSocket()

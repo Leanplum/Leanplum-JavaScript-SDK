@@ -3,7 +3,7 @@ import PushManager from '../../src/PushManager'
 import VarCache from '../../src/VarCache'
 
 export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
-  getLastResponse: jest.fn(),
+  getLastResponse: jest.fn().mockImplementation((data) => data.response[0]),
   isResponseSuccess: jest.fn().mockImplementation((response) => Boolean(response?.success)),
   request: jest.fn()
 }
@@ -27,4 +27,12 @@ export const varCacheMock: Partial<jest.Mocked<VarCache>> = {
   addVariablesChangedHandler: jest.fn(),
   removeVariablesChangedHandler: jest.fn(),
   clearUserContent: jest.fn(),
+}
+
+export function mockNextResponse(data: any) {
+  lpRequestMock.request.mockImplementationOnce(
+    (method, args, options) => {
+      options.response(data)
+    }
+  )
 }

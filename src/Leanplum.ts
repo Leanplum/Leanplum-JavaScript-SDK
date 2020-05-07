@@ -16,7 +16,7 @@
 
 import Constants from './Constants'
 import LeanplumInternal from './LeanplumInternal'
-import { SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import { Inbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
 
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -104,6 +104,10 @@ export default class Leanplum {
 
   static getVariants(): any[] {
     return Leanplum._lp.getVariants()
+  }
+
+  static inbox(): Inbox {
+    return Leanplum._lp.inbox()
   }
 
   static addStartResponseHandler(handler: StatusHandler): void {

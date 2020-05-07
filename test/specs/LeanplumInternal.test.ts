@@ -14,11 +14,13 @@
  *  limitations under the License.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { APP_ID, KEY_DEV } from '../data/constants'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, pushManagerMock, varCacheMock } from '../mocks/internal'
+import { lpRequestMock, mockNextResponse, pushManagerMock, varCacheMock } from '../mocks/internal'
 
 jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
 jest.mock('../../src/PushManager', () => jest.fn().mockImplementation(() => pushManagerMock))
@@ -33,6 +35,46 @@ describe(LeanplumInternal, () => {
 
   afterEach(() => {
     jest.clearAllMocks()
+  })
+
+  describe('start', () => {
+    it('passes available message IDs to API', () => {
+      const inbox = lp.inbox()
+      lpRequestMock.request.mockImplementationOnce(
+        (method, args, options) => {
+          options.response({
+            success: true,
+            response: [ { newsfeedMessages: {
+              '123##1': {},
+              '234##1': {},
+            } } ],
+          })
+        }
+      )
+      inbox.downloadMessages()
+
+      lp.start()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      const [method, args] = lpRequestMock.request.mock.calls[1]
+      const { newsfeedMessages } = args.buildDict()
+      expect(method).toBe('start')
+      expect(newsfeedMessages).toEqual(['123##1', '234##1'])
+    })
+
+    it('synchronizes message inbox, if requested by API', () => {
+      mockNextResponse({
+        response: [{
+          success: true,
+          syncNewsfeed: true,
+        }],
+      })
+      lp.start()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      const [method] = lpRequestMock.request.mock.calls[1]
+      expect(method).toEqual('getNewsfeedMessages')
+    })
   })
 
   describe('track', () => {
@@ -264,7 +306,7 @@ describe(LeanplumInternal, () => {
     })
 
     describe('isWebPushSubscribed', () => {
-      it('calls internal method', async () => {
+      it('calls internal method', async() => {
         await lp.isWebPushSubscribed()
 
         expect(pushManagerMock.isWebPushSubscribed).toHaveBeenCalledTimes(1)
@@ -272,7 +314,7 @@ describe(LeanplumInternal, () => {
     })
 
     describe('registerForWebPush', () => {
-      it('fails when WebPush is not suported', async () => {
+      it('fails when WebPush is not suported', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(false)
 
         await expect(lp.registerForWebPush()).rejects.toEqual('Leanplum: WebPush is not supported.')
@@ -280,9 +322,9 @@ describe(LeanplumInternal, () => {
         expect(pushManagerMock.register).toHaveBeenCalledTimes(0)
       })
 
-      it('returns `true` when already subscribed', async () => {
+      it('returns `true` when already subscribed', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
-        pushManagerMock.register.mockImplementationOnce(async (url, callback) => callback(true))
+        pushManagerMock.register.mockImplementationOnce(async(url, callback) => callback(true))
 
         const result = await lp.registerForWebPush('/sw.test.js')
 
@@ -292,9 +334,9 @@ describe(LeanplumInternal, () => {
         expect(pushManagerMock.subscribeUser).toHaveBeenCalledTimes(0)
       })
 
-      it('returns `true` and subscribes user when not subscribed', async () => {
+      it('returns `true` and subscribes user when not subscribed', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
-        pushManagerMock.register.mockImplementationOnce(async (url, callback) => callback(false))
+        pushManagerMock.register.mockImplementationOnce(async(url, callback) => callback(false))
         pushManagerMock.subscribeUser.mockReturnValueOnce(Promise.resolve(true))
 
         const result = await lp.registerForWebPush('/sw.test.js')
@@ -307,11 +349,70 @@ describe(LeanplumInternal, () => {
     })
 
     describe('unregisterFromWebPush', () => {
-      it('calls internal method', async () => {
+      it('calls internal method', async() => {
         await lp.unregisterFromWebPush()
 
         expect(pushManagerMock.unsubscribeUser).toHaveBeenCalledTimes(1)
       })
+    })
+  })
+
+  describe('inbox', () => {
+    it('returns inbox', () => {
+      const inbox = lp.inbox()
+
+      expect(inbox).toBeDefined()
+    })
+
+    it('returns the same instance every time', () => {
+      const inbox = lp.inbox()
+
+      expect(lp.inbox()).toBe(inbox)
+    })
+
+    it('handles inbox action requests', () => {
+      mockNextResponse({
+        response: [{
+          success: true,
+          messages: {
+            '12345': {
+              action: 'Open URL',
+              vars: {
+                __name__: 'Open URL',
+                URL: 'https://example.com',
+              },
+            },
+          },
+        }],
+      })
+      lp.start()
+
+      mockNextResponse({ response: [{ success: true }] })
+      windowMock.location = { assign: jest.fn() } as any
+      lp.onInboxAction('123##1', {
+        __name__: 'Chain to Existing Message',
+        'Chained message': '12345',
+      })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
+      expect(windowMock.location.assign).toHaveBeenCalledWith('https://example.com')
+    })
+
+    it('tracks triggered actions', () => {
+      windowMock.location = { assign: jest.fn() } as any
+
+      lp.onInboxAction('123', {
+        __name__: 'Open URL',
+        URL: 'https://example.com',
+      })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+
+      const [action, args] = lpRequestMock.request.mock.calls[0]
+      const {messageId, event} = args.buildDict()
+      expect(action).toEqual('track')
+      expect(messageId).toEqual('123')
+      expect(event).toEqual('Open')
     })
   })
 
