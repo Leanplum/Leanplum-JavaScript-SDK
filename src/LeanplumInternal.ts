@@ -47,6 +47,7 @@ export default class LeanplumInternal {
   private _systemName: string
   private _systemVersion: string
   private _messageCache: { [key: string]: any }
+  private _sessionLength: number
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
@@ -210,6 +211,31 @@ export default class LeanplumInternal {
     })
   }
 
+  useSessionLength(seconds: number): void {
+    this._sessionLength = seconds
+  }
+
+  private hasActiveSession(): boolean {
+    if (!this._sessionLength) {
+      return false
+    }
+
+    const SESSION_KEY = '__leanplum_session'
+    const currentTime = Date.now()
+    const lastActive = parseInt(localStorage.getItem(SESSION_KEY))
+    localStorage.setItem(SESSION_KEY, String(currentTime))
+
+    if (isNaN(lastActive)) {
+      return false
+    }
+
+    if (currentTime - lastActive < this._sessionLength) {
+      return true
+    }
+
+    return false
+  }
+
   start(userId: string, callback: StatusHandler): void;
   start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
   start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
@@ -225,6 +251,10 @@ export default class LeanplumInternal {
     } else if (typeof userAttributes === 'function') {
       callback = userAttributes
       userAttributes = {}
+    }
+
+    if (this.hasActiveSession()) {
+      return this.startFromCache(userId, userAttributes, callback)
     }
 
     this._lpRequest.userId = userId

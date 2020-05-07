@@ -35,6 +35,7 @@ describe(LeanplumInternal, () => {
 
   afterEach(() => {
     jest.clearAllMocks()
+    localStorage.clear()
   })
 
   describe('start', () => {
@@ -75,6 +76,47 @@ describe(LeanplumInternal, () => {
       const [method] = lpRequestMock.request.mock.calls[1]
       expect(method).toEqual('getNewsfeedMessages')
     })
+
+    describe('useSessionLength', () => {
+      it('starts a new session if there is no stored session', () => {
+        jest.spyOn(Date, 'now').mockImplementation(() => 0)
+
+        lp.useSessionLength(2000)
+        mockNextResponse({ response: [{ success: true }], })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      })
+
+      it('resumes sessions if session is active', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+        lp.useSessionLength(2000)
+
+        mockNextResponse({ response: [{ success: true }], })
+        lp.start()
+        currentTime = 1000
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      })
+
+      it('starts a new session if session length has expired', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+
+        lp.useSessionLength(2000)
+
+        mockNextResponse({ response: [{ success: true }], })
+        lp.start()
+        currentTime = 2001
+        mockNextResponse({ response: [{ success: true }], })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
+    })
+
   })
 
   describe('track', () => {
