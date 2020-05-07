@@ -366,7 +366,7 @@ describe(LeanplumInternal, () => {
 
       it('returns `true` when already subscribed', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
-        pushManagerMock.register.mockImplementationOnce(async(url, callback) => callback(true))
+        pushManagerMock.register.mockImplementationOnce(async(url, scope, callback) => callback(true))
 
         const result = await lp.registerForWebPush('/sw.test.js')
 
@@ -378,7 +378,7 @@ describe(LeanplumInternal, () => {
 
       it('returns `true` and subscribes user when not subscribed', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
-        pushManagerMock.register.mockImplementationOnce(async(url, callback) => callback(false))
+        pushManagerMock.register.mockImplementationOnce(async(url, scope, callback) => callback(false))
         pushManagerMock.subscribeUser.mockReturnValueOnce(Promise.resolve(true))
 
         const result = await lp.registerForWebPush('/sw.test.js')
@@ -387,6 +387,20 @@ describe(LeanplumInternal, () => {
         expect(pushManagerMock.register).toHaveBeenCalledTimes(1)
         expect(pushManagerMock.register.mock.calls[0][0]).toEqual('/sw.test.js')
         expect(pushManagerMock.subscribeUser).toHaveBeenCalledTimes(1)
+      })
+
+      it('uses previously set web push options', async() => {
+        pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
+        const serviceWorkerUrl = '/lp-sw.min.js'
+        const scope = '/shop/'
+
+        lp.setWebPushOptions({ serviceWorkerUrl, scope })
+
+        const result = await lp.registerForWebPush()
+
+        const registerCall = pushManagerMock.register.mock.calls[0]
+        expect(registerCall[0]).toEqual(serviceWorkerUrl)
+        expect(registerCall[1]).toEqual({ scope })
       })
     })
 

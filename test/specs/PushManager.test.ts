@@ -99,7 +99,7 @@ describe(PushManager, () => {
         register: () => registration
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       subscription = {
         endpoint: 'old_subscription'
@@ -138,7 +138,7 @@ describe(PushManager, () => {
       windowMock.mockReturnValue({} as any)
 
       jest.spyOn(console, 'log').mockImplementationOnce(() => {})
-      await pushManager.register('', callback)
+      await pushManager.register('', null, callback)
 
       expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith(false)
@@ -153,7 +153,7 @@ describe(PushManager, () => {
       })
 
       jest.spyOn(console, 'log').mockImplementationOnce(() => {})
-      await pushManager.register('', callback)
+      await pushManager.register('', null, callback)
 
       expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith(false)
@@ -169,7 +169,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', callback)
+      await pushManager.register('', null, callback)
 
       expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith(false)
@@ -187,7 +187,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', callback)
+      await pushManager.register('', null, callback)
 
       expect(callback).toHaveBeenCalledTimes(1)
       expect(callback).toHaveBeenCalledWith(true)
@@ -202,7 +202,7 @@ describe(PushManager, () => {
       })
       mockServiceWorker({ register })
 
-      await pushManager.register('', callback)
+      await pushManager.register('', null, callback)
 
       expect(register).toHaveBeenCalledTimes(1)
       expect(register).toHaveBeenCalledWith('/sw.min.js', null)
@@ -217,7 +217,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       expect(createRequestSpy).toHaveBeenCalledTimes(0)
     })
@@ -234,7 +234,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
 
@@ -266,7 +266,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       await expect(pushManager.subscribeUser()).rejects.toThrowError()
     })
@@ -281,7 +281,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       await expect(pushManager.subscribeUser()).rejects.toThrowError()
     })
@@ -298,7 +298,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       expect(await pushManager.subscribeUser()).toBe(true)
     })
@@ -313,7 +313,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
       await pushManager.subscribeUser().catch(() => { /* noop - expected */ })
 
       expect(createRequestSpy).toHaveBeenCalledTimes(0)
@@ -332,7 +332,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
       await pushManager.subscribeUser()
 
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
@@ -366,7 +366,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       await expect(pushManager.unsubscribeUser()).rejects.toThrowError()
     })
@@ -382,7 +382,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       await expect(pushManager.unsubscribeUser()).rejects.toThrowError()
     })
@@ -396,7 +396,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       await expect(pushManager.unsubscribeUser()).resolves.not.toThrowError()
     })
@@ -413,7 +413,7 @@ describe(PushManager, () => {
         })
       })
 
-      await pushManager.register('', (x) => Promise.resolve(x))
+      await pushManager.register('', null, (x) => Promise.resolve(x))
 
       await expect(pushManager.unsubscribeUser()).resolves.not.toThrowError()
     })
