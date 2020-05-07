@@ -81,7 +81,7 @@ describe(LeanplumInternal, () => {
       it('starts a new session if there is no stored session', () => {
         jest.spyOn(Date, 'now').mockImplementation(() => 0)
 
-        lp.useSessionLength(2000)
+        lp.useSessionLength(2)
         mockNextResponse({ response: [{ success: true }], })
         lp.start()
 
@@ -91,7 +91,7 @@ describe(LeanplumInternal, () => {
       it('resumes sessions if session is active', () => {
         let currentTime = 0
         jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
-        lp.useSessionLength(2000)
+        lp.useSessionLength(2)
 
         mockNextResponse({ response: [{ success: true }], })
         lp.start()
@@ -105,7 +105,7 @@ describe(LeanplumInternal, () => {
         let currentTime = 0
         jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
 
-        lp.useSessionLength(2000)
+        lp.useSessionLength(2)
 
         mockNextResponse({ response: [{ success: true }], })
         lp.start()

@@ -229,7 +229,7 @@ export default class LeanplumInternal {
       return false
     }
 
-    if (currentTime - lastActive < this._sessionLength) {
+    if (currentTime - lastActive < this._sessionLength * 1000) {
       return true
     }
 
