@@ -223,7 +223,7 @@ Object.keys(testModes).forEach((mode) => {
       it('verifyDefaultApiPath', (done) => {
         interceptRequest((request) => {
           expect(request).not.toBeNull()
-          expect(request.url).toContain('https://www.leanplum.com/api')
+          expect(request.url).toContain('https://api.leanplum.com/api')
           request.respond(200, {
             'Content-Type': 'application/json'
           }, JSON.stringify(successResponse))

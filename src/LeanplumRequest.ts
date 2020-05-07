@@ -25,7 +25,7 @@ export default class LeanplumRequest {
   private lastRequestTime = undefined
   private network = new Network()
 
-  public apiPath = 'https://www.leanplum.com/api'
+  public apiPath = 'https://api.leanplum.com/api'
   public appId: string
   public batchCooldown = 5
   public batchEnabled = true
