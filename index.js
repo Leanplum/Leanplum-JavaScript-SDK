@@ -158,3 +158,72 @@ function updateUserId() {
   $(".current-user-id").text(userId);
   $("#setUserId").val(userId);
 }
+
+const inbox = Leanplum.inbox()
+inbox.onChanged(renderAppInbox);
+renderAppInbox();
+
+$("#appInboxDownload")
+    .click(() => inbox.downloadMessages());
+$("#appInbox")
+  .on("click", "[data-id]", (e) => {
+    e.preventDefault();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.read(messageId);
+  })
+  .on("click", "[data-action=delete]", (e) => {
+    e.preventDefault();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.remove(messageId);
+  })
+  .on("click", "[data-action=markAsRead]", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageId = $(e.target).closest("[data-id]").data("id");
+    inbox.markAsRead(messageId);
+  })
+
+function renderAppInbox() {
+  if (inbox.count() === 0) {
+    $("#appInbox").html(`<p class="m-1">No messages</p>`);
+  }
+
+  const friendlyText = (timestamp) => {
+    const MS_IN_DAY = 24*60*60*1000;
+    const diff = Math.floor((Date.now() - timestamp) / MS_IN_DAY);
+    return (
+      diff > 1 ? `${diff} days ago` :
+      diff > 0 ? `yesterday` :
+      `today`
+    )
+  }
+
+  const html =
+    '<div class="list-group mb-3">' +
+    inbox.allMessages().map(message => `
+      <button type="button" class="list-group-item list-group-item-action" data-id="${message.id()}">
+        <span class="unread-indicator bg-primary" ${message.isRead() ? 'hidden' : ''}></span>
+        <img width=64 class="rounded float-left mr-3" src="${message.imageUrl()}" />
+        <div class="d-flex justify-content-between">
+          <h5 class="mb-1">${message.title()}</h5>
+          <small title="${new Date(message.timestamp()).toLocaleDateString()}">
+            ${friendlyText(message.timestamp())}
+          </small>
+        </div>
+<div class="float-right ml-3">
+          <a href="#" class="btn btn-sm btn-outline-secondary m-1" data-action="markAsRead" title="Mark as read" ${message.isRead() ? 'hidden' : ''}>✓</a>
+          <a href="#" class="btn btn-sm btn-outline-danger" data-action="delete" title="Delete">×</a>
+        </div>
+        <p class="text-left">${message.subtitle()}</p>
+      </button>
+    `).join('') +
+    '</div>';
+
+  $("#appInbox").html(html);
+  const unreadCount = inbox.unreadCount();
+  $("#appInboxUnreadCount")
+    .text(unreadCount)
+    .removeClass('d-none')
+    .toggleClass('badge-secondary', unreadCount === 0)
+    .toggleClass('badge-primary', unreadCount > 0)
+}
