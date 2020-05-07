@@ -21,11 +21,17 @@ $("[data-action=setup]")
         }
     });
 
+let scope = null
+if (window.location.hostname === "leanplum.github.io") {
+  scope = "/Leanplum-JavaScript-SDK/";
+}
+Leanplum.setWebPushOptions({
+  serviceWorkerUrl: window.origin + window.pathname + "/sw.min.js",
+  scope
+})
+
 $("#registerForWebPush")
-    .click(() => {
-      const swLocation = window.origin + window.pathname + "/sw.min.js";
-      Leanplum.registerForWebPush(swLocation).then(refreshWebPush);
-    });
+    .click(() => Leanplum.registerForWebPush().then(refreshWebPush));
 
 $("#unregisterFromWebPush")
     .click(() => Leanplum.unregisterFromWebPush().then(refreshWebPush));
