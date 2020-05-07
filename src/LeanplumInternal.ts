@@ -47,6 +47,7 @@ export default class LeanplumInternal {
   private _systemName: string
   private _systemVersion: string
   private _messageCache: { [key: string]: any }
+  private _sessionLength: number
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
@@ -210,6 +211,10 @@ export default class LeanplumInternal {
     })
   }
 
+  useSessionLength(seconds: number): void {
+    this._sessionLength = seconds
+  }
+
   start(userId: string, callback: StatusHandler): void;
   start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
   start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
@@ -225,6 +230,10 @@ export default class LeanplumInternal {
     } else if (typeof userAttributes === 'function') {
       callback = userAttributes
       userAttributes = {}
+    }
+
+    if (this.hasActiveSession()) {
+      return this.startFromCache(userId, userAttributes, callback)
     }
 
     this._lpRequest.userId = userId
@@ -529,5 +538,26 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       this.createRequest,
       this._lpRequest.getLastResponse
     )
+  }
+
+  private hasActiveSession(): boolean {
+    if (!this._sessionLength) {
+      return false
+    }
+
+    const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
+    const currentTime = Date.now()
+    const lastActive = parseInt(LocalStorageManager.getFromLocalStorage(SESSION_KEY))
+    LocalStorageManager.saveToLocalStorage(SESSION_KEY, String(currentTime))
+
+    if (isNaN(lastActive)) {
+      return false
+    }
+
+    if (currentTime - lastActive < this._sessionLength * 1000) {
+      return true
+    }
+
+    return false
   }
 }
