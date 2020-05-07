@@ -220,10 +220,10 @@ export default class LeanplumInternal {
       return false
     }
 
-    const SESSION_KEY = '__leanplum_session'
+    const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
     const currentTime = Date.now()
-    const lastActive = parseInt(localStorage.getItem(SESSION_KEY))
-    localStorage.setItem(SESSION_KEY, String(currentTime))
+    const lastActive = parseInt(LocalStorageManager.getFromLocalStorage(SESSION_KEY))
+    LocalStorageManager.saveToLocalStorage(SESSION_KEY, String(currentTime))
 
     if (isNaN(lastActive)) {
       return false
