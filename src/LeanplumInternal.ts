@@ -29,7 +29,7 @@ import {
   SimpleHandler,
   StatusHandler,
   WebPushOptions,
-  UserAttributes
+  UserAttributes,
 } from './types/public'
 import VarCache from './VarCache'
 
@@ -505,7 +505,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    */
   registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
     if (this._pushManager.isWebPushSupported()) {
-      const subscribe = (isSubscribed) => {
+      const subscribe = (isSubscribed): Promise<boolean> => {
         if (isSubscribed) {
           return Promise.resolve(true)
         }

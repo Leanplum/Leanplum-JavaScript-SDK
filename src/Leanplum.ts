@@ -21,7 +21,7 @@ import {
   SimpleHandler,
   StatusHandler,
   WebPushOptions,
-  UserAttributes
+  UserAttributes,
 } from './types/public'
 
 /* eslint-disable @typescript-eslint/ban-types */
