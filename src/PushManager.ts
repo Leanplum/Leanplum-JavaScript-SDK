@@ -82,6 +82,7 @@ export default class PushManager {
    */
   public async register(
     serviceWorkerUrl: string,
+    scope: { scope: string } | null,
     callback: (isSubscribed: boolean) => Promise<boolean>
   ): Promise<boolean> {
     if (!this.isWebPushSupported()) {
@@ -92,7 +93,7 @@ export default class PushManager {
     try {
       this.serviceWorkerRegistration = await this.serviceWorker.register(
         serviceWorkerUrl || '/sw.min.js',
-        null
+        scope
       )
 
       const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription()

@@ -23,7 +23,14 @@ import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
-import { Action, Inbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import {
+  Action,
+  Inbox,
+  SimpleHandler,
+  StatusHandler,
+  WebPushOptions,
+  UserAttributes
+} from './types/public'
 import VarCache from './VarCache'
 
 /* eslint-disable @typescript-eslint/ban-types */
@@ -40,6 +47,7 @@ export default class LeanplumInternal {
   private _lpSocket: LeanplumSocket = new LeanplumSocket()
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
   private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
+  private _webPushOptions: WebPushOptions
 
   private _email: string
   private _deviceName: string
@@ -484,6 +492,10 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     return this._pushManager.isWebPushSubscribed()
   }
 
+  setWebPushOptions(options: WebPushOptions): void {
+    this._webPushOptions = { ...options }
+  }
+
   /**
    * Register the browser for web push.
    * @param  {string}   serviceWorkerUrl The url on your server that hosts the
@@ -493,12 +505,18 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    */
   registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
     if (this._pushManager.isWebPushSupported()) {
-      return this._pushManager.register(serviceWorkerUrl, (isSubscribed) => {
+      const subscribe = (isSubscribed) => {
         if (isSubscribed) {
           return Promise.resolve(true)
         }
         return this._pushManager.subscribeUser()
-      })
+      }
+
+      const options = this._webPushOptions
+      const workerUrl = serviceWorkerUrl || options.serviceWorkerUrl
+      const scope = options && options.scope ? { scope: options.scope } : null
+
+      return this._pushManager.register(workerUrl, scope, subscribe)
     } else {
       return Promise.reject('Leanplum: WebPush is not supported.')
     }

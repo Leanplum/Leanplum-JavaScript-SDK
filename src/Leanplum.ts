@@ -16,7 +16,13 @@
 
 import Constants from './Constants'
 import LeanplumInternal from './LeanplumInternal'
-import { Inbox, SimpleHandler, StatusHandler, UserAttributes } from './types/public'
+import {
+  Inbox,
+  SimpleHandler,
+  StatusHandler,
+  WebPushOptions,
+  UserAttributes
+} from './types/public'
 
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -205,6 +211,10 @@ export default class Leanplum {
    */
   static isWebPushSubscribed(): Promise<boolean> {
     return Leanplum._lp.isWebPushSubscribed()
+  }
+
+  static setWebPushOptions(options: WebPushOptions): void {
+    return Leanplum._lp.setWebPushOptions(options)
   }
 
   /**
