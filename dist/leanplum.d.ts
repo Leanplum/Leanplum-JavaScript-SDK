@@ -75,6 +75,7 @@ export default class Leanplum {
       * @return {Promise} Resolves if true, rejects if false.
       */
     static isWebPushSubscribed(): Promise<boolean>;
+    static setWebPushOptions(options: WebPushOptions): void;
     /**
       * Register the browser for web push.
       * @param  {string}   serviceWorkerUrl The url on your server that hosts the
@@ -131,4 +132,8 @@ export type Action = ChainMessage | OpenURLAction;
 export type SimpleHandler = () => void;
 export type StatusHandler = (success: boolean) => void;
 export type UserAttributes = any;
+export interface WebPushOptions {
+  serviceWorkerUrl?: string;
+  scope?: string;
+}
 
