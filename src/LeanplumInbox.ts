@@ -19,9 +19,12 @@ export default class LeanplumInbox implements Inbox {
       queued: true,
       sendNow: true,
       response: (data) => {
-        this.messageMap = data.response[0].newsfeedMessages
+        const response = data.response[0]
+        if (response && response.newsfeedMessages) {
+          this.messageMap = response.newsfeedMessages
 
-        this.triggerChangeHandlers()
+          this.triggerChangeHandlers()
+        }
       },
     })
 

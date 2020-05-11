@@ -34,6 +34,29 @@ describe(LeanplumInbox, () => {
 
       expect(handler).toHaveBeenCalledTimes(1)
     })
+
+    it('works when reponse does not provide messages', () => {
+      const handler = jest.fn()
+
+      inbox.onChanged(handler)
+
+      createRequestSpy.mockImplementationOnce(
+        (method, args, options) => {
+          options.response({
+            response: [{
+              success:true,
+              warning:{
+                message:"User not found; request skipped."
+              }
+            }]
+          })
+        }
+      )
+      inbox.downloadMessages()
+
+      expect(handler).toHaveBeenCalledTimes(0)
+      expect(inbox.messageIds()).toEqual([])
+    })
   })
 
   describe('allMessages', () => {
