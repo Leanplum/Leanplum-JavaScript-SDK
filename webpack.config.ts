@@ -42,7 +42,6 @@ class DtsBundlePlugin {
         name: libraryName,
         out: '../' + this.outFileName,
         outputAsModuleFolder: true,
-        verbose: true,
       })
 
       this.removeSourceDefs(path.resolve(__dirname, './dist'))
@@ -97,6 +96,11 @@ function createConfig(
         test: /\.ts$/,
         include: [path.resolve(__dirname, './src')],
         loader: 'ts-loader',
+        options: {
+          compilerOptions: {
+            declaration: !isInDevMode && (filename === 'leanplum.js'),
+          },
+        },
       }],
     },
     output: {
@@ -150,15 +154,9 @@ const swConfig: Partial<webpack.Configuration> = {
 if (isInDevMode) {
   configuration = createConfig('leanplum.js', lpConfig)
   configuration.plugins = [new ForkTsCheckerWebpackPlugin({
-    compilerOptions: {
-      declaration: false,
-    },
     silent: false,
   })]
   configuration.module.rules.find((x) => x.loader === 'ts-loader').options = {
-    compilerOptions: {
-      declaration: false,
-    },
     transpileOnly: true,
   }
   configuration.watch = true
