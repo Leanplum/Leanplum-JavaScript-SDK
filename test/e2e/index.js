@@ -24,7 +24,7 @@ $("[data-action=setup]")
 let scope = null;
 let serviceWorkerUrl = "sw.min.js";
 if (window.location.hostname === "leanplum.github.io") {
-  scope = window.location.pathname;
+  scope = window.location.pathname; // GH-pages guarantees ending slash
   serviceWorkerUrl = scope + serviceWorkerUrl;
 }
 Leanplum.setWebPushOptions({ serviceWorkerUrl, scope });
