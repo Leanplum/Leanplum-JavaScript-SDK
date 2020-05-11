@@ -26,7 +26,7 @@ if (window.location.hostname === "leanplum.github.io") {
   scope = "/Leanplum-JavaScript-SDK/";
 }
 Leanplum.setWebPushOptions({
-  serviceWorkerUrl: window.origin + window.pathname + "/sw.min.js",
+  serviceWorkerUrl: window.origin + window.location.pathname + "/sw.min.js",
   scope
 })
 
