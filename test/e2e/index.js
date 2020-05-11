@@ -21,14 +21,13 @@ $("[data-action=setup]")
         }
     });
 
-let scope = null
+let scope = null;
+let serviceWorkerUrl = "sw.min.js";
 if (window.location.hostname === "leanplum.github.io") {
-  scope = "/Leanplum-JavaScript-SDK/";
+  scope = window.location.pathname; // GH-pages guarantees ending slash
+  serviceWorkerUrl = scope + serviceWorkerUrl;
 }
-Leanplum.setWebPushOptions({
-  serviceWorkerUrl: window.origin + window.location.pathname + "/sw.min.js",
-  scope
-})
+Leanplum.setWebPushOptions({ serviceWorkerUrl, scope });
 
 $("#registerForWebPush")
     .click(() => Leanplum.registerForWebPush().then(refreshWebPush));
