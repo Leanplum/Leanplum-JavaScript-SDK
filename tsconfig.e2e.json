@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "UMD",
+    "moduleResolution": "node",
+    "outDir": "dist/e2e",
+    "rootDir": "./test/e2e"
+  },
+  "include": [ "test/e2e/*.ts" ]
+}

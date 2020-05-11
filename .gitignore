@@ -1,5 +1,7 @@
-### macOS
+### E2E
+dist/e2e
 
+### macOS
 .DS_Store
 
 # Logs
@@ -112,7 +114,3 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-dist/test
-
-test/e2e/leanplum.min.js
-test/e2e/sw.min.js
