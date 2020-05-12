@@ -51,11 +51,9 @@ export default class LeanplumInbox implements Inbox {
     this.markAsRead(messageId)
 
     const inboxMessage = this.message(messageId)
-    const openAction = inboxMessage?.openAction()
-    if (openAction) {
-      const id = messageId.split('##')[0]
-      this.onAction(id, openAction)
-    }
+    const id = messageId.split('##')[0]
+    const openAction = inboxMessage?.openAction() || null
+    this.onAction(id, openAction)
   }
 
   public remove(messageId: string): void {

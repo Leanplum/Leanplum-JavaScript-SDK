@@ -154,26 +154,27 @@ export default class LeanplumInternal {
     return this._lpInbox
   }
 
-  onInboxAction(messageId: string, action: Action): void {
-    switch (action.__name__) {
-      case 'Chain to Existing Message':
-        const message = this._messageCache[action['Chained message']]
-        if (message) {
-          this.onInboxAction(messageId, message.vars)
-        }
-        break
+  onInboxAction(messageId: string, action?: Action): void {
+    let response = () => {}
+    if (action && action.__name__ === 'Open URL') {
+      response = () => this.wnd.location.assign(action.URL)
+    }
 
-      case 'Open URL':
-        const args = new ArgsBuilder()
-          .add(Constants.PARAMS.MESSAGE_ID, messageId)
-          .add(Constants.PARAMS.EVENT, 'Open')
+    const args = new ArgsBuilder()
+      .add(Constants.PARAMS.MESSAGE_ID, messageId)
+      .add(Constants.PARAMS.EVENT, 'Open')
 
-        this.createRequest(Constants.METHODS.TRACK, args, {
-          queued: false,
-          sendNow: true,
-          response: () => this.wnd.location.assign(action.URL),
-        })
-        break
+    this.createRequest(Constants.METHODS.TRACK, args, {
+      queued: false,
+      sendNow: true,
+      response
+    })
+
+    if (action.__name__ === 'Chain to Existing Message') {
+      const message = this._messageCache[action['Chained message']]
+      if (message) {
+        this.onInboxAction(action['Chained message'], message.vars)
+      }
     }
   }
 

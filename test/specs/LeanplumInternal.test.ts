@@ -443,8 +443,9 @@ describe(LeanplumInternal, () => {
       })
       lp.start()
 
-      mockNextResponse({ response: [{ success: true }] })
       windowMock.location = { assign: jest.fn() } as any
+      mockNextResponse({ response: [{ success: true }] })
+      mockNextResponse({ response: [{ success: true }] })
       lp.onInboxAction('123##1', {
         __name__: 'Chain to Existing Message',
         'Chained message': '12345',
@@ -457,6 +458,7 @@ describe(LeanplumInternal, () => {
     it('tracks triggered actions', () => {
       windowMock.location = { assign: jest.fn() } as any
 
+      mockNextResponse({ response: [{ success: true }] })
       lp.onInboxAction('123', {
         __name__: 'Open URL',
         URL: 'https://example.com',
@@ -469,6 +471,46 @@ describe(LeanplumInternal, () => {
       expect(action).toEqual('track')
       expect(messageId).toEqual('123')
       expect(event).toEqual('Open')
+    })
+
+    it('tracks chained actions', () => {
+      mockNextResponse({
+        response: [{
+          success: true,
+          messages: {
+            '12345': {
+              action: 'Open URL',
+              vars: {
+                __name__: 'Open URL',
+                URL: 'https://example.com',
+              },
+            },
+          },
+        }],
+      })
+      lp.start()
+
+      mockNextResponse({ response: [{ success: true }] })
+      mockNextResponse({ response: [{ success: true }] })
+      windowMock.location = { assign: jest.fn() } as any
+      lp.onInboxAction('123##1', {
+        __name__: 'Chain to Existing Message',
+        'Chained message': '12345',
+      })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(3)
+
+      expect(getRequestData(lpRequestMock.request.mock.calls[1])).toEqual({
+        action: 'track',
+        messageId: '123##1',
+        event: 'Open'
+      })
+
+      expect(getRequestData(lpRequestMock.request.mock.calls[2])).toEqual({
+        action: 'track',
+        messageId: '12345',
+        event: 'Open'
+      })
     })
   })
 
@@ -489,4 +531,14 @@ describe(LeanplumInternal, () => {
       })
     })
   })
+
+  function getRequestData(request: any): any {
+    const [action, args] = request
+    const {messageId, event} = args.buildDict()
+    return {
+      action,
+      messageId,
+      event
+    }
+  }
 })
