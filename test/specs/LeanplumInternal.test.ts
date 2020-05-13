@@ -20,9 +20,10 @@ import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { APP_ID, KEY_DEV } from '../data/constants'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, mockNextResponse, pushManagerMock, varCacheMock } from '../mocks/internal'
+import { lpRequestMock, lpSocketMock, mockNextResponse, pushManagerMock, varCacheMock } from '../mocks/internal'
 
 jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
+jest.mock('../../src/LeanplumSocket', () => jest.fn().mockImplementation(() => lpSocketMock))
 jest.mock('../../src/PushManager', () => jest.fn().mockImplementation(() => pushManagerMock))
 jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
 
@@ -77,12 +78,30 @@ describe(LeanplumInternal, () => {
       expect(method).toEqual('getNewsfeedMessages')
     })
 
+    it('works in DEV mode', () => {
+      lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
+      mockNextResponse({ response: [{ success: true }] })
+
+      lp.start()
+
+      expect(lpSocketMock.connect).toHaveBeenCalledTimes(1)
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [cahe, auth, createRequest, getLastResponse] = lpSocketMock.connect.mock.calls[0]
+
+      createRequest(expect.any(String), expect.any(Object), expect.any(Object))
+      getLastResponse({ response: [] })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      expect(lpRequestMock.getLastResponse).toHaveBeenCalledTimes(2)
+    })
+
     describe('useSessionLength', () => {
       it('starts a new session if there is no stored session', () => {
         jest.spyOn(Date, 'now').mockImplementation(() => 0)
 
         lp.useSessionLength(2)
-        mockNextResponse({ response: [{ success: true }], })
+        mockNextResponse({ response: [{ success: true }] })
         lp.start()
 
         expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
@@ -93,7 +112,7 @@ describe(LeanplumInternal, () => {
         jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
         lp.useSessionLength(2)
 
-        mockNextResponse({ response: [{ success: true }], })
+        mockNextResponse({ response: [{ success: true }] })
         lp.start()
         currentTime = 1000
         lp.start()
@@ -107,16 +126,35 @@ describe(LeanplumInternal, () => {
 
         lp.useSessionLength(2)
 
-        mockNextResponse({ response: [{ success: true }], })
+        mockNextResponse({ response: [{ success: true }] })
         lp.start()
         currentTime = 2001
-        mockNextResponse({ response: [{ success: true }], })
+        mockNextResponse({ response: [{ success: true }] })
         lp.start()
 
         expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
       })
     })
+  })
 
+  describe('startFromCache', () => {
+    it('works in DEV mode', () => {
+      lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
+      mockNextResponse({ response: [{ success: true }] })
+
+      lp.start()
+
+      expect(lpSocketMock.connect).toHaveBeenCalledTimes(1)
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [cahe, auth, createRequest, getLastResponse] = lpSocketMock.connect.mock.calls[0]
+
+      createRequest(expect.any(String), expect.any(Object), expect.any(Object))
+      getLastResponse({ response: [] })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      expect(lpRequestMock.getLastResponse).toHaveBeenCalledTimes(2)
+    })
   })
 
   describe('track', () => {
@@ -396,7 +434,7 @@ describe(LeanplumInternal, () => {
 
         lp.setWebPushOptions({ serviceWorkerUrl, scope })
 
-        const result = await lp.registerForWebPush()
+        await lp.registerForWebPush()
 
         const registerCall = pushManagerMock.register.mock.calls[0]
         expect(registerCall[0]).toEqual(serviceWorkerUrl)
