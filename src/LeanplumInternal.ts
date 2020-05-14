@@ -588,18 +588,29 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       return
     }
 
-    for (const id of Object.keys(messages)) {
-      const message = messages[id]
-      const vars = { ...action }
-      delete vars['parentCampaignId']
-      if (isEqual(message.vars, vars) && message.parentCampaignId === action.parentCampaignId) {
-        this.trackMessage(id)
-        break
-      }
+    const messageId = this.messageIdFromAction(action);
+    if (messageId) {
+        this.trackMessage(messageId)
     }
 
     if (action.__name__ === 'Open URL') {
       this.wnd.location.assign(action.URL)
+    }
+  }
+
+  private messageIdFromAction(action: Action): string {
+    const messages = this._messageCache || {}
+    const vars = { ...action }
+    delete vars['parentCampaignId']
+
+    for (const id of Object.keys(messages)) {
+      const message = messages[id]
+      if (message.parentCampaignId !== action.parentCampaignId) {
+        continue
+      }
+      if (isEqual(message.vars, vars)) {
+        return id
+      }
     }
   }
 }
