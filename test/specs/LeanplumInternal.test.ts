@@ -426,29 +426,6 @@ describe(LeanplumInternal, () => {
       expect(lp.inbox()).toBe(inbox)
     })
 
-    it('handles inbox action requests', () => {
-      mockMessageCache({
-        '12345': {
-          action: 'Open URL',
-          vars: {
-            __name__: 'Open URL',
-            URL: 'https://example.com',
-          },
-        },
-      })
-
-      windowMock.location = { assign: jest.fn() } as any
-      mockNextResponse({ response: [{ success: true }] })
-      mockNextResponse({ response: [{ success: true }] })
-      lp.onInboxAction('123##1', {
-        __name__: 'Chain to Existing Message',
-        'Chained message': '12345',
-      })
-
-      expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
-      expect(windowMock.location.assign).toHaveBeenCalledWith('https://example.com')
-    })
-
     it('tracks triggered actions', () => {
       windowMock.location = { assign: jest.fn() } as any
 
@@ -498,6 +475,39 @@ describe(LeanplumInternal, () => {
         action: 'track',
         messageId: '12345'
       })
+    })
+
+    // required for tracking impressions properly
+    it('tracks before navigating away', () => {
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          parentCampaignId: '999',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
+          },
+        },
+      })
+      windowMock.location = { assign: jest.fn() } as any
+
+      mockNextResponse({ response: [{ success: true }] })
+
+      let resolveTrackRequest;
+      lpRequestMock.request.mockImplementationOnce(
+        (method, args, options) => resolveTrackRequest = options.response
+      )
+      lp.onInboxAction('123', {
+        parentCampaignId: '999',
+        __name__: 'Open URL',
+        URL: 'https://example.com',
+      })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(0)
+
+      resolveTrackRequest({ response: [ { success: true } ] })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
     })
 
     it('tracks chained actions', () => {

@@ -565,7 +565,11 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     return false
   }
 
-  private trackMessage(messageId: string, event: string = null): void {
+  private trackMessage(
+    messageId: string,
+    event: string = null,
+    response: Function = () => { /* noop */ }
+  ): void {
     const args = new ArgsBuilder()
       .add(Constants.PARAMS.MESSAGE_ID, messageId)
 
@@ -573,7 +577,11 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       args.add(Constants.PARAMS.EVENT, event)
     }
 
-    this.createRequest(Constants.METHODS.TRACK, args, { queued: false, sendNow: true })
+    this.createRequest(Constants.METHODS.TRACK, args, {
+      queued: false,
+      sendNow: true,
+      response,
+    })
   }
 
   private onAction(action: Action): void {
@@ -588,13 +596,16 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       return
     }
 
+    const processAction = () => {
+      if (action.__name__ === 'Open URL') {
+        this.wnd.location.assign(action.URL)
+      }
+    }
     const messageId = this.messageIdFromAction(action);
     if (messageId) {
-        this.trackMessage(messageId)
-    }
-
-    if (action.__name__ === 'Open URL') {
-      this.wnd.location.assign(action.URL)
+      this.trackMessage(messageId, null, processAction)
+    } else {
+      processAction()
     }
   }
 
