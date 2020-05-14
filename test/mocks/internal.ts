@@ -5,7 +5,11 @@ import VarCache from '../../src/VarCache'
 export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
   getLastResponse: jest.fn().mockImplementation((data) => data.response[0]),
   isResponseSuccess: jest.fn().mockImplementation((response) => Boolean(response?.success)),
-  request: jest.fn()
+  request: jest.fn(),
+}
+
+export const lpSocketMock = {
+  connect: jest.fn(),
 }
 
 export const pushManagerMock: Partial<jest.Mocked<PushManager>> = {
@@ -13,7 +17,7 @@ export const pushManagerMock: Partial<jest.Mocked<PushManager>> = {
   isWebPushSupported: jest.fn(),
   register: jest.fn(),
   subscribeUser: jest.fn(),
-  unsubscribeUser: jest.fn()
+  unsubscribeUser: jest.fn(),
 }
 
 export const varCacheMock: Partial<jest.Mocked<VarCache>> = {
@@ -29,7 +33,8 @@ export const varCacheMock: Partial<jest.Mocked<VarCache>> = {
   clearUserContent: jest.fn(),
 }
 
-export function mockNextResponse(data: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mockNextResponse(data: any): void {
   lpRequestMock.request.mockImplementationOnce(
     (method, args, options) => {
       if (options.response) {

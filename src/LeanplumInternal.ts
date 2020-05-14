@@ -241,25 +241,23 @@ export default class LeanplumInternal {
     }
 
     const args = new ArgsBuilder()
-        .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
-        .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.SYSTEM_NAME, this._systemName || this._browserDetector.OS)
-        .add(Constants.PARAMS.SYSTEM_VERSION, (this._systemVersion || '').toString())
-        .add(Constants.PARAMS.BROWSER_NAME, this._browserDetector.browser)
-        .add(Constants.PARAMS.BROWSER_VERSION, this._browserDetector.version.toString())
-        .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
-        .add(Constants.PARAMS.DEVICE_NAME, this._deviceName ||
-            `${this._browserDetector.browser} ${this._browserDetector.version}`)
-        .add(Constants.PARAMS.DEVICE_MODEL, this._deviceModel || 'Web Browser')
-        .add(Constants.PARAMS.NEWSFEED_MESSAGES, this._lpInbox.messageIds())
-        .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-        .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, this._internalState.variantDebugInfoEnabled)
+      .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
+      .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.SYSTEM_NAME, this._systemName || this._browserDetector.OS)
+      .add(Constants.PARAMS.SYSTEM_VERSION, (this._systemVersion || '').toString())
+      .add(Constants.PARAMS.BROWSER_NAME, this._browserDetector.browser)
+      .add(Constants.PARAMS.BROWSER_VERSION, this._browserDetector.version.toString())
+      .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.DEVICE_NAME, this._deviceName ||
+          `${this._browserDetector.browser} ${this._browserDetector.version}`)
+      .add(Constants.PARAMS.DEVICE_MODEL, this._deviceModel || 'Web Browser')
+      .add(Constants.PARAMS.NEWSFEED_MESSAGES, this._lpInbox.messageIds())
+      .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
+      .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, this._internalState.variantDebugInfoEnabled)
 
-    // Issue request.
-    // noinspection Annotator
     this.createRequest(Constants.METHODS.START, args, {
       queued: true,
       sendNow: true,
@@ -286,9 +284,9 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
           }
 
           this._varCache.applyDiffs(
-              startResponse[Constants.KEYS.VARS],
-              startResponse[Constants.KEYS.VARIANTS],
-              startResponse[Constants.KEYS.ACTION_METADATA])
+            startResponse[Constants.KEYS.VARS],
+            startResponse[Constants.KEYS.VARIANTS],
+            startResponse[Constants.KEYS.ACTION_METADATA])
           this._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
           this._varCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
@@ -539,8 +537,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
         appId: this._lpRequest.appId,
         deviceId: this._lpRequest.deviceId,
       },
-      this.createRequest,
-      this._lpRequest.getLastResponse
+      this.createRequest.bind(this),
+      this._lpRequest.getLastResponse.bind(this._lpRequest)
     )
   }
 
