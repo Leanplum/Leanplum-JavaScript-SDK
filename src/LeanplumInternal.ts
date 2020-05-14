@@ -156,50 +156,10 @@ export default class LeanplumInternal {
   }
 
   onInboxAction(messageId: string, action?: Action): void {
-    const messages = this._messageCache || {}
-    const trackMessage = (
-      messageId: string,
-      event: string = null
-    ): void => {
-      const args = new ArgsBuilder()
-        .add(Constants.PARAMS.MESSAGE_ID, messageId)
+    this.trackMessage(messageId, 'Open')
 
-      if (event) {
-        args.add(Constants.PARAMS.EVENT, event)
-      }
-
-      this.createRequest(Constants.METHODS.TRACK, args, { queued: false, sendNow: true })
-    }
-
-    trackMessage(messageId, 'Open')
-
-    // TODO: refactor to: if (action) trackAction(action)
-    if (!action) {
-      return
-    }
-
-    if (action && action.__name__ === 'Chain to Existing Message') {
-      const chainedMessageId = action['Chained message']
-      const message = messages[chainedMessageId]
-      if (message) {
-        this.onInboxAction(chainedMessageId, message.vars)
-      }
-
-      return
-    }
-
-    for (const id of Object.keys(messages)) {
-      const message = messages[id]
-      const vars = { ...action }
-      delete vars['parentCampaignId']
-      if (isEqual(message.vars, vars) && message.parentCampaignId === action.parentCampaignId) {
-        trackMessage(id)
-        break
-      }
-    }
-
-    if (action.__name__ === 'Open URL') {
-      this.wnd.location.assign(action.URL)
+    if (action) {
+      this.onAction(action)
     }
   }
 
@@ -603,5 +563,43 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     }
 
     return false
+  }
+
+  private trackMessage(messageId: string, event: string = null): void {
+    const args = new ArgsBuilder()
+      .add(Constants.PARAMS.MESSAGE_ID, messageId)
+
+    if (event) {
+      args.add(Constants.PARAMS.EVENT, event)
+    }
+
+    this.createRequest(Constants.METHODS.TRACK, args, { queued: false, sendNow: true })
+  }
+
+  private onAction(action: Action) {
+    const messages = this._messageCache || {}
+    if (action && action.__name__ === 'Chain to Existing Message') {
+      const chainedMessageId = action['Chained message']
+      const message = messages[chainedMessageId]
+      if (message) {
+        this.onInboxAction(chainedMessageId, message.vars)
+      }
+
+      return
+    }
+
+    for (const id of Object.keys(messages)) {
+      const message = messages[id]
+      const vars = { ...action }
+      delete vars['parentCampaignId']
+      if (isEqual(message.vars, vars) && message.parentCampaignId === action.parentCampaignId) {
+        this.trackMessage(id)
+        break
+      }
+    }
+
+    if (action.__name__ === 'Open URL') {
+      this.wnd.location.assign(action.URL)
+    }
   }
 }
