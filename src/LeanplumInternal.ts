@@ -596,12 +596,12 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       return
     }
 
-    const processAction = () => {
+    const processAction = (): void => {
       if (action.__name__ === 'Open URL') {
         this.wnd.location.assign(action.URL)
       }
     }
-    const messageId = this.messageIdFromAction(action);
+    const messageId = this.messageIdFromAction(action)
     if (messageId) {
       this.trackMessage(messageId, null, processAction)
     } else {
