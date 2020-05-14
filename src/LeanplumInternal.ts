@@ -576,7 +576,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this.createRequest(Constants.METHODS.TRACK, args, { queued: false, sendNow: true })
   }
 
-  private onAction(action: Action) {
+  private onAction(action: Action): void {
     const messages = this._messageCache || {}
     if (action && action.__name__ === 'Chain to Existing Message') {
       const chainedMessageId = action['Chained message']
