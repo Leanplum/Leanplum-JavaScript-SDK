@@ -128,6 +128,12 @@ export default class LeanplumInbox implements Inbox {
 
 export class LeanplumInboxMessage implements InboxMessage {
   static create(id: string, messageInfo: MessageObject): InboxMessage {
+    const parentCampaignId = messageInfo.messageData?.parentCampaignId
+    const action = {
+      ...messageInfo.messageData?.vars?.[Constants.VALUES.DEFAULT_PUSH_ACTION],
+      parentCampaignId,
+    }
+
     return new LeanplumInboxMessage(
       id,
       messageInfo.messageData?.vars?.Title,
@@ -135,7 +141,7 @@ export class LeanplumInboxMessage implements InboxMessage {
       messageInfo.deliveryTimestamp,
       messageInfo.isRead,
       messageInfo.messageData?.vars?.Image,
-      messageInfo.messageData?.vars?.[Constants.VALUES.DEFAULT_PUSH_ACTION]
+      action
     )
   }
 

@@ -427,21 +427,15 @@ describe(LeanplumInternal, () => {
     })
 
     it('handles inbox action requests', () => {
-      mockNextResponse({
-        response: [{
-          success: true,
-          messages: {
-            '12345': {
-              action: 'Open URL',
-              vars: {
-                __name__: 'Open URL',
-                URL: 'https://example.com',
-              },
-            },
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
           },
-        }],
+        },
       })
-      lp.start()
 
       windowMock.location = { assign: jest.fn() } as any
       mockNextResponse({ response: [{ success: true }] })
@@ -466,50 +460,77 @@ describe(LeanplumInternal, () => {
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
 
-      const [action, args] = lpRequestMock.request.mock.calls[0]
-      const {messageId, event} = args.buildDict()
-      expect(action).toEqual('track')
-      expect(messageId).toEqual('123')
-      expect(event).toEqual('Open')
+      expect(getRequestData(lpRequestMock.request.mock.calls[0])).toEqual({
+        action: 'track',
+        messageId: '123',
+        event: 'Open'
+      })
+    })
+
+    it('tracks app functions from campaign', () => {
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          parentCampaignId: '999',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
+          },
+        },
+      })
+      windowMock.location = { assign: jest.fn() } as any
+
+      mockNextResponse({ response: [{ success: true }] })
+      mockNextResponse({ response: [{ success: true }] })
+      lp.onInboxAction('123', {
+        parentCampaignId: '999',
+        __name__: 'Open URL',
+        URL: 'https://example.com',
+      })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      expect(getRequestData(lpRequestMock.request.mock.calls[0])).toEqual({
+        action: 'track',
+        messageId: '123',
+        event: 'Open'
+      })
+      expect(getRequestData(lpRequestMock.request.mock.calls[1])).toEqual({
+        action: 'track',
+        messageId: '12345'
+      })
     })
 
     it('tracks chained actions', () => {
-      mockNextResponse({
-        response: [{
-          success: true,
-          messages: {
-            '12345': {
-              action: 'Open URL',
-              vars: {
-                __name__: 'Open URL',
-                URL: 'https://example.com',
-              },
-            },
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          parentCampaignId: '999',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
           },
-        }],
+        },
       })
-      lp.start()
 
       mockNextResponse({ response: [{ success: true }] })
       mockNextResponse({ response: [{ success: true }] })
       windowMock.location = { assign: jest.fn() } as any
-      lp.onInboxAction('123##1', {
+      lp.onInboxAction('123', {
+        parentCampaignId: '999',
         __name__: 'Chain to Existing Message',
         'Chained message': '12345',
       })
 
-      expect(lpRequestMock.request).toHaveBeenCalledTimes(3)
-
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      expect(getRequestData(lpRequestMock.request.mock.calls[0])).toEqual({
+        action: 'track',
+        messageId: '123',
+        event: 'Open',
+      })
       expect(getRequestData(lpRequestMock.request.mock.calls[1])).toEqual({
         action: 'track',
-        messageId: '123##1',
-        event: 'Open'
-      })
-
-      expect(getRequestData(lpRequestMock.request.mock.calls[2])).toEqual({
-        action: 'track',
         messageId: '12345',
-        event: 'Open'
+        event: 'Open',
       })
     })
   })
@@ -540,5 +561,16 @@ describe(LeanplumInternal, () => {
       messageId,
       event
     }
+  }
+
+  function mockMessageCache(messages: any): void {
+    mockNextResponse({
+      response: [{
+        success: true,
+        messages,
+      }],
+    })
+    lp.start()
+    lpRequestMock.request.mockClear()
   }
 })

@@ -32,7 +32,9 @@ export const varCacheMock: Partial<jest.Mocked<VarCache>> = {
 export function mockNextResponse(data: any) {
   lpRequestMock.request.mockImplementationOnce(
     (method, args, options) => {
-      options.response(data)
+      if (options.response) {
+        options.response(data)
+      }
     }
   )
 }
