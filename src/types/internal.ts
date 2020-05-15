@@ -2,6 +2,8 @@ import ArgsBuilder from '../ArgsBuilder'
 import { LeanplumRequestOptions } from '../LeanplumRequest'
 import { Action } from './public'
 
+export type MessageId = string
+
 export type CreateRequestFunction = (
   action: string,
   args: ArgsBuilder,

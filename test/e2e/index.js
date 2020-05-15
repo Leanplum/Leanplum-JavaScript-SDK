@@ -178,6 +178,7 @@ $("#appInbox")
   })
   .on("click", "[data-action=delete]", (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const messageId = $(e.target).closest("[data-id]").data("id");
     inbox.remove(messageId);
   })

@@ -464,37 +464,10 @@ describe(LeanplumInternal, () => {
       expect(lp.inbox()).toBe(inbox)
     })
 
-    it('handles inbox action requests', () => {
-      mockNextResponse({
-        response: [{
-          success: true,
-          messages: {
-            '12345': {
-              action: 'Open URL',
-              vars: {
-                __name__: 'Open URL',
-                URL: 'https://example.com',
-              },
-            },
-          },
-        }],
-      })
-      lp.start()
-
-      mockNextResponse({ response: [{ success: true }] })
-      windowMock.location = { assign: jest.fn() } as any
-      lp.onInboxAction('123##1', {
-        __name__: 'Chain to Existing Message',
-        'Chained message': '12345',
-      })
-
-      expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
-      expect(windowMock.location.assign).toHaveBeenCalledWith('https://example.com')
-    })
-
     it('tracks triggered actions', () => {
       windowMock.location = { assign: jest.fn() } as any
 
+      mockNextResponse({ response: [{ success: true }] })
       lp.onInboxAction('123', {
         __name__: 'Open URL',
         URL: 'https://example.com',
@@ -502,11 +475,111 @@ describe(LeanplumInternal, () => {
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
 
-      const [action, args] = lpRequestMock.request.mock.calls[0]
-      const {messageId, event} = args.buildDict()
-      expect(action).toEqual('track')
-      expect(messageId).toEqual('123')
-      expect(event).toEqual('Open')
+      expect(getRequestData(lpRequestMock.request.mock.calls[0])).toEqual({
+        action: 'track',
+        messageId: '123',
+        event: 'Open'
+      })
+    })
+
+    it('tracks app functions from campaign', () => {
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          parentCampaignId: '999',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
+          },
+        },
+      })
+      windowMock.location = { assign: jest.fn() } as any
+
+      mockNextResponse({ response: [{ success: true }] })
+      mockNextResponse({ response: [{ success: true }] })
+      lp.onInboxAction('123', {
+        parentCampaignId: '999',
+        __name__: 'Open URL',
+        URL: 'https://example.com',
+      })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      expect(getRequestData(lpRequestMock.request.mock.calls[0])).toEqual({
+        action: 'track',
+        messageId: '123',
+        event: 'Open'
+      })
+      expect(getRequestData(lpRequestMock.request.mock.calls[1])).toEqual({
+        action: 'track',
+        messageId: '12345'
+      })
+    })
+
+    // required for tracking impressions properly
+    it('tracks before navigating away', () => {
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          parentCampaignId: '999',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
+          },
+        },
+      })
+      windowMock.location = { assign: jest.fn() } as any
+
+      mockNextResponse({ response: [{ success: true }] })
+
+      let resolveTrackRequest;
+      lpRequestMock.request.mockImplementationOnce(
+        (method, args, options) => resolveTrackRequest = options.response
+      )
+      lp.onInboxAction('123', {
+        parentCampaignId: '999',
+        __name__: 'Open URL',
+        URL: 'https://example.com',
+      })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(0)
+
+      resolveTrackRequest({ response: [ { success: true } ] })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
+    })
+
+    it('tracks chained actions', () => {
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          parentCampaignId: '999',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
+          },
+        },
+      })
+
+      mockNextResponse({ response: [{ success: true }] })
+      mockNextResponse({ response: [{ success: true }] })
+      windowMock.location = { assign: jest.fn() } as any
+      lp.onInboxAction('123', {
+        parentCampaignId: '999',
+        __name__: 'Chain to Existing Message',
+        'Chained message': '12345',
+      })
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      expect(getRequestData(lpRequestMock.request.mock.calls[0])).toEqual({
+        action: 'track',
+        messageId: '123',
+        event: 'Open',
+      })
+      expect(getRequestData(lpRequestMock.request.mock.calls[1])).toEqual({
+        action: 'track',
+        messageId: '12345',
+        event: 'Open',
+      })
     })
   })
 
@@ -527,4 +600,25 @@ describe(LeanplumInternal, () => {
       })
     })
   })
+
+  function getRequestData(request: any): any {
+    const [action, args] = request
+    const {messageId, event} = args.buildDict()
+    return {
+      action,
+      messageId,
+      event
+    }
+  }
+
+  function mockMessageCache(messages: any): void {
+    mockNextResponse({
+      response: [{
+        success: true,
+        messages,
+      }],
+    })
+    lp.start()
+    lpRequestMock.request.mockClear()
+  }
 })
