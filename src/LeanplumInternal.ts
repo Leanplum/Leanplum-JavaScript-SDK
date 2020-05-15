@@ -156,11 +156,7 @@ export default class LeanplumInternal {
   }
 
   onInboxAction(messageId: string, action?: Action): void {
-    this.trackMessage(messageId, 'Open')
-
-    if (action) {
-      this.onAction(action)
-    }
+    this.trackMessage(messageId, 'Open', () => action && this.onAction(action))
   }
 
   addStartResponseHandler(handler: StatusHandler): void {
