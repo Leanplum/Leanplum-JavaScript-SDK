@@ -4,13 +4,7 @@ export const windowMock: Window = {
   },
 } as Window
 
-const queue = []
-
-export function resolveRequest() {
-  const request = queue.shift()
-  request.onreadystatechange()
-  jest.runAllTimers()
-}
+const xhrQueue = []
 
 export const xhrMock = function(): Partial<XMLHttpRequest> {
   return {
@@ -24,8 +18,16 @@ export const xhrMock = function(): Partial<XMLHttpRequest> {
       }
     }),
     send: jest.fn(function() {
-      queue.push(this)
+      xhrQueue.push(this)
     }),
     setRequestHeader: jest.fn(),
+  }
+}
+
+xhrMock.resolveRequest = function() {
+  const xhr = xhrQueue.shift()
+  if (xhr) {
+    xhr.onreadystatechange()
+    jest.runAllTimers()
   }
 }

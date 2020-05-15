@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import Network from '../../src/Network'
-import { xhrMock, resolveRequest } from '../mocks/external'
+import { xhrMock } from '../mocks/external'
 
 globalThis.XMLHttpRequest = jest.fn().mockImplementation(xhrMock) as any
 
@@ -20,8 +20,8 @@ describe(Network, () => {
     network.ajax('POST', 'http://test.com/', {}, success, error, true, true)
     network.ajax('POST', 'http://test.com/', {}, success, error, true, true)
 
-    resolveRequest()
-    resolveRequest()
+    xhrMock.resolveRequest()
+    xhrMock.resolveRequest()
 
     expect(success).toHaveBeenCalledTimes(2)
     expect(error).toHaveBeenCalledTimes(0)
