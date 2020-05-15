@@ -581,6 +581,38 @@ describe(LeanplumInternal, () => {
         event: 'Open',
       })
     })
+
+    // required for tracking impressions properly
+    it('tracks chained messages before navigating away', () => {
+      mockMessageCache({
+        '12345': {
+          action: 'Open URL',
+          parentCampaignId: '999',
+          vars: {
+            __name__: 'Open URL',
+            URL: 'https://example.com',
+          },
+        },
+      })
+
+      mockNextResponse({ response: [{ success: true }] })
+      let resolveTrackRequest;
+      lpRequestMock.request.mockImplementationOnce(
+        (method, args, options) => resolveTrackRequest = options.response
+      )
+      windowMock.location = { assign: jest.fn() } as any
+      lp.onInboxAction('123', {
+        parentCampaignId: '999',
+        __name__: 'Chain to Existing Message',
+        'Chained message': '12345',
+      })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(0)
+
+      resolveTrackRequest({ response: [ { success: true } ] })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('Misc', () => {
