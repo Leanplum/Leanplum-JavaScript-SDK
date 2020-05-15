@@ -53,14 +53,11 @@ export default class Network {
       this.runningRequest = true
     }
 
-    /** @namespace XDomainRequest **/
-    /** @namespace location **/
     if (typeof XDomainRequest !== 'undefined') {
       if (location.protocol === 'http:' && url.indexOf('https:') === 0) {
         url = `http:${url.substring(6)}`
       }
-      // eslint-disable-next-line prefer-rest-params
-      return this.ajaxIE8.call(this, arguments)
+      return this.ajaxIE8(method, url, data, success, error, queued, plainText)
     }
 
     let handled = false
@@ -196,7 +193,8 @@ export default class Network {
   private dequeueRequest(): void {
     const args = this.requestQueue.shift()
     if (args) {
-      this.ajax.call(this, args)
+      // eslint-disable-next-line prefer-spread
+      this.ajax.apply(this, args)
     }
   }
 }
