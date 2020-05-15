@@ -23,6 +23,7 @@ import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
+import isEqual from 'lodash.isequal'
 import {
   Action,
   Inbox,
@@ -154,26 +155,11 @@ export default class LeanplumInternal {
     return this._lpInbox
   }
 
-  onInboxAction(messageId: string, action: Action): void {
-    switch (action.__name__) {
-      case 'Chain to Existing Message':
-        const message = this._messageCache[action['Chained message']]
-        if (message) {
-          this.onInboxAction(messageId, message.vars)
-        }
-        break
+  onInboxAction(messageId: string, action?: Action): void {
+    this.trackMessage(messageId, 'Open')
 
-      case 'Open URL':
-        const args = new ArgsBuilder()
-          .add(Constants.PARAMS.MESSAGE_ID, messageId)
-          .add(Constants.PARAMS.EVENT, 'Open')
-
-        this.createRequest(Constants.METHODS.TRACK, args, {
-          queued: false,
-          sendNow: true,
-          response: () => this.wnd.location.assign(action.URL),
-        })
-        break
+    if (action) {
+      this.onAction(action)
     }
   }
 
@@ -575,5 +561,65 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     }
 
     return false
+  }
+
+  private trackMessage(
+    messageId: string,
+    event: string = null,
+    response: Function = () => { /* noop */ }
+  ): void {
+    const args = new ArgsBuilder()
+      .add(Constants.PARAMS.MESSAGE_ID, messageId)
+
+    if (event) {
+      args.add(Constants.PARAMS.EVENT, event)
+    }
+
+    this.createRequest(Constants.METHODS.TRACK, args, {
+      queued: false,
+      sendNow: true,
+      response,
+    })
+  }
+
+  private onAction(action: Action): void {
+    const messages = this._messageCache || {}
+    if (action && action.__name__ === 'Chain to Existing Message') {
+      const chainedMessageId = action['Chained message']
+      const message = messages[chainedMessageId]
+      if (message) {
+        this.onInboxAction(chainedMessageId, message.vars)
+      }
+
+      return
+    }
+
+    const processAction = (): void => {
+      if (action.__name__ === 'Open URL') {
+        this.wnd.location.assign(action.URL)
+      }
+    }
+    const messageId = this.messageIdFromAction(action)
+    if (messageId) {
+      this.trackMessage(messageId, null, processAction)
+    } else {
+      processAction()
+    }
+  }
+
+  private messageIdFromAction(action: Action): string {
+    const messages = this._messageCache || {}
+    const vars = { ...action }
+    delete vars['parentCampaignId']
+
+    for (const id of Object.keys(messages)) {
+      const message = messages[id]
+      if (message.parentCampaignId !== action.parentCampaignId) {
+        continue
+      }
+      if (isEqual(message.vars, vars)) {
+        return id
+      }
+    }
   }
 }
