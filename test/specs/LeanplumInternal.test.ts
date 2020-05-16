@@ -170,7 +170,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.0)
       expect(params).toEqual(undefined)
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with params', () => {
@@ -185,7 +186,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.0)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with value', () => {
@@ -200,7 +202,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(1.23)
       expect(params).toEqual(undefined)
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with value and params', () => {
@@ -215,7 +218,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(1.23)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with value, info and params', () => {
@@ -230,7 +234,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(1.23)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual('test')
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works in DEV mode', () => {
@@ -246,7 +251,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.99)
       expect(params).toEqual(JSON.stringify({ dev: true }))
       expect(info).toEqual('Development')
-      expect(options).toEqual({ devMode: true, queued: true })
+      expect(options.devMode).toEqual(true);
+      expect(options.queued).toEqual(true);
     })
   })
 
@@ -262,7 +268,8 @@ describe(LeanplumInternal, () => {
       expect(event).toEqual('Purchase')
       expect(value).toEqual(19.99)
       expect(params).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with currency code', () => {
@@ -276,7 +283,8 @@ describe(LeanplumInternal, () => {
       expect(event).toEqual('Purchase')
       expect(value).toEqual(19.99)
       expect(currencyCode).toEqual('EUR')
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with params', () => {
@@ -291,7 +299,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(19.99)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(currencyCode).toEqual('EUR')
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with custom event name', () => {
@@ -306,7 +315,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(19.99)
       expect(currencyCode).toEqual('BGN')
       expect(params).toEqual(JSON.stringify({ itemsInCart: 4 }))
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works in DEV mode', () => {
@@ -322,7 +332,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.99)
       expect(currencyCode).toEqual('USD')
       expect(params).toEqual(JSON.stringify({ dev: true }))
-      expect(options).toEqual({ devMode: true, queued: true })
+      expect(options.devMode).toEqual(true);
+      expect(options.queued).toEqual(true);
     })
   })
 
