@@ -253,6 +253,10 @@ export default class Leanplum {
     Leanplum._lp.clearUserContent()
   }
 
+  static applyQueue(queue: Array<{ name: string, args: Array<any> }>): void {
+    Leanplum._lp.applyQueue(queue)
+  }
+
   static __destroy(): void {
     this._lp = new LeanplumInternal(window)
   }
