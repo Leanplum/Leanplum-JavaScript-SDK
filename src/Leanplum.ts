@@ -136,6 +136,10 @@ export default class Leanplum {
     Leanplum._lp.forceContentUpdate(callback)
   }
 
+  static useSessionLength(seconds: number): void {
+    Leanplum._lp.useSessionLength(seconds)
+  }
+
   static start(userId: string, callback: StatusHandler): void;
   static start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
   static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;

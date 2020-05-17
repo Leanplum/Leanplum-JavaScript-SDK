@@ -45,6 +45,7 @@ export default class Leanplum {
     static addVariablesChangedHandler(handler: SimpleHandler): void;
     static removeVariablesChangedHandler(handler: SimpleHandler): void;
     static forceContentUpdate(callback?: StatusHandler): void;
+    static useSessionLength(seconds: number): void;
     static start(userId: string, callback: StatusHandler): void;
     static start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
     static start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
