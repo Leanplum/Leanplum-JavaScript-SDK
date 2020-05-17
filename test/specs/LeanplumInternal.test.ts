@@ -107,6 +107,21 @@ describe(LeanplumInternal, () => {
         expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       })
 
+      it('retries to start session, if start call fails', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+
+        lp.useSessionLength(2)
+        mockNextResponse({ response: [{ success: false }] })
+        lp.start()
+
+        currentTime = 100
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
+
       it('resumes sessions if session is active', () => {
         let currentTime = 0
         jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
@@ -114,6 +129,7 @@ describe(LeanplumInternal, () => {
 
         mockNextResponse({ response: [{ success: true }] })
         lp.start()
+
         currentTime = 1000
         lp.start()
 
@@ -128,11 +144,69 @@ describe(LeanplumInternal, () => {
 
         mockNextResponse({ response: [{ success: true }] })
         lp.start()
+
         currentTime = 2001
         mockNextResponse({ response: [{ success: true }] })
         lp.start()
 
         expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
+
+      it('continues session on each start call', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+
+        lp.useSessionLength(2)
+
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 1999
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 3998
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      })
+
+      it('continues session on successfull track', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+        lp.useSessionLength(2)
+
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 1000
+        mockNextResponse({ response: [{ success: true }] })
+        lp.track('Test')
+
+        currentTime = 2000
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
+
+      it('destroys active session on stop', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+        lp.useSessionLength(2)
+
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 500
+        mockNextResponse({ response: [{ success: true }] })
+        lp.stop()
+
+        currentTime = 1000
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(3)
       })
     })
   })

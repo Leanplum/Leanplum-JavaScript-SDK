@@ -316,6 +316,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       userAttributes = {}
     }
 
+    this.updateSession()
+
     this._lpRequest.userId = userId
 
     if (callback) {
@@ -337,6 +339,9 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this.createRequest(Constants.METHODS.STOP, undefined, {
       sendNow: true,
       queued: true,
+      response: () => {
+        LocalStorageManager.removeFromLocalStorage(SESSION_KEY)
+      }
     })
   }
 
@@ -562,9 +567,6 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     return false
   }
 
-  // TODO: add test that session is not set if start fails
-  // TODO: add test that session is updated after startFromCache (browsing without tracking)
-  // TODO: add test that session is updated after track
   private updateSession(): void {
     LocalStorageManager.saveToLocalStorage(SESSION_KEY, String(Date.now()))
   }
