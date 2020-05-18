@@ -596,7 +596,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       const chainedMessageId = action['Chained message']
       const message = messages[chainedMessageId]
       if (message) {
-        this.onInboxAction(chainedMessageId, message.vars)
+        this.trackMessage(chainedMessageId, 'View', () => this.onAction(message.vars))
       }
 
       return
