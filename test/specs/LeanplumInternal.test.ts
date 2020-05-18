@@ -107,6 +107,21 @@ describe(LeanplumInternal, () => {
         expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
       })
 
+      it('retries to start session, if start call fails', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+
+        lp.useSessionLength(2)
+        mockNextResponse({ response: [{ success: false }] })
+        lp.start()
+
+        currentTime = 100
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
+
       it('resumes sessions if session is active', () => {
         let currentTime = 0
         jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
@@ -114,6 +129,7 @@ describe(LeanplumInternal, () => {
 
         mockNextResponse({ response: [{ success: true }] })
         lp.start()
+
         currentTime = 1000
         lp.start()
 
@@ -128,11 +144,69 @@ describe(LeanplumInternal, () => {
 
         mockNextResponse({ response: [{ success: true }] })
         lp.start()
+
         currentTime = 2001
         mockNextResponse({ response: [{ success: true }] })
         lp.start()
 
         expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
+
+      it('continues session on each start call', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+
+        lp.useSessionLength(2)
+
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 1999
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 3998
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      })
+
+      it('continues session on successfull track', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+        lp.useSessionLength(2)
+
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 1000
+        mockNextResponse({ response: [{ success: true }] })
+        lp.track('Test')
+
+        currentTime = 2000
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
+
+      it('destroys active session on stop', () => {
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+        lp.useSessionLength(2)
+
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 500
+        mockNextResponse({ response: [{ success: true }] })
+        lp.stop()
+
+        currentTime = 1000
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(3)
       })
     })
   })
@@ -170,7 +244,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.0)
       expect(params).toEqual(undefined)
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with params', () => {
@@ -185,7 +260,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.0)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with value', () => {
@@ -200,7 +276,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(1.23)
       expect(params).toEqual(undefined)
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with value and params', () => {
@@ -215,7 +292,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(1.23)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with value, info and params', () => {
@@ -230,7 +308,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(1.23)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(info).toEqual('test')
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works in DEV mode', () => {
@@ -246,7 +325,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.99)
       expect(params).toEqual(JSON.stringify({ dev: true }))
       expect(info).toEqual('Development')
-      expect(options).toEqual({ devMode: true, queued: true })
+      expect(options.devMode).toEqual(true);
+      expect(options.queued).toEqual(true);
     })
   })
 
@@ -262,7 +342,8 @@ describe(LeanplumInternal, () => {
       expect(event).toEqual('Purchase')
       expect(value).toEqual(19.99)
       expect(params).toEqual(undefined)
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with currency code', () => {
@@ -276,7 +357,8 @@ describe(LeanplumInternal, () => {
       expect(event).toEqual('Purchase')
       expect(value).toEqual(19.99)
       expect(currencyCode).toEqual('EUR')
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with params', () => {
@@ -291,7 +373,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(19.99)
       expect(params).toEqual(JSON.stringify({ test: true }))
       expect(currencyCode).toEqual('EUR')
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works with custom event name', () => {
@@ -306,7 +389,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(19.99)
       expect(currencyCode).toEqual('BGN')
       expect(params).toEqual(JSON.stringify({ itemsInCart: 4 }))
-      expect(options).toEqual({ devMode: false, queued: true })
+      expect(options.devMode).toEqual(false);
+      expect(options.queued).toEqual(true);
     })
 
     it('works in DEV mode', () => {
@@ -322,7 +406,8 @@ describe(LeanplumInternal, () => {
       expect(value).toEqual(0.99)
       expect(currencyCode).toEqual('USD')
       expect(params).toEqual(JSON.stringify({ dev: true }))
-      expect(options).toEqual({ devMode: true, queued: true })
+      expect(options.devMode).toEqual(true);
+      expect(options.queued).toEqual(true);
     })
   })
 

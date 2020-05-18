@@ -37,6 +37,8 @@ import VarCache from './VarCache'
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
+
 export default class LeanplumInternal {
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
@@ -264,6 +266,8 @@ export default class LeanplumInternal {
         if (this._lpRequest.isResponseSuccess(startResponse)) {
           this._internalState.startSuccessful = true
 
+          this.updateSession()
+
           this._messageCache = startResponse[Constants.KEYS.MESSAGES]
 
           if (startResponse[Constants.KEYS.SYNC_INBOX]) {
@@ -312,6 +316,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       userAttributes = {}
     }
 
+    this.updateSession()
+
     this._lpRequest.userId = userId
 
     if (callback) {
@@ -333,6 +339,9 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this.createRequest(Constants.METHODS.STOP, undefined, {
       sendNow: true,
       queued: true,
+      response: () => {
+        LocalStorageManager.removeFromLocalStorage(SESSION_KEY)
+      },
     })
   }
 
@@ -420,6 +429,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
     this.createRequest(Constants.METHODS.TRACK, args, {
       queued: true,
+      response: () => this.updateSession(),
     })
   }
 
@@ -543,10 +553,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       return false
     }
 
-    const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
     const currentTime = Date.now()
     const lastActive = parseInt(LocalStorageManager.getFromLocalStorage(SESSION_KEY))
-    LocalStorageManager.saveToLocalStorage(SESSION_KEY, String(currentTime))
 
     if (isNaN(lastActive)) {
       return false
@@ -557,6 +565,10 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     }
 
     return false
+  }
+
+  private updateSession(): void {
+    LocalStorageManager.saveToLocalStorage(SESSION_KEY, String(Date.now()))
   }
 
   private trackMessage(
