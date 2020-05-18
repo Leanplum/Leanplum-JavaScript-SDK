@@ -663,7 +663,7 @@ describe(LeanplumInternal, () => {
       expect(getRequestData(lpRequestMock.request.mock.calls[1])).toEqual({
         action: 'track',
         messageId: '12345',
-        event: 'Open',
+        event: 'View',
       })
     })
 
