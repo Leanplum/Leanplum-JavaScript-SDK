@@ -341,7 +341,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       queued: true,
       response: () => {
         LocalStorageManager.removeFromLocalStorage(SESSION_KEY)
-      }
+      },
     })
   }
 
@@ -429,7 +429,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
     this.createRequest(Constants.METHODS.TRACK, args, {
       queued: true,
-      response: () => this.updateSession()
+      response: () => this.updateSession(),
     })
   }
 
