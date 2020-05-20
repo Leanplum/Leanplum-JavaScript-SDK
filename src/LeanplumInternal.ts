@@ -371,6 +371,10 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     })
   }
 
+  getUserId(): string {
+    return this._lpRequest.userId
+  }
+
   setUserId(userId: string): void {
     this.setUserAttributes(userId)
   }

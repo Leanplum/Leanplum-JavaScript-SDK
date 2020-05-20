@@ -57,6 +57,7 @@ export default class Leanplum {
     static resumeSession(): void;
     static pauseState(): void;
     static resumeState(): void;
+    static getUserId(): string;
     static setUserId(userId: string): void;
     static setUserAttributes(userAttributes: UserAttributes): void;
     static setUserAttributes(userId: string, userAttributes?: UserAttributes): void;
