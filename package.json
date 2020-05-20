@@ -1,13 +1,13 @@
 {
   "scripts": {
-    "build": "yarn clean && cross-env NODE_ENV=production webpack",
+    "build": "yarn run clean && cross-env NODE_ENV=production webpack",
     "clean": "rimraf dist",
     "lint": "yarn eslint 'src/**/*.{ts,tsx}'",
     "start": "cross-env NODE_ENV=development webpack --watch",
-    "e2e-build": "tsc --project tsconfig.e2e.json && yarn run e2e-copy",
+    "e2e-build": "yarn run build && tsc --project tsconfig.e2e.json && yarn run e2e-copy",
     "e2e-copy": "cp ./test/e2e/*.html ./dist/e2e/ && cp ./dist/*.js ./dist/e2e/ && cp ./dist/sw/*.js ./dist/e2e/",
-    "e2e-serve": "yarn run e2e-build && http-server dist/e2e -p 8989 -a localhost",
     "e2e-deploy": "yarn run e2e-build && now deploy dist/e2e",
+    "e2e-serve": "yarn run e2e-build && http-server dist/e2e -p 8989 -a localhost",
     "test": "jest"
   },
   "license": "Apache-2.0",
