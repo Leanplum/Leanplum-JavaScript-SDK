@@ -24,6 +24,7 @@ export default class LeanplumRequest {
   private cooldownTimeout = null
   private lastRequestTime = undefined
   private network = new Network()
+  private userIdValue: string | undefined = undefined
 
   public apiPath = 'https://api.leanplum.com/api'
   public appId: string
@@ -31,8 +32,15 @@ export default class LeanplumRequest {
   public batchEnabled = true
   public clientKey: string
   public deviceId: string
-  public userId: string
   public versionName: string
+
+  public get userId(): string | undefined {
+    return this.userIdValue ?? this.loadLocal<string>(Constants.DEFAULT_KEYS.USER_ID) ?? this.deviceId
+  }
+
+  public set userId(userId: string) {
+    this.userIdValue = userId
+  }
 
   public request(action: string, params: ArgsBuilder, options: LeanplumRequestOptions = {}): void {
     options = options || {}
@@ -53,13 +61,6 @@ export default class LeanplumRequest {
 
       this.deviceId = id
       this.saveLocal(Constants.DEFAULT_KEYS.DEVICE_ID, id)
-    }
-
-    if (!this.userId) {
-      this.userId = this.loadLocal<string>(Constants.DEFAULT_KEYS.USER_ID)
-      if (!this.userId) {
-        this.userId = this.deviceId
-      }
     }
 
     this.saveLocal(Constants.DEFAULT_KEYS.USER_ID, this.userId)

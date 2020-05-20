@@ -174,6 +174,10 @@ export default class Leanplum {
     Leanplum._lp.resumeState()
   }
 
+  static getUserId(): string {
+    return this._lp.getUserId()
+  }
+
   static setUserId(userId: string): void {
     Leanplum.setUserAttributes(userId)
   }
