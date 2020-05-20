@@ -1,0 +1,4 @@
+[submodule "gtm-tag"]
+	path = gtm-tag
+	url = git@github.com:Leanplum/Leanplum-GTM-Tag.git
+	branch = master
