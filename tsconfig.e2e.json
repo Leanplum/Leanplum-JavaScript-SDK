@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "UMD",
+    "module": "ES6",
     "moduleResolution": "node",
     "outDir": "dist/e2e",
     "rootDir": "./test/e2e"
