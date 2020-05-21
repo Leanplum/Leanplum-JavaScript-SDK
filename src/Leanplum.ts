@@ -253,7 +253,7 @@ export default class Leanplum {
     Leanplum._lp.clearUserContent()
   }
 
-  static applyQueue(queue: Array<{ name: string, args: Array<any> }>): void {
+  static applyQueue(queue: Array<{ name: string; args: Array<any> }>): void {
     Leanplum._lp.applyQueue(queue)
   }
 

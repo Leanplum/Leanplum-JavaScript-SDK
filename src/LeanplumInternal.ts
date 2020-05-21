@@ -534,8 +534,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   }
 
   // used by Google Tag Manager to apply commands queued during async script loading
-  applyQueue(queue: Array<{ name: string, args: Array<any> }>): void {
-    queue.forEach(invocation => this[invocation.name].apply(this, invocation.args))
+  applyQueue(queue: Array<{ name: string; args: Array<any> }>): void {
+    queue.forEach(invocation => this[invocation.name](...invocation.args))
   }
 
   private createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
