@@ -86,6 +86,10 @@ ___TEMPLATE_PARAMETERS___
         "macrosInSelect": false,
         "selectItems": [
           {
+            "value": "load",
+            "displayValue": "Only load SDK"
+          },
+          {
             "value": "track",
             "displayValue": "Track Event"
           },
@@ -274,17 +278,22 @@ const LP_URL = 'https://cdn.jsdelivr.net/npm/leanplum-sdk@{LP_SDK_VERSION}/dist/
 // command queue
 var lp = {};
 var queue = [
-  { "name": "setAppIdForProductionMode", "args": [data.applicationKey, data.productionKey] },
-  { "name": "useSessionLength", "args": [2*60*60] },
-  { "name": "start", "args": [] }
+  { "name": "setAppIdForProductionMode", "args": [data.applicationKey, data.productionKey] }
 ];
+
+if (data.method !== "load") {
+  // start a session
+  queue.push(
+    { "name": "useSessionLength", "args": [2*60*60] },
+    { "name": "start", "args": [] }
+  );
+}
 
 
 const parameters = {};
 const parametersTable = data.trackParameters || data.userAttributes;
 if (parametersTable) {
   parametersTable.forEach(parameter => {
-    // TODO: add data type field, now only strings?
     parameters[parameter.parameterName] = parameter.parameterValue;
   });
 }
@@ -606,6 +615,22 @@ scenarios:
       { "name": "useSessionLength", "args": [2*60*60] },
       { "name": "start", "args": [] },
       { "name": "setUserAttributes", "args": [{ "param": "123" } ] }
+    ]);
+
+- name: Can inject SDK without sending events
+  code: |-
+    mock('injectScript', function(url, onSuccess, onFailure) {
+        onSuccess();
+    });
+
+    runCode({
+      applicationKey: "app_foo",
+      productionKey: "prod_bar",
+      method: "load"
+    });
+
+    assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
+      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] }
     ]);
 
 

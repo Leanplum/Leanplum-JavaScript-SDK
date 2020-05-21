@@ -43,13 +43,16 @@ async function run() {
       .filter(line => !!line.trim())
       .join('\n     ');
 
+  await execSequential([
+    `git -C ${SUBMODULE_PATH} checkout master`,
+  ]);
+
   const template = readText('./build/gtm-template.tpl')
     .replace(/{LP_SDK_VERSION}/g, version)
     .replace(/{LP_SDK_METHODS}/g, JSON.stringify(publicMethods));
   writeFileSync(`${SUBMODULE_PATH}/template.tpl`, template);
 
   const sha = await execSequential([
-    `git -C ${SUBMODULE_PATH} checkout master`,
     `git -C ${SUBMODULE_PATH} add .`,
     `git -C ${SUBMODULE_PATH} commit -m "chore: update SDK to ${version}"`,
     `git -C ${SUBMODULE_PATH} rev-parse HEAD`
@@ -71,9 +74,9 @@ async function run() {
   await execSequential([
     `git -C ${SUBMODULE_PATH} add .`,
     `git -C ${SUBMODULE_PATH} commit -m "chore: publish new version"`,
-  ])
+  ]);
 
-  // TODO: push submodule
+  console.log(`GTM tag update successful. Verify the changes in the ${SUBMODULE_PATH} submodule.`);
 }
 
 run();
