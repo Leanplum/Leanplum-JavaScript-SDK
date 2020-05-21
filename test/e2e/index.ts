@@ -1,4 +1,4 @@
-import Leanplum from '../../dist/leanplum'
+declare const Leanplum: typeof import('../../dist/leanplum').default
 
 const isProdKey = (accessKey): boolean => /^prod_/.test(accessKey)
 
