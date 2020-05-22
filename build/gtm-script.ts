@@ -2,7 +2,7 @@ import { exec } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import Leanplum from '../src/LeanplumInternal';
 
-const SUBMODULE_PATH = './gtm-tag';
+const GTM_REPO_PATH = './gtm-tag';
 const GTM_REPO = 'git@github.com:Leanplum/Leanplum-GTM-Tag.git';
 
 const readText = (filename: string): string =>
@@ -28,7 +28,7 @@ async function run() {
   const publicMethods = allMethods.slice(1, allMethods.indexOf('createRequest'));
   let [ version ] = await execParallel([
     'npm show leanplum-sdk version',
-    `git clone ${GTM_REPO} ${SUBMODULE_PATH}`
+    `git clone ${GTM_REPO} ${GTM_REPO_PATH}`
   ]);
 
   if (!(/^\d+\.\d+\.\d+$/).test(version)) {
@@ -45,21 +45,21 @@ async function run() {
       .join('\n     ');
 
   await execSequential([
-    `git -C ${SUBMODULE_PATH} checkout master`,
+    `git -C ${GTM_REPO_PATH} checkout master`,
   ]);
 
   const template = readText('./build/gtm-template.tpl')
     .replace(/{LP_SDK_VERSION}/g, version)
     .replace(/{LP_SDK_METHODS}/g, JSON.stringify(publicMethods));
-  writeFileSync(`${SUBMODULE_PATH}/template.tpl`, template);
+  writeFileSync(`${GTM_REPO_PATH}/template.tpl`, template);
 
   const sha = await execSequential([
-    `git -C ${SUBMODULE_PATH} add .`,
-    `git -C ${SUBMODULE_PATH} commit -m "chore: update SDK to ${version}"`,
-    `git -C ${SUBMODULE_PATH} rev-parse HEAD`
+    `git -C ${GTM_REPO_PATH} add .`,
+    `git -C ${GTM_REPO_PATH} commit -m "chore: update SDK to ${version}"`,
+    `git -C ${GTM_REPO_PATH} rev-parse HEAD`
   ]);
 
-  let metadata = readText(`${SUBMODULE_PATH}/metadata.yaml`);
+  let metadata = readText(`${GTM_REPO_PATH}/metadata.yaml`);
   if (metadata.indexOf(sha) < 0) {
     const lines = metadata.split('\n');
     lines.splice(
@@ -70,13 +70,13 @@ async function run() {
     );
     metadata = lines.join('\n');
   }
-  writeFileSync(`${SUBMODULE_PATH}/metadata.yaml`, metadata);
+  writeFileSync(`${GTM_REPO_PATH}/metadata.yaml`, metadata);
 
   await execSequential([
-    `git -C ${SUBMODULE_PATH} add .`,
-    `git -C ${SUBMODULE_PATH} commit -m "chore: publish release with SDD ${version}"`,
-    `git -C ${SUBMODULE_PATH} push`,
-    `rm -rf ${SUBMODULE_PATH}`
+    `git -C ${GTM_REPO_PATH} add .`,
+    `git -C ${GTM_REPO_PATH} commit -m "chore: publish release with SDD ${version}"`,
+    `git -C ${GTM_REPO_PATH} push`,
+    `rm -rf ${GTM_REPO_PATH}`
   ]);
 
   console.log('GTM tag update successful.');
