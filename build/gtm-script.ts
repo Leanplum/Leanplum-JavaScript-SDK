@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import Leanplum from '../src/LeanplumInternal';
 
 const SUBMODULE_PATH = './gtm-tag';
+const GTM_REPO = 'git@github.com:Leanplum/Leanplum-GTM-Tag.git';
 
 const readText = (filename: string): string =>
   readFileSync(filename, { encoding: 'utf-8' });
@@ -27,7 +28,7 @@ async function run() {
   const publicMethods = allMethods.slice(1, allMethods.indexOf('createRequest'));
   let [ version ] = await execParallel([
     'npm show leanplum-sdk version',
-    'git submodule update --init'
+    `git clone ${GTM_REPO} ${SUBMODULE_PATH}`
   ]);
 
   if (!(/^\d+\.\d+\.\d+$/).test(version)) {
@@ -73,10 +74,12 @@ async function run() {
 
   await execSequential([
     `git -C ${SUBMODULE_PATH} add .`,
-    `git -C ${SUBMODULE_PATH} commit -m "chore: publish new version"`,
+    `git -C ${SUBMODULE_PATH} commit -m "chore: publish release with SDD ${version}"`,
+    `git -C ${SUBMODULE_PATH} push`,
+    `rm -rf ${SUBMODULE_PATH}`
   ]);
 
-  console.log(`GTM tag update successful. Verify the changes in the ${SUBMODULE_PATH} submodule.`);
+  console.log('GTM tag update successful.');
 }
 
 run();
