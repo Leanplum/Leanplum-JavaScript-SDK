@@ -533,6 +533,11 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     this._varCache.clearUserContent()
   }
 
+  // used by Google Tag Manager to apply commands queued during async script loading
+  applyQueue(queue: Array<{ name: string; args: Array<any> }>): void {
+    queue.forEach(invocation => this[invocation.name](...invocation.args))
+  }
+
   private createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
     this._lpRequest.request(action, args, {
       devMode: this._internalState.devMode,

@@ -97,6 +97,10 @@ export default class Leanplum {
       * inconsistent state or user experience.
       */
     static clearUserContent(): void;
+    static applyQueue(queue: Array<{
+        name: string;
+        args: Array<any>;
+    }>): void;
     static __destroy(): void;
 }
 
