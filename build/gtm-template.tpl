@@ -336,10 +336,7 @@ switch (data.method) {
 
 {LP_SDK_METHODS}.forEach(function(name) {
   lp[name] = function() {
-    queue.push({
-      name: name,
-      args: [].prototype.slice.call(arguments)
-    });
+    queue.push({ name: name, args: arguments });
   };
 });
 setInWindow("Leanplum", lp, false);
