@@ -66,9 +66,6 @@ const optimization: webpack.Options.Optimization = {
       cache: true,
       parallel: true,
       uglifyOptions: {
-        compress: {
-          drop_console: true,
-        },
         ecma: 5,
         mangle: true,
         output: {
