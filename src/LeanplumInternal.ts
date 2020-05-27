@@ -50,7 +50,9 @@ export default class LeanplumInternal {
     this.onInboxAction.bind(this)
   )
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
-  private _lpSocket: LeanplumSocket = new LeanplumSocket()
+  private _lpSocket: LeanplumSocket = new LeanplumSocket(
+    (args) => this._events.emit('showMessage', args)
+  )
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
   private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
   private _webPushOptions: WebPushOptions
@@ -77,8 +79,8 @@ export default class LeanplumInternal {
         // tell user code to render it
         const vars = message.vars;
         const result = this._events.emit('showMessage', {
-          action: message.action,
-          vars,
+          ...vars,
+
           trackImpression: () => this.trackMessage(id),
           runAction: (actionName: string): void => {
             this.trackMessage(

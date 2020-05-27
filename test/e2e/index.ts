@@ -241,13 +241,20 @@ function renderAppInbox(): void {
 
 // register handler for in-app messages
 Leanplum.on('showMessage', (args) => {
-  const vars = args.vars;
+  let title, body;
 
-  const title = vars.Title.Text || vars.Title;
-  const body = vars.Message.Text || vars.Message;
+  if (args.__name__ === 'HTML' && args.__file__Template === 'lp_public_floating-interstitial-10.html') {
+    // floating interstitital
+    title = args.Title['Text value'];
+    body = args.Message['Text value'];
+  } else if (args.__name__ === 'Confirm') {
+    title = args.Title;
+    body = args.Message;
+  }
+
   const footer = `
-      <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#lpModal">${vars['Cancel text']}</button>
-      <button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#lpModal">${vars['Accept text']}</button>
+    <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#lpModal">${args['Cancel text']}</button>
+    <button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#lpModal">${args['Accept text']}</button>
   `;
 
   const modal = `
@@ -269,8 +276,15 @@ Leanplum.on('showMessage', (args) => {
       </div>
     </form>
   </div>
-`;
+`
+
+  const trackAction = (e) => {
+    // TODO: track action
+    console.log('should track action for ', e.currentTarget);
+  }
+
   $(modal).hide().appendTo('body')
     .on('shown.bs.modal', args.trackImpression)
+    .find('form').on('submit', trackAction).end()
     .modal({ show: true })
 })

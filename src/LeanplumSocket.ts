@@ -28,6 +28,10 @@ export default class LeanplumSocket {
   private socketClient: SocketIoClient | null = null
   private socketHost = 'dev.leanplum.com'
 
+  constructor(
+    private onTriggerMessage: Function
+  ) { }
+
   public connect(
     cache: VarCache,
     auth: { appId: string; deviceId: string },
@@ -61,6 +65,7 @@ export default class LeanplumSocket {
     }
 
     this.socketClient.onmessage = (event: string, args: { email: string }[]) => {
+      console.log('received dev event:', event, args);
       if (event === 'updateVars') {
         const args = new ArgsBuilder().add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
         createRequest(Constants.METHODS.GET_VARS, args, {
@@ -90,15 +95,7 @@ export default class LeanplumSocket {
         // eslint-disable-next-line no-alert
         alert(`Your device has been registered to ${args[0].email}.`)
       } else if (event === 'trigger') {
-        // TODO: pass as real event to user code
-        // TODO: properties are weird, translate to camelCase?
-        const action = (args && args[0] as any).action;
-        const messageHandler = (window as any).Leanplum.onShowMessage;
-        if (messageHandler) {
-          messageHandler(action);
-        }
-      } else {
-        console.log('Received unsupported event: ', event);
+        this.onTriggerMessage((args[0] as any).action);
       }
     }
 
