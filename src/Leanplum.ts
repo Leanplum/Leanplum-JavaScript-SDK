@@ -33,9 +33,6 @@ export default class Leanplum {
 
   static VERSION = Constants.SDK_VERSION;
 
-  // TODO: use proper event emitter
-  static onShowMessage?: Function
-
   static setApiPath(apiPath: string) {
     Leanplum._lp.setApiPath(apiPath)
   }

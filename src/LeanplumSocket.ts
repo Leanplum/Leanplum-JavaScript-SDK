@@ -97,6 +97,8 @@ export default class LeanplumSocket {
         if (messageHandler) {
           messageHandler(action);
         }
+      } else {
+        console.log('Received unsupported event: ', event);
       }
     }
 

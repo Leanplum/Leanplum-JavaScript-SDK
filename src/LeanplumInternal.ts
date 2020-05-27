@@ -65,6 +65,38 @@ export default class LeanplumInternal {
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
+
+    this._events.on('messagesReceived', (messages) => {
+      const messageIds = Object.keys(messages);
+
+      // TODO: check logic for showing messages from other SDKs
+      // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
+      const processMessage = (id: string, message: any) => {
+        console.log(message);
+
+        // tell user code to render it
+        const vars = message.vars;
+        const result = this._events.emit('showMessage', {
+          action: message.action,
+          vars,
+          trackImpression: () => this.trackMessage(id),
+          runAction: (actionName: string): void => {
+            this.trackMessage(
+              id,
+              // TODO: figure out correct action name?
+              // '.m910545446-Accept'
+              `.m${id}-${actionName}`,
+              () => this.onAction(vars[`${actionName} action`]['Chained message'])
+            )
+          }
+        });
+      };
+
+      messageIds
+        .filter(id => messages[id].action !== 'Open URL')
+        // TODO: filter with whenTriggers and whenLimits logic on client-side (more events?)
+        .forEach(id => processMessage(id, messages[id]));
+    })
   }
 
   setApiPath(apiPath: string): void {
@@ -281,7 +313,8 @@ export default class LeanplumInternal {
 
           this.updateSession()
 
-          this._messageCache = startResponse[Constants.KEYS.MESSAGES]
+          this._messageCache = startResponse[Constants.KEYS.MESSAGES] || {}
+          this._events.emit('messagesReceived', this._messageCache)
 
           if (startResponse[Constants.KEYS.SYNC_INBOX]) {
             this._lpInbox.downloadMessages()
@@ -302,106 +335,6 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
             startResponse[Constants.KEYS.ACTION_METADATA])
           this._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
           this._varCache.token = startResponse[Constants.KEYS.TOKEN]
-
-          // TODO: add real events
-          // TODO: check logic for showing messages from other SDKs
-          // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
-          // TODO: handle whenTriggers and whenLimits logic on client-side (change insertion point)
-          const messages = startResponse.messages;
-          const messageIds = Object.keys(messages);
-          if (messageIds.length && Leanplum.onShowMessage) {
-            const processMessage = (id: string, message: any) => {
-              // track impression
-              const args = new ArgsBuilder().add("messageId", id);
-              Leanplum.createRequest(Constants.METHODS.TRACK, args, {
-                sendNow: true,
-                queued: false
-              });
-
-              if (message.action === "Open URL") {
-                // TODO: use window.location.href
-                alert('Navigating to ' + message.vars.URL);
-                return;
-              }
-
-              // tell user code to render it
-              const vars = message.vars;
-              const result = Leanplum.onShowMessage({
-                action: message.action,
-                title: vars.Title.Text || vars.Title,
-                message: vars.Message.Text || vars.Message,
-                accept: vars['Accept text'],
-                cancel: vars['Cancel text']
-              });
-
-              const chainedMsg = vars['Accept action']['Chained message'];
-
-              if (chainedMsg) {
-                result.then((success: boolean) => {
-                  // track accept click
-                  const args = new ArgsBuilder()
-                    .add("messageId", id)
-                    // TODO: generate event name for actions
-                    .add(Constants.PARAMS.EVENT, '.m910545446-Accept');
-
-                  Leanplum.createRequest(Constants.METHODS.TRACK, args, {
-                    sendNow: true,
-                    queued: false
-                  });
-
-                  if (success) {
-                    processMessage(chainedMsg, messages[chainedMsg]);
-                  }
-                });
-              }
-            };
-
-            const setupExitIntent = (callback) => {
-              const SENSITIVITY = 20; // pixels from browser top
-              const DELAY_INTERVAL = 1000; // milliseconds to wait before returns
-              let delay = null;
-
-              function onMouseLeave(e) {
-                if (e.clientY > SENSITIVITY) {
-                  return;
-                }
-
-                delay = setTimeout(() => {
-                  callback();
-                  document.documentElement.removeEventListener('mouseleave', onMouseLeave);
-                  document.documentElement.removeEventListener('mouseenter', onMouseEnter);
-                }, DELAY_INTERVAL);
-              }
-
-              function onMouseEnter() {
-                if (delay) {
-                  clearTimeout(delay);
-                  delay = null;
-                }
-              }
-
-              document.documentElement.addEventListener('mouseleave', onMouseLeave);
-              document.documentElement.addEventListener('mouseenter', onMouseEnter);
-            };
-
-            const showOrSetupMessage = (id: string, message: any) => {
-              // skip action
-              if (message.action === 'Open URL') {
-                return;
-              }
-
-              const vars = message.vars;
-
-              // TODO: serialize exit intent parameter in vars, currently hacked through title text
-              if (/leave|leaving/gi.test(vars.Title.Text || vars.Title)) {
-                setupExitIntent(() => processMessage(id, message));
-              } else {
-                processMessage(id, message);
-              }
-            };
-
-            messageIds.forEach(id => showOrSetupMessage(id, messages[id]));
-          }
         } else {
           this._internalState.startSuccessful = false
           this._varCache.loadDiffs()

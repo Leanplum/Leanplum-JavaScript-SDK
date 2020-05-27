@@ -238,3 +238,39 @@ function renderAppInbox(): void {
     .toggleClass('badge-secondary', unreadCount === 0)
     .toggleClass('badge-primary', unreadCount > 0)
 }
+
+// register handler for in-app messages
+Leanplum.on('showMessage', (args) => {
+  const vars = args.vars;
+
+  const title = vars.Title.Text || vars.Title;
+  const body = vars.Message.Text || vars.Message;
+  const footer = `
+      <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#lpModal">${vars['Cancel text']}</button>
+      <button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#lpModal">${vars['Accept text']}</button>
+  `;
+
+  const modal = `
+  <div class="modal" id="lpModal" tabIndex="-1" role="dialog">
+    <form class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">${title}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>${body}</p>
+        </div>
+        <div class="modal-footer">
+          ${footer}
+        </div>
+      </div>
+    </form>
+  </div>
+`;
+  $(modal).hide().appendTo('body')
+    .on('shown.bs.modal', args.trackImpression)
+    .modal({ show: true })
+})
