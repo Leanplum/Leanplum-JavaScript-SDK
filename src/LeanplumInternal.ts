@@ -77,12 +77,21 @@ export default class LeanplumInternal {
         console.log(message);
 
         // tell user code to render it
+        // TODO: resolve files API / in vars (available in start call)
         const vars = message.vars;
         const result = this._events.emit('showMessage', {
           ...vars,
 
-          trackImpression: () => this.trackMessage(id),
-          runAction: (actionName: string): void => {
+          // these match the ActionContext API
+          //   track
+          //   runActionNamed
+          //   runTrackedActionNamed
+          // https://docs.leanplum.com/reference#section-android-custom-templates
+          track: (event?: string) => this.trackMessage(id, event || null),
+          runActionNamed: (actionName: string): void => {
+            this.onAction(vars[`${actionName} action`]['Chained message'])
+          },
+          runTrackedActionNamed: (actionName: string): void => {
             this.trackMessage(
               id,
               // TODO: figure out correct action name?

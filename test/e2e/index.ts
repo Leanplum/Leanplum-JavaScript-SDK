@@ -241,38 +241,75 @@ function renderAppInbox(): void {
 
 // register handler for in-app messages
 Leanplum.on('showMessage', (args) => {
-  let title, body;
+  let title, body, buttons = [];
 
   if (args.__name__ === 'HTML' && args.__file__Template === 'lp_public_floating-interstitial-10.html') {
-    // floating interstitital
     title = args.Title['Text value'];
     body = args.Message['Text value'];
+
+    const maybeAdd = (buttonName) => {
+      const button = args[buttonName];
+      if (!button['Show button']) {
+        return
+      }
+      buttons.push({
+        text: button.Text['Text value'],
+        action: args[`Select ${buttonName.toLowerCase()} action`]
+      })
+    }
+    maybeAdd('Button 1');
+    maybeAdd('Button 2');
   } else if (args.__name__ === 'Confirm') {
     title = args.Title;
     body = args.Message;
+    buttons.push(
+      { text: args['Cancel text'], action: args['Cancel action'] },
+      { text: args['Accept text'], action: args['Accept action'], primary: true }
+    )
+  } else if (args.__name__ === 'Alert') {
+    title = args.Title;
+    body = args.Message;
+    buttons.push(
+      { text: args['Dismiss text'], action: args['Dismiss action'] }
+    )
+  } else if (args.__name__ === 'Web Interstitial') {
+    if (args['Has dismiss button']) {
+      buttons.push(
+        { text: 'Dismiss' }
+      )
+    }
+
+    body = `<iframe class="w-100 border-0" src="${args.URL}"></iframe>`
   }
 
-  const footer = `
-    <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#lpModal">${args['Cancel text']}</button>
-    <button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#lpModal">${args['Accept text']}</button>
-  `;
+  const buttonHtml = button =>
+    `<button
+        type="${button.primary ? 'submit' : 'button' }"
+        class="btn btn-${ button.primary ? 'primary' : 'secondary' }"
+        data-toggle="modal"
+        data-target="#lpModal">
+      ${button.text}
+    </button>`
+  const footer = !buttons.length ? '' :
+    `<div class="modal-footer">${buttons.map(buttonHtml).join('')}</div>`
+
+  const header = !title ? '' :
+    `<div class="modal-header">
+      <h5 class="modal-title">${title}</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>`
 
   const modal = `
   <div class="modal" id="lpModal" tabIndex="-1" role="dialog">
     <form class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">${title}</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
+        ${header}
         <div class="modal-body">
-          <p>${body}</p>
+          ${body}
         </div>
-        <div class="modal-footer">
-          ${footer}
-        </div>
+        ${footer}
       </div>
     </form>
   </div>
