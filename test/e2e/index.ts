@@ -247,6 +247,16 @@ Leanplum.on('showMessage', (args) => {
     title = args.Title['Text value'];
     body = args.Message['Text value'];
 
+    const imageInfo = args['Hero image']
+    if (imageInfo.URL) {
+      const imageHtml = `<p><img src="${imageInfo.URL}" width="${imageInfo.width}" height="${imageInfo.height}" /></p>`
+      if (imageInfo['Display above headline']) {
+        body = imageHtml + body;
+      } else {
+        body += imageHtml;
+      }
+    }
+
     const maybeAdd = (buttonName) => {
       const button = args[buttonName];
       if (!button['Show button']) {
@@ -274,6 +284,7 @@ Leanplum.on('showMessage', (args) => {
     )
   } else if (args.__name__ === 'Web Interstitial') {
     if (args['Has dismiss button']) {
+      // Dismiss button has no action
       buttons.push(
         { text: 'Dismiss' }
       )

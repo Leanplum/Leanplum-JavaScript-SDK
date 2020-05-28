@@ -41,6 +41,12 @@ import VarCache from './VarCache'
 
 const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
 
+const getServingUrls = (files) =>
+  Object.keys(files).reduce((acc, filename) => {
+    acc[filename] = files[filename][""].servingUrl;
+    return acc;
+  }, {})
+
 export default class LeanplumInternal {
   private _events: EventEmitter = new EventEmitter();
   private _browserDetector: BrowserDetector
@@ -51,7 +57,7 @@ export default class LeanplumInternal {
   )
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
   private _lpSocket: LeanplumSocket = new LeanplumSocket(
-    (args) => this._events.emit('showMessage', args)
+    (args) => this._events.emit('showMessage', this.resolveFiles({ ...args }))
   )
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
   private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
@@ -64,6 +70,7 @@ export default class LeanplumInternal {
   private _systemVersion: string
   private _messageCache: { [key: string]: any }
   private _sessionLength: number
+  private _files: any = {}
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
@@ -77,8 +84,9 @@ export default class LeanplumInternal {
         console.log(message);
 
         // tell user code to render it
-        // TODO: resolve files API / in vars (available in start call)
-        const vars = message.vars;
+        // TODO: should we post-process variables to be easily consumed in JS (camelCase props)?
+        const vars = this.resolveFiles({ ...message.vars });
+
         const result = this._events.emit('showMessage', {
           messageId: id,
 
@@ -325,6 +333,8 @@ export default class LeanplumInternal {
           this._internalState.startSuccessful = true
 
           this.updateSession()
+
+          this._files = getServingUrls(startResponse.fileAttributes)
 
           this._messageCache = startResponse[Constants.KEYS.MESSAGES] || {}
           this._events.emit('messagesReceived', this._messageCache)
@@ -692,6 +702,18 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     } else {
       processAction()
     }
+  }
+
+  private resolveFiles(vars: any): any {
+    for (const key in vars) {
+      if (/^__file__/.test(key)) {
+        vars.URL = this._files[vars[key]]
+      } else if (typeof vars[key] === "object") {
+        vars[key] = this.resolveFiles(vars[key])
+      }
+    }
+
+    return vars;
   }
 
   private messageIdFromAction(action: Action): string {
