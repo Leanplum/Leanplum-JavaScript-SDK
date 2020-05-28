@@ -287,7 +287,7 @@ Leanplum.on('showMessage', (args) => {
         type="${button.primary ? 'submit' : 'button' }"
         class="btn btn-${ button.primary ? 'primary' : 'secondary' }"
         data-toggle="modal"
-        data-target="#lpModal">
+        data-target="#lpModal-${args.messageId}">
       ${button.text}
     </button>`
   const footer = !buttons.length ? '' :
@@ -302,7 +302,7 @@ Leanplum.on('showMessage', (args) => {
     </div>`
 
   const modal = `
-  <div class="modal" id="lpModal" tabIndex="-1" role="dialog">
+  <div class="modal" id="lpModal-${args.messageId}" tabIndex="-1" role="dialog">
     <form class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         ${header}

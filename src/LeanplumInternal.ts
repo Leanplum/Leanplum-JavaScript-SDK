@@ -80,6 +80,8 @@ export default class LeanplumInternal {
         // TODO: resolve files API / in vars (available in start call)
         const vars = message.vars;
         const result = this._events.emit('showMessage', {
+          messageId: id,
+
           ...vars,
 
           // these match the ActionContext API
