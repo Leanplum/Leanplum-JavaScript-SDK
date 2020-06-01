@@ -92,7 +92,7 @@ export default class SocketIoClient {
           this.socket.onerror = (event) => {
             this.socket.close()
             if (this.onerror) {
-              self.onerror(event)
+              this.onerror(event)
             }
           }
         }, null, false, true // null, queued, plainText
