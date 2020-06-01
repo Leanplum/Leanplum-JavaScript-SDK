@@ -78,7 +78,7 @@ describe(LeanplumInternal, () => {
       expect(method).toEqual('getNewsfeedMessages')
     })
 
-    it('works in DEV mode', () => {
+    xit('works in DEV mode', () => {
       lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
       mockNextResponse({ response: [{ success: true }] })
 
@@ -212,7 +212,7 @@ describe(LeanplumInternal, () => {
   })
 
   describe('startFromCache', () => {
-    it('works in DEV mode', () => {
+    xit('works in DEV mode', () => {
       lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
       mockNextResponse({ response: [{ success: true }] })
 

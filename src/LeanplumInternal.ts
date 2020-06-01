@@ -24,6 +24,7 @@ import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
 import isEqual from 'lodash.isequal'
+import Messages from './Messages'
 import EventEmitter from './EventEmitter'
 import {
   Action,
@@ -41,12 +42,6 @@ import VarCache from './VarCache'
 
 const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
 
-const getServingUrls = (files) =>
-  Object.keys(files).reduce((acc, filename) => {
-    acc[filename] = files[filename][""].servingUrl;
-    return acc;
-  }, {})
-
 export default class LeanplumInternal {
   private _events: EventEmitter = new EventEmitter();
   private _browserDetector: BrowserDetector
@@ -56,30 +51,20 @@ export default class LeanplumInternal {
     this.onInboxAction.bind(this)
   )
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
+  private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
   private _lpSocket: LeanplumSocket = new LeanplumSocket(
-    (message) => {
-      const id = message.messageId;
-      const vars = message.action;
-
-      this._events.emit('showMessage', this.resolveFiles({
-        isPreview: true,
-
-        messageId: message.messageId,
-
-        ...vars,
-
-        track: (event?: string) =>
-          console.log(`Tracking event '${event}' for ${message.messageId}`),
-        runActionNamed: (actionName: string): void =>
-          console.log(`Running untracked action '${actionName}'`),
-        runTrackedActionNamed: (actionName: string): void =>
-          console.log(`Running tracked action '${actionName}'`)
-      }))
-    }
+    this._varCache,
+    this.createRequest.bind(this),
+    this._lpRequest.getLastResponse.bind(this._lpRequest),
+    this._events
   )
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
-  private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
   private _webPushOptions: WebPushOptions
+  private _messages: Messages = new Messages(
+    this._events,
+    this.trackMessage.bind(this),
+    this.onAction.bind(this)
+  )
 
   private _email: string
   private _deviceName: string
@@ -88,53 +73,9 @@ export default class LeanplumInternal {
   private _systemVersion: string
   private _messageCache: { [key: string]: any }
   private _sessionLength: number
-  private _files: any = {}
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
-
-    // TODO: extract to different module like Inbox
-    this._events.on('messagesReceived', (messages) => {
-      const messageIds = Object.keys(messages);
-
-      // TODO: check logic for showing messages from other SDKs
-      // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
-      const processMessage = (id: string, message: any) => {
-        console.log(message);
-
-        // tell user code to render it
-        // TODO: resolve colors
-        const vars = this.resolveFiles({ ...message.vars });
-
-        const result = this._events.emit('showMessage', {
-          messageId: id,
-
-          ...vars,
-
-          // these match the ActionContext API
-          //   track
-          //   runActionNamed
-          //   runTrackedActionNamed
-          // https://docs.leanplum.com/reference#section-android-custom-templates
-          track: (event?: string) => this.trackMessage(id, event || null),
-          runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
-          runTrackedActionNamed: (actionName: string): void => {
-            this.trackMessage(
-              id,
-              // TODO: figure out correct action name from ?
-              // '.m910545446-Accept'
-              `.m${id}-${actionName}`,
-              () => this.onAction(vars[actionName])
-            )
-          }
-        });
-      };
-
-      messageIds
-        .filter(id => messages[id].action !== 'Open URL')
-        // TODO: filter with whenTriggers and whenLimits logic on client-side (more events?)
-        .forEach(id => processMessage(id, messages[id]));
-    })
   }
 
   setApiPath(apiPath: string): void {
@@ -351,7 +292,7 @@ export default class LeanplumInternal {
 
           this.updateSession()
 
-          this._files = getServingUrls(startResponse.fileAttributes)
+          this._events.emit('filesReceived', startResponse.fileAttributes)
 
           this._messageCache = startResponse[Constants.KEYS.MESSAGES] || {}
           this._events.emit('messagesReceived', this._messageCache)
@@ -644,13 +585,10 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   private connectSocket(): void {
     this._lpSocket.connect(
-      this._varCache,
       {
         appId: this._lpRequest.appId,
         deviceId: this._lpRequest.deviceId,
-      },
-      this.createRequest.bind(this),
-      this._lpRequest.getLastResponse.bind(this._lpRequest)
+      }
     )
   }
 
@@ -719,20 +657,6 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     } else {
       processAction()
     }
-  }
-
-  private resolveFiles(vars: any): any {
-    for (const key in vars) {
-      // TODO: check if value is ""
-      // TODO: prefix with key suffix
-      if (/^__file__/.test(key)) {
-        vars.URL = this._files[vars[key]]
-      } else if (typeof vars[key] === "object") {
-        vars[key] = this.resolveFiles(vars[key])
-      }
-    }
-
-    return vars;
   }
 
   private messageIdFromAction(action: Action): string {

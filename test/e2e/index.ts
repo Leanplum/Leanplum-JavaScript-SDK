@@ -241,15 +241,17 @@ function renderAppInbox(): void {
 
 // register handler for in-app messages
 Leanplum.on('showMessage', (args) => {
+  const { message, context } = args;
   let title, body, buttons = [];
 
-  if (args.__name__ === 'HTML' && args.__file__Template === 'lp_public_floating-interstitial-10.html') {
-    title = args.Title['Text value'];
-    body = args.Message['Text value'];
+  if (message.__name__ === 'HTML' && message.__file__Template === 'lp_public_floating-interstitial-10.html') {
+    title = message.Title['Text value'];
+    body = message.Message['Text value'];
 
-    const imageInfo = args['Hero image']
-    if (imageInfo.URL) {
-      const imageHtml = `<p><img src="${imageInfo.URL}" width="${imageInfo.width}" height="${imageInfo.height}" /></p>`
+    const imageInfo = message['Hero image']
+    const imageUrl = imageInfo['Image URL']
+    if (imageUrl) {
+      const imageHtml = `<p><img src="${imageUrl}" width="${imageInfo.width}" height="${imageInfo.height}" /></p>`
       if (imageInfo['Display above headline']) {
         body = imageHtml + body;
       } else {
@@ -258,9 +260,9 @@ Leanplum.on('showMessage', (args) => {
     }
 
     const maybeAdd = (buttonName) => {
-      const button = args[buttonName];
+      const button = message[buttonName];
       if (!button) {
-        console.log(`Could not find ${buttonName} in message: `, args);
+        console.log(`Could not find ${buttonName} in message: `, message);
         return
       }
       if (!button['Show button']) {
@@ -273,34 +275,34 @@ Leanplum.on('showMessage', (args) => {
     }
     maybeAdd('Button 1');
     maybeAdd('Button 2');
-  } else if (args.__name__ === 'Confirm') {
-    title = args.Title;
-    body = args.Message;
+  } else if (message.__name__ === 'Confirm') {
+    title = message.Title;
+    body = message.Message;
     buttons.push(
-      { text: args['Cancel text'], action: 'Cancel action' },
-      { text: args['Accept text'], action: 'Accept action', primary: true }
+      { text: message['Cancel text'], action: 'Cancel action' },
+      { text: message['Accept text'], action: 'Accept action', primary: true }
     )
-  } else if (args.__name__ === 'Alert') {
-    title = args.Title;
-    body = args.Message;
+  } else if (message.__name__ === 'Alert') {
+    title = message.Title;
+    body = message.Message;
     buttons.push(
       { text: 'Dismiss', action: 'Dismiss' }
     )
-  } else if (args.__name__ === 'Web Interstitial') {
-    if (args['Has dismiss button']) {
+  } else if (message.__name__ === 'Web Interstitial') {
+    if (message['Has dismiss button']) {
       // Dismiss button has no action
       buttons.push(
         { text: 'Dismiss' }
       )
     }
 
-    body = `<iframe class="w-100 border-0" src="${args.URL}"></iframe>`
+    body = `<iframe class="w-100 border-0" src="${message.URL}"></iframe>`
   } else {
     // unknown action, do not show
     return;
   }
 
-  const modalId = `lpModal-${args.messageId}${args.isPreview ? '-preview' : ''}`
+  const modalId = `lpModal-${message.messageId}${args.isPreview ? '-preview' : ''}`
 
   const buttonHtml = button =>
     `<button
@@ -338,11 +340,11 @@ Leanplum.on('showMessage', (args) => {
   const trackAction = (e) => {
     e.preventDefault()
     const action = $(e.currentTarget).data('action')
-    args.runTrackedActionNamed(action)
+    context.runTrackedActionNamed(action)
   }
 
   $(modal).hide().appendTo('body')
-    .on('shown.bs.modal', () => args.track('Open'))
+    .on('shown.bs.modal', () => context.track('Open'))
     .on('hidden.bs.modal', () => $(`#${modalId}`).remove())
     .find('button').on('click', trackAction).end()
     .modal({ show: true })
