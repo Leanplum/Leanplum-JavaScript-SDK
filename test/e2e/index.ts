@@ -259,12 +259,16 @@ Leanplum.on('showMessage', (args) => {
 
     const maybeAdd = (buttonName) => {
       const button = args[buttonName];
+      if (!button) {
+        console.log(`Could not find ${buttonName} in message: `, args);
+        return
+      }
       if (!button['Show button']) {
         return
       }
       buttons.push({
         text: button.Text['Text value'],
-        action: args[`Select ${buttonName.toLowerCase()} action`]
+        action: `Select ${buttonName.toLowerCase()} action`
       })
     }
     maybeAdd('Button 1');
@@ -273,14 +277,14 @@ Leanplum.on('showMessage', (args) => {
     title = args.Title;
     body = args.Message;
     buttons.push(
-      { text: args['Cancel text'], action: args['Cancel action'] },
-      { text: args['Accept text'], action: args['Accept action'], primary: true }
+      { text: args['Cancel text'], action: 'Cancel action' },
+      { text: args['Accept text'], action: 'Accept action', primary: true }
     )
   } else if (args.__name__ === 'Alert') {
     title = args.Title;
     body = args.Message;
     buttons.push(
-      { text: args['Dismiss text'], action: args['Dismiss action'] }
+      { text: 'Dismiss', action: 'Dismiss' }
     )
   } else if (args.__name__ === 'Web Interstitial') {
     if (args['Has dismiss button']) {
@@ -291,14 +295,19 @@ Leanplum.on('showMessage', (args) => {
     }
 
     body = `<iframe class="w-100 border-0" src="${args.URL}"></iframe>`
+  } else {
+    // unknown action, do not show
+    return;
   }
+
+  const modalId = `lpModal-${args.messageId}${args.isPreview ? '-preview' : ''}`
 
   const buttonHtml = button =>
     `<button
-        type="${button.primary ? 'submit' : 'button' }"
         class="btn btn-${ button.primary ? 'primary' : 'secondary' }"
+        data-action="${button.action}"
         data-toggle="modal"
-        data-target="#lpModal-${args.messageId}">
+        data-target="#${modalId}">
       ${button.text}
     </button>`
   const footer = !buttons.length ? '' :
@@ -313,7 +322,7 @@ Leanplum.on('showMessage', (args) => {
     </div>`
 
   const modal = `
-  <div class="modal" id="lpModal-${args.messageId}" tabIndex="-1" role="dialog">
+  <div class="modal" id="${modalId}" tabIndex="-1" role="dialog">
     <form class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         ${header}
@@ -327,12 +336,14 @@ Leanplum.on('showMessage', (args) => {
 `
 
   const trackAction = (e) => {
-    // TODO: track action
-    console.log('should track action for ', e.currentTarget);
+    e.preventDefault()
+    const action = $(e.currentTarget).data('action')
+    args.runTrackedActionNamed(action)
   }
 
   $(modal).hide().appendTo('body')
-    .on('shown.bs.modal', args.trackImpression)
-    .find('form').on('submit', trackAction).end()
+    .on('shown.bs.modal', () => args.track('Open'))
+    .on('hidden.bs.modal', () => $(`#${modalId}`).remove())
+    .find('button').on('click', trackAction).end()
     .modal({ show: true })
 })

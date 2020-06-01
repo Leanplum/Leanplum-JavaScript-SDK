@@ -57,7 +57,25 @@ export default class LeanplumInternal {
   )
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
   private _lpSocket: LeanplumSocket = new LeanplumSocket(
-    (args) => this._events.emit('showMessage', this.resolveFiles({ ...args }))
+    (message) => {
+      const id = message.messageId;
+      const vars = message.action;
+
+      this._events.emit('showMessage', this.resolveFiles({
+        isPreview: true,
+
+        messageId: message.messageId,
+
+        ...vars,
+
+        track: (event?: string) =>
+          console.log(`Tracking event '${event}' for ${message.messageId}`),
+        runActionNamed: (actionName: string): void =>
+          console.log(`Running untracked action '${actionName}'`),
+        runTrackedActionNamed: (actionName: string): void =>
+          console.log(`Running tracked action '${actionName}'`)
+      }))
+    }
   )
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
   private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
@@ -75,6 +93,7 @@ export default class LeanplumInternal {
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
 
+    // TODO: extract to different module like Inbox
     this._events.on('messagesReceived', (messages) => {
       const messageIds = Object.keys(messages);
 
@@ -84,7 +103,7 @@ export default class LeanplumInternal {
         console.log(message);
 
         // tell user code to render it
-        // TODO: should we post-process variables to be easily consumed in JS (camelCase props)?
+        // TODO: resolve colors
         const vars = this.resolveFiles({ ...message.vars });
 
         const result = this._events.emit('showMessage', {
@@ -98,16 +117,14 @@ export default class LeanplumInternal {
           //   runTrackedActionNamed
           // https://docs.leanplum.com/reference#section-android-custom-templates
           track: (event?: string) => this.trackMessage(id, event || null),
-          runActionNamed: (actionName: string): void => {
-            this.onAction(vars[`${actionName} action`]['Chained message'])
-          },
+          runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
           runTrackedActionNamed: (actionName: string): void => {
             this.trackMessage(
               id,
-              // TODO: figure out correct action name?
+              // TODO: figure out correct action name from ?
               // '.m910545446-Accept'
               `.m${id}-${actionName}`,
-              () => this.onAction(vars[`${actionName} action`]['Chained message'])
+              () => this.onAction(vars[actionName])
             )
           }
         });
@@ -706,6 +723,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   private resolveFiles(vars: any): any {
     for (const key in vars) {
+      // TODO: check if value is ""
+      // TODO: prefix with key suffix
       if (/^__file__/.test(key)) {
         vars.URL = this._files[vars[key]]
       } else if (typeof vars[key] === "object") {

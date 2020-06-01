@@ -95,7 +95,7 @@ export default class LeanplumSocket {
         // eslint-disable-next-line no-alert
         alert(`Your device has been registered to ${args[0].email}.`)
       } else if (event === 'trigger') {
-        this.onTriggerMessage((args[0] as any).action);
+        this.onTriggerMessage(args[0]);
       }
     }
 
