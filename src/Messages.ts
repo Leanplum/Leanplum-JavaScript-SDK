@@ -27,7 +27,7 @@ export default class Messages {
   onMessagePreview(message) {
     const vars = message.action;
 
-    this.events.emit('showMessage', this.resolveFiles({
+    this.events.emit('showMessage', this.resolveFields({
       isPreview: true,
 
       message: {
@@ -55,7 +55,7 @@ export default class Messages {
       console.log('processing message', message);
       // tell user code to render it
       // TODO: resolve colors
-      const vars = this.resolveFiles({ ...message.vars });
+      const vars = this.resolveFields({ ...message.vars });
 
       const context = {
         // these match the ActionContext API
@@ -85,15 +85,27 @@ export default class Messages {
       .forEach(id => processMessage(id, messages[id]));
   }
 
-  private resolveFiles(vars: any): any {
+  private colorToHex(color: number): string {
+    const b = color & 0xff; color >>= 8;
+    const g = color & 0xff; color >>= 8;
+    const r = color & 0xff; color >>= 8;
+    const a = (color & 0xff) / 255;
+    return `rgba(${r},${g},${b},${a})`
+  }
+
+  private resolveFields(vars: any): any {
+    // TODO: determine types from start(): actionDefinitions[].kinds[key]
+    const colorSuffix = /\bcolor/i
+    const filePrefix = /^__file__/
     for (const key in vars) {
-      const filePrefix = /^__file__/
       if (filePrefix.test(key)) {
         const name = key.replace(filePrefix, '')
         const servingUrl = this._files[vars[key]]
         vars[name + ' URL'] = servingUrl
+      } else if (colorSuffix.test(key)) {
+        vars[key] = this.colorToHex(vars[key])
       } else if (typeof vars[key] === "object") {
-        vars[key] = this.resolveFiles(vars[key])
+        vars[key] = this.resolveFields(vars[key])
       }
     }
 
