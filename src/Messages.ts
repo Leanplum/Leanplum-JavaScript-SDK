@@ -36,8 +36,10 @@ export default class Messages {
       },
 
       context: {
-        track: (event?: string) =>
-          console.log(`Tracking event '${event}' for ${message.messageId}`),
+        track: (event?: string) => {
+          const eventInfo = event ? `event '${event}'` : 'impression'
+          console.log(`Tracking ${eventInfo} for ${message.messageId}`)
+        },
         runActionNamed: (actionName: string): void =>
           console.log(`Running untracked action '${actionName}'`),
         runTrackedActionNamed: (actionName: string): void =>
@@ -52,9 +54,7 @@ export default class Messages {
     // TODO: check logic for showing messages from other SDKs
     // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
     const processMessage = (id: string, message: any) => {
-      console.log('processing message', message);
       // tell user code to render it
-      // TODO: resolve colors
       const vars = this.resolveFields({ ...message.vars });
 
       const context = {
@@ -64,9 +64,7 @@ export default class Messages {
         runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
         runTrackedActionNamed: (actionName: string): void => {
           const event = actionName.replace(/ action$/, '')
-          // TODO: figure out correct action name from actionName
-          // '.m910545446-Accept'
-          this.trackMessage(id, `.m${id}-${event}`, () => this.onAction(vars[actionName]))
+          this.trackMessage(id, event, () => this.onAction(vars[actionName]))
         }
       }
 
@@ -94,7 +92,7 @@ export default class Messages {
   }
 
   private resolveFields(vars: any): any {
-    // TODO: determine types from start(): actionDefinitions[].kinds[key]
+    // TODO: determine types from action definitions (definition.kinds[key])
     const colorSuffix = /\bcolor/i
     const filePrefix = /^__file__/
     for (const key in vars) {

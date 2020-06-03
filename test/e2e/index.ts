@@ -286,7 +286,7 @@ Leanplum.on('showMessage', (args) => {
     title = message.Title;
     body = message.Message;
     buttons.push(
-      { text: 'Dismiss', action: 'Dismiss' }
+      { text: 'Dismiss', action: 'Dismiss action' }
     )
   } else if (message.__name__ === 'Web Interstitial') {
     if (message['Has dismiss button']) {
@@ -337,15 +337,15 @@ Leanplum.on('showMessage', (args) => {
   </div>
 `
 
-  const trackAction = (e) => {
+  const runTrackedAction = (e) => {
     e.preventDefault()
     const action = $(e.currentTarget).data('action')
     context.runTrackedActionNamed(action)
   }
 
   $(modal).hide().appendTo('body')
-    .on('shown.bs.modal', () => context.track('Open'))
+    .on('shown.bs.modal', () => context.track())
     .on('hidden.bs.modal', () => $(`#${modalId}`).remove())
-    .find('button').on('click', trackAction).end()
+    .find('button').on('click', runTrackedAction).end()
     .modal({ show: true })
 })
