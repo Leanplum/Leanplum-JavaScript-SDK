@@ -33,7 +33,7 @@ export default class Leanplum {
 
   static VERSION = Constants.SDK_VERSION;
 
-  static setApiPath(apiPath: string) {
+  static setApiPath(apiPath: string): void {
     Leanplum._lp.setApiPath(apiPath)
   }
 

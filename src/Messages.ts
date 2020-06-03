@@ -1,7 +1,8 @@
+import { Message, MessageVariables } from './types/internal'
 import EventEmitter from './EventEmitter'
 
 export default class Messages {
-  private _files: any = {}
+  private _files: { [key: string]: string } = {}
 
   constructor(
     private events: EventEmitter,
@@ -13,19 +14,19 @@ export default class Messages {
     events.on('filesReceived', this.onFilesReceived.bind(this))
   }
 
-  onFilesReceived(files) {
+  onFilesReceived(files): void {
     if (files) {
       this._files = Object.keys(files).reduce((acc, filename) => {
-        acc[filename] = files[filename][""].servingUrl;
-        return acc;
+        acc[filename] = files[filename][''].servingUrl
+        return acc
       }, {})
     } else {
       this._files = {}
     }
   }
 
-  onMessagePreview(message) {
-    const vars = message.action;
+  onMessagePreview(message): void {
+    const vars = message.action
 
     this.events.emit('showMessage', this.resolveFields({
       isPreview: true,
@@ -43,55 +44,52 @@ export default class Messages {
         runActionNamed: (actionName: string): void =>
           console.log(`Running untracked action '${actionName}'`),
         runTrackedActionNamed: (actionName: string): void =>
-          console.log(`Running tracked action '${actionName}'`)
-      }
+          console.log(`Running tracked action '${actionName}'`),
+      },
     }))
   }
 
-  onMessagesReceived(messages) {
-    const messageIds = Object.keys(messages);
-
-    // TODO: check logic for showing messages from other SDKs
-    // https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L471-L529
-    const processMessage = (id: string, message: any) => {
-      // tell user code to render it
-      const vars = this.resolveFields({ ...message.vars });
-
-      const context = {
-        // these match the ActionContext API
-        // https://docs.leanplum.com/reference#section-android-custom-templates
-        track: (event?: string) => this.trackMessage(id, event || null),
-        runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
-        runTrackedActionNamed: (actionName: string): void => {
-          const event = actionName.replace(/ action$/, '')
-          this.trackMessage(id, event, () => this.onAction(vars[actionName]))
-        }
-      }
-
-      const result = this.events.emit('showMessage', {
-        context,
-        message: {
-          messageId: id,
-          ...vars,
-        },
-      });
-    };
+  onMessagesReceived(messages): void {
+    const messageIds = Object.keys(messages)
 
     messageIds
       .filter(id => messages[id].action !== 'Open URL')
       // TODO: filter with whenTriggers and whenLimits logic on client-side
-      .forEach(id => processMessage(id, messages[id]));
+      .forEach(id => this.showMessage(id, messages[id]))
+  }
+
+  private showMessage(id: string, message: Message): void {
+    const vars = this.resolveFields({ ...message.vars })
+
+    const context = {
+      // these match the ActionContext API
+      // https://docs.leanplum.com/reference#section-android-custom-templates
+      track: (event?: string) => this.trackMessage(id, event || null),
+      runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
+      runTrackedActionNamed: (actionName: string): void => {
+        const event = actionName.replace(/ action$/, '')
+        this.trackMessage(id, event, () => this.onAction(vars[actionName]))
+      },
+    }
+
+    this.events.emit('showMessage', {
+      context,
+      message: {
+        messageId: id,
+        ...vars,
+      },
+    })
   }
 
   private colorToHex(color: number): string {
-    const b = color & 0xff; color >>= 8;
-    const g = color & 0xff; color >>= 8;
-    const r = color & 0xff; color >>= 8;
-    const a = (color & 0xff) / 255;
+    const b = color & 0xff; color >>= 8
+    const g = color & 0xff; color >>= 8
+    const r = color & 0xff; color >>= 8
+    const a = (color & 0xff) / 255
     return `rgba(${r},${g},${b},${a})`
   }
 
-  private resolveFields(vars: any): any {
+  private resolveFields(vars: MessageVariables): MessageVariables {
     // TODO: determine types from action definitions (definition.kinds[key])
     const colorSuffix = /\bcolor/i
     const filePrefix = /^__file__/
@@ -102,11 +100,11 @@ export default class Messages {
         vars[name + ' URL'] = servingUrl
       } else if (colorSuffix.test(key)) {
         vars[key] = this.colorToHex(vars[key])
-      } else if (typeof vars[key] === "object") {
+      } else if (typeof vars[key] === 'object') {
         vars[key] = this.resolveFields(vars[key])
       }
     }
 
-    return vars;
+    return vars
   }
 }

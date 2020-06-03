@@ -20,9 +20,12 @@ import isEqual from 'lodash.isequal'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import SocketIoClient from './SocketIoClient'
-import { CreateRequestFunction } from './types/internal'
+import { CreateRequestFunction, Message } from './types/internal'
 import VarCache from './VarCache'
 import EventEmitter from './EventEmitter'
+
+type RegisterMessage = { email: string }
+type DevServerMessage = RegisterMessage | Message
 
 export default class LeanplumSocket {
   private networkTimeoutSeconds = 10
@@ -94,7 +97,7 @@ export default class LeanplumSocket {
     this.socketClient?.setNetworkTimeout(seconds)
   }
 
-  public onMessageReceived(event: string, args: { email: string }[]) {
+  public onMessageReceived(event: string, args: Array<DevServerMessage>): void {
     if (event === 'updateVars') {
       const args = new ArgsBuilder().add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
       this.createRequest(Constants.METHODS.GET_VARS, args, {
@@ -121,10 +124,12 @@ export default class LeanplumSocket {
         'updated': false,
       })
     } else if (event === 'registerDevice') {
+      const message = args[0] as RegisterMessage
       // eslint-disable-next-line no-alert
-      alert(`Your device has been registered to ${args[0].email}.`)
+      alert(`Your device has been registered to ${message.email}.`)
     } else if (event === 'trigger') {
-      this.events.emit('previewRequest', args[0]);
+      const message = args[0] as Message
+      this.events.emit('previewRequest', message)
     }
   }
 }
