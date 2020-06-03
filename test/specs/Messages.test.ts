@@ -82,4 +82,37 @@ describe(Messages, () => {
       expect(message).toHaveProperty('White Color', 'rgba(255,255,255,1)')
     })
   })
+
+  describe('in-app messages', () => {
+    it('does not trigger actions without whenTriggers', () => {
+      events.emit('messagesReceived', {
+        "123": {
+          "countdown": 0,
+          "action": "Open URL",
+          "startTime": 1587034800000,
+          "parentCampaignId": 905685067,
+          "vars": {
+            "__name__":"Open URL",
+            "URL":"https://example.com/dismiss"
+          },
+          "hasImpressionCriteria": false,
+          "priority": 1000,
+          "whenLimits": {
+            "children": [
+              {
+                "subject":"times",
+                "objects":[],
+                "verb":"limitSession",
+                "noun":1,
+                "secondaryVerb":"="
+              }
+            ],
+            "verb":"AND"
+          }
+        }
+      })
+
+      expect(showMessage).not.toHaveBeenCalled()
+    })
+  })
 })

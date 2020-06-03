@@ -628,7 +628,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     }
 
     this.createRequest(Constants.METHODS.TRACK, args, {
-      queued: false,
+      queued: true,
       sendNow: true,
       response,
     })

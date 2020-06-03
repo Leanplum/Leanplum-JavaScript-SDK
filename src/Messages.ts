@@ -53,8 +53,8 @@ export default class Messages {
     const messageIds = Object.keys(messages)
 
     messageIds
-      .filter(id => messages[id].action !== 'Open URL')
-      // TODO: filter with whenTriggers and whenLimits logic on client-side
+      // TODO: process whenTriggers and whenLimits logic on client-side
+      .filter(id => messages[id].whenTriggers)
       .forEach(id => this.showMessage(id, messages[id]))
   }
 
