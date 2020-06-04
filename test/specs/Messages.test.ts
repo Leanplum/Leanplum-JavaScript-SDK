@@ -5,13 +5,18 @@ describe(Messages, () => {
   let events: EventEmitter
   let messages: Messages
   let showMessage: jest.Mock
+  let createRequest: jest.Mock
+  let navigationChange: jest.Mock
 
   beforeEach(() => {
     events = new EventEmitter()
-    messages = new Messages(events, jest.fn(), jest.fn())
-    showMessage = jest.fn()
+    createRequest = jest.fn().mockImplementation((m, e, options) => options?.response())
+    messages = new Messages(events, createRequest)
 
+    navigationChange = jest.fn()
+    showMessage = jest.fn()
     events.on('showMessage', showMessage)
+    events.on('navigationChange', navigationChange)
   })
 
   const MESSAGE = {
@@ -87,32 +92,151 @@ describe(Messages, () => {
     it('does not trigger actions without whenTriggers', () => {
       events.emit('messagesReceived', {
         "123": {
-          "countdown": 0,
-          "action": "Open URL",
-          "startTime": 1587034800000,
-          "parentCampaignId": 905685067,
-          "vars": {
-            "__name__":"Open URL",
-            "URL":"https://example.com/dismiss"
+          countdown: 0,
+          action: "Open URL",
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          vars: {
+            __name__:"Open URL",
+            URL:"https://example.com/dismiss"
           },
-          "hasImpressionCriteria": false,
-          "priority": 1000,
-          "whenLimits": {
-            "children": [
-              {
-                "subject":"times",
-                "objects":[],
-                "verb":"limitSession",
-                "noun":1,
-                "secondaryVerb":"="
-              }
-            ],
-            "verb":"AND"
-          }
+          hasImpressionCriteria: false,
+          priority: 1000
         }
       })
 
       expect(showMessage).not.toHaveBeenCalled()
+    })
+
+    it('triggers showMessage for messages at start', () => {
+      events.emit('messagesReceived', {
+        "123": {
+          countdown: 1,
+          action: "Confirm",
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          whenTriggers: {
+            verb: "OR",
+            children: [
+              { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
+            ]
+          },
+          vars: {
+            __name__:"Confirm",
+            Title: "Please confirm",
+            Message: "Ready?",
+            "Cancel text":"No",
+            "Accept text":"Yes",
+            "Accept action": { }
+          },
+          hasImpressionCriteria:false,
+          priority:1000
+        }
+      })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('triggers showMessage for chained message', () => {
+      events.emit('messagesReceived', {
+        "123": {
+          countdown: 1,
+          action: "Confirm",
+          whenTriggers: {
+            children: [
+              { subject:"start", objects:[], verb:"", secondaryVerb:"="}
+            ],
+            verb: "OR"
+          },
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Confirm",
+            Title: "Please confirm",
+            Message:"Ready?",
+            "Cancel text": "No",
+            "Accept text": "Yes",
+            "Accept action": {
+              "Chained message": "234",
+              __name__:"Chain to Existing Message"
+            }
+          },
+          hasImpressionCriteria: false,
+          priority: 1000
+        },
+        "234": {
+          countdown: 1,
+          action: "Confirm",
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Confirm",
+            Title: "Confirm again",
+            Message:"Ready?",
+            "Cancel text": "No",
+            "Accept text": "Yes",
+          },
+          hasImpressionCriteria: false,
+          priority: 1000
+        }
+      })
+
+      // trigger accept action
+      showMessage.mock.calls[0][0].context.runActionNamed('Accept action')
+
+      expect(showMessage).toHaveBeenCalledTimes(2)
+      const secondMessage = showMessage.mock.calls[1][0].message
+      expect(secondMessage).toHaveProperty('__name__', 'Confirm')
+      expect(secondMessage).toHaveProperty('Title', 'Confirm again')
+    })
+
+    it('triggers chained message action', () => {
+      events.emit('messagesReceived', {
+        "123": {
+          countdown: 1,
+          action: "Confirm",
+          whenTriggers: {
+            children: [
+              { subject:"start", objects:[], verb:"", secondaryVerb:"="}
+            ],
+            verb: "OR"
+          },
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Confirm",
+            Title: "Please confirm",
+            Message:"Ready?",
+            "Cancel text": "No",
+            "Accept text": "Yes",
+            "Accept action": {
+              "Chained message": "234",
+              __name__:"Chain to Existing Message"
+            }
+          },
+          hasImpressionCriteria: false,
+          priority: 1000
+        },
+        "234": {
+          countdown: 1,
+          action: "Open URL",
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Open URL",
+            URL:"https://example.com/success"
+          },
+          hasImpressionCriteria: false,
+          priority: 1000
+        }
+      })
+
+      // trigger accept action
+      showMessage.mock.calls[0][0].context.runActionNamed('Accept action')
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+      expect(navigationChange).toHaveBeenCalledTimes(1)
+      expect(navigationChange).toHaveBeenCalledWith("https://example.com/success")
     })
   })
 })

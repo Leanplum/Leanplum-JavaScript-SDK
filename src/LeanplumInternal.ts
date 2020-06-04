@@ -23,7 +23,6 @@ import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
-import isEqual from 'lodash.isequal'
 import Messages from './Messages'
 import EventEmitter from './EventEmitter'
 import {
@@ -62,8 +61,7 @@ export default class LeanplumInternal {
   private _webPushOptions: WebPushOptions
   private _messages: Messages = new Messages(
     this._events,
-    this.trackMessage.bind(this),
-    this.onAction.bind(this)
+    this.createRequest.bind(this),
   )
 
   private _email: string
@@ -71,11 +69,11 @@ export default class LeanplumInternal {
   private _deviceModel: string
   private _systemName: string
   private _systemVersion: string
-  private _messageCache: { [key: string]: any }
   private _sessionLength: number
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
+    this._events.on('navigationChange', (url) => this.wnd.location.assign(url))
   }
 
   setApiPath(apiPath: string): void {
@@ -180,7 +178,11 @@ export default class LeanplumInternal {
   }
 
   onInboxAction(messageId: string, action?: Action): void {
-    this.trackMessage(messageId, 'Open', () => action && this.onAction(action))
+    this._messages.trackMessage(
+      messageId,
+      'Open',
+      () => action && this._messages.onAction(action)
+    )
   }
 
   // TODO(breaking change): replace with events and remove stateful handlers
@@ -293,9 +295,7 @@ export default class LeanplumInternal {
           this.updateSession()
 
           this._events.emit('filesReceived', startResponse.fileAttributes)
-
-          this._messageCache = startResponse[Constants.KEYS.MESSAGES] || {}
-          this._events.emit('messagesReceived', this._messageCache)
+          this._events.emit('messagesReceived', startResponse[Constants.KEYS.MESSAGES])
 
           if (startResponse[Constants.KEYS.SYNC_INBOX]) {
             this._lpInbox.downloadMessages()
@@ -613,65 +613,5 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   private updateSession(): void {
     LocalStorageManager.saveToLocalStorage(SESSION_KEY, String(Date.now()))
-  }
-
-  private trackMessage(
-    messageId: string,
-    event: string = null,
-    response: Function = () => { /* noop */ }
-  ): void {
-    const args = new ArgsBuilder()
-      .add(Constants.PARAMS.MESSAGE_ID, messageId)
-
-    if (event) {
-      args.add(Constants.PARAMS.EVENT, event)
-    }
-
-    this.createRequest(Constants.METHODS.TRACK, args, {
-      queued: true,
-      sendNow: true,
-      response,
-    })
-  }
-
-  private onAction(action: Action): void {
-    const messages = this._messageCache || {}
-    if (action && action.__name__ === 'Chain to Existing Message') {
-      const chainedMessageId = action['Chained message']
-      const message = messages[chainedMessageId]
-      if (message) {
-        this.trackMessage(chainedMessageId, 'View', () => this.onAction(message.vars))
-      }
-
-      return
-    }
-
-    const processAction = (): void => {
-      if (action.__name__ === 'Open URL') {
-        this.wnd.location.assign(action.URL)
-      }
-    }
-    const messageId = this.messageIdFromAction(action)
-    if (messageId) {
-      this.trackMessage(messageId, null, processAction)
-    } else {
-      processAction()
-    }
-  }
-
-  private messageIdFromAction(action: Action): string {
-    const messages = this._messageCache || {}
-    const vars = { ...action }
-    delete vars['parentCampaignId']
-
-    for (const id of Object.keys(messages)) {
-      const message = messages[id]
-      if (message.parentCampaignId !== action.parentCampaignId) {
-        continue
-      }
-      if (isEqual(message.vars, vars)) {
-        return id
-      }
-    }
   }
 }
