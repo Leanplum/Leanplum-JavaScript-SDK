@@ -100,7 +100,6 @@ describe(Messages, () => {
             __name__:"Open URL",
             URL:"https://example.com/dismiss"
           },
-          hasImpressionCriteria: false,
           priority: 1000
         }
       })
@@ -129,7 +128,6 @@ describe(Messages, () => {
             "Accept text":"Yes",
             "Accept action": { }
           },
-          hasImpressionCriteria:false,
           priority:1000
         }
       })
@@ -161,7 +159,6 @@ describe(Messages, () => {
               __name__:"Chain to Existing Message"
             }
           },
-          hasImpressionCriteria: false,
           priority: 1000
         },
         "234": {
@@ -176,7 +173,6 @@ describe(Messages, () => {
             "Cancel text": "No",
             "Accept text": "Yes",
           },
-          hasImpressionCriteria: false,
           priority: 1000
         }
       })
@@ -214,7 +210,6 @@ describe(Messages, () => {
               __name__:"Chain to Existing Message"
             }
           },
-          hasImpressionCriteria: false,
           priority: 1000
         },
         "234": {
@@ -226,7 +221,6 @@ describe(Messages, () => {
             __name__: "Open URL",
             URL:"https://example.com/success"
           },
-          hasImpressionCriteria: false,
           priority: 1000
         }
       })
@@ -237,6 +231,65 @@ describe(Messages, () => {
       expect(showMessage).toHaveBeenCalledTimes(1)
       expect(navigationChange).toHaveBeenCalledTimes(1)
       expect(navigationChange).toHaveBeenCalledWith("https://example.com/success")
+    })
+  })
+
+  describe('shouldShowMessage', () => {
+    it('is false for messagges without triggers', () => {
+      const result = messages.shouldShowMessage({ })
+      expect(result).toBeFalsy()
+    })
+
+    it('is false for messages outside the active period', () => {
+      const now = Date.now()
+      const result = messages.shouldShowMessage({
+        startTime: now + 10,
+        endTime: now + 20,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
+          ]
+        }
+      })
+      expect(result).toBeFalsy()
+    })
+  })
+
+  describe('prioritization', () => {
+    it('chooses one in-app message to show', () => {
+      events.emit('messagesReceived', {
+        "123": {
+          countdown: 1,
+          action: "Confirm",
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          whenTriggers: {
+            verb: "OR",
+            children: [
+              { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
+            ]
+          },
+          vars: { __name__:"Confirm", },
+          priority: 1000
+        },
+        "456": {
+          countdown: 1,
+          action: "Confirm",
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          whenTriggers: {
+            verb: "OR",
+            children: [
+              { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
+            ]
+          },
+          vars: { __name__:"Confirm", },
+          priority: 1000
+        }
+      })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -16,6 +16,12 @@ export default class Messages {
     events.on('previewRequest', this.onMessagePreview.bind(this))
     events.on('messagesReceived', this.onMessagesReceived.bind(this))
     events.on('filesReceived', this.onFilesReceived.bind(this))
+
+    // TODO
+    //events.on('start', this.onMessageTrigger)
+    //events.on('resume', this.onMessageTrigger)
+    //events.on('trigger', this.onMessageTrigger)
+    //events.on('advanceState', this.onMessageTrigger)
   }
 
   onFilesReceived(files): void {
@@ -59,9 +65,27 @@ export default class Messages {
     const messageIds = Object.keys(messages)
 
     messageIds
-      // TODO: process whenTriggers and whenLimits logic on client-side
-      .filter(id => messages[id].whenTriggers)
+      .filter(id => this.shouldShowMessage(messages[id]))
+      .slice(0, 1)
       .forEach(id => this.showMessage(id, messages[id]))
+  }
+
+  shouldShowMessage(message): boolean {
+    // TODO: process whenTriggers and whenLimits logic on client-side
+    // https://github.com/Leanplum/Leanplum-Android-SDK/blob/4a795596830d45f5cae2402c25ef32a2f94c6676/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L240-L282
+    if (!message.whenTriggers) {
+      return false
+    }
+
+    if (message.startTime && message.endTime) {
+      const now = Date.now()
+      const outsideActivePeriod = now < message.startTime || message.endTime < now
+      if (outsideActivePeriod) {
+        return false
+      }
+    }
+
+    return true
   }
 
   private showMessage(id: string, message: Message): void {
