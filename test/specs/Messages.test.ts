@@ -132,6 +132,8 @@ describe(Messages, () => {
         }
       })
 
+      events.emit('start')
+
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
 
@@ -176,6 +178,10 @@ describe(Messages, () => {
           priority: 1000
         }
       })
+
+      events.emit('start')
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
 
       // trigger accept action
       showMessage.mock.calls[0][0].context.runActionNamed('Accept action')
@@ -225,34 +231,14 @@ describe(Messages, () => {
         }
       })
 
+      events.emit('start')
+
       // trigger accept action
       showMessage.mock.calls[0][0].context.runActionNamed('Accept action')
 
       expect(showMessage).toHaveBeenCalledTimes(1)
       expect(navigationChange).toHaveBeenCalledTimes(1)
       expect(navigationChange).toHaveBeenCalledWith("https://example.com/success")
-    })
-  })
-
-  describe('shouldShowMessage', () => {
-    it('is false for messagges without triggers', () => {
-      const result = messages.shouldShowMessage({ })
-      expect(result).toBeFalsy()
-    })
-
-    it('is false for messages outside the active period', () => {
-      const now = Date.now()
-      const result = messages.shouldShowMessage({
-        startTime: now + 10,
-        endTime: now + 20,
-        whenTriggers: {
-          verb: "OR",
-          children: [
-            { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
-          ]
-        }
-      })
-      expect(result).toBeFalsy()
     })
   })
 
@@ -288,8 +274,83 @@ describe(Messages, () => {
           priority: 1000
         }
       })
+      events.emit('start')
 
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
+  })
+
+  describe('triggering', () => {
+    const MESSAGE_WITH_EVENT_TRIGGER = {
+      countdown: 1,
+      action: "Confirm",
+      startTime: 1587034800000,
+      parentCampaignId: 456,
+      whenTriggers: {
+        verb: "OR",
+        children: [ {
+          subject: "event",
+          verb: "triggers",
+          noun: "Add to cart",
+          objects: [],
+          secondaryVerb: "="
+        } ]
+      },
+      vars: { __name__:"Confirm", },
+      priority: 1000
+    }
+
+    it('triggers messages on event triggers', () => {
+      events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('trigger', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+      const message = showMessage.mock.calls[0][0].message
+      expect(message.messageId).toEqual("123")
+    })
+
+    it('does not trigger messages if trigger event does not match', () => {
+      events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
+
+      events.emit('start')
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+    })
+
+    it('does not show message if trigger event does not match', () => {
+      events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
+
+      events.emit('trigger', { eventName: 'Checkout' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+    })
+
+    it('does not show messages without triggers', () => {
+      const message = { ...MESSAGE_WITH_EVENT_TRIGGER }
+      delete message.whenTriggers
+      events.emit('messagesReceived', { "123": message })
+
+      events.emit('trigger', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+    })
+
+    it('does not trigger messages outside the active period', () => {
+      const now = Date.now()
+      const message = {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        startTime: now + 10,
+        endTime: now + 20
+      }
+
+      events.emit('trigger', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+    })
+
+    // TODO: trigger with params
   })
 })

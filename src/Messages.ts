@@ -17,11 +17,11 @@ export default class Messages {
     events.on('messagesReceived', this.onMessagesReceived.bind(this))
     events.on('filesReceived', this.onFilesReceived.bind(this))
 
-    // TODO
-    //events.on('start', this.onMessageTrigger)
-    //events.on('resume', this.onMessageTrigger)
-    //events.on('trigger', this.onMessageTrigger)
-    //events.on('advanceState', this.onMessageTrigger)
+    events.on('start', this.onTrigger.bind(this, 'start'))
+    //events.on('resume', this.onResume)
+    events.on('trigger', this.onTrigger.bind(this, 'trigger'))
+    //events.on('advanceState', this.onAdvanceState)
+    //events.on('setUserAttribute', this.onSetUserAttribute)
   }
 
   onFilesReceived(files): void {
@@ -33,6 +33,29 @@ export default class Messages {
     } else {
       this._files = {}
     }
+  }
+
+  onTrigger(event, args) {
+    const messages = this.getMessages()
+    const messageIds = Object.keys(messages)
+
+    // TODO: extract to triggerContextFrom(event, args), handle event args
+    const triggerContext = {
+      subject: event,
+      verb: '',
+    }
+    if (event === 'trigger') {
+      Object.assign(triggerContext, {
+        subject: 'event',
+        verb: 'triggers',
+        noun: args.eventName,
+      })
+    }
+
+    messageIds
+      .filter(id => this.shouldShowMessage(messages[id], triggerContext))
+      .slice(0, 1)
+      .forEach(id => this.showMessage(id, messages[id]))
   }
 
   onMessagePreview(message): void {
@@ -62,18 +85,21 @@ export default class Messages {
   onMessagesReceived(receivedMessages): void {
     const messages = receivedMessages || {}
     this._messageCache = messages
-    const messageIds = Object.keys(messages)
-
-    messageIds
-      .filter(id => this.shouldShowMessage(messages[id]))
-      .slice(0, 1)
-      .forEach(id => this.showMessage(id, messages[id]))
   }
 
-  shouldShowMessage(message): boolean {
+  shouldShowMessage(message, triggerContext): boolean {
     // TODO: process whenTriggers and whenLimits logic on client-side
     // https://github.com/Leanplum/Leanplum-Android-SDK/blob/4a795596830d45f5cae2402c25ef32a2f94c6676/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L240-L282
     if (!message.whenTriggers) {
+      return false
+    }
+
+    // TODO: compile trigggers to function
+    const { subject, noun } = triggerContext
+    const matchesTrigger = message.whenTriggers.children.some((trigger) => {
+      return trigger.subject === subject && trigger.noun === noun
+    })
+    if (!matchesTrigger) {
       return false
     }
 
@@ -162,6 +188,9 @@ export default class Messages {
     }
   }
 
+  private getMessages(): any {
+    return this._messageCache || {}
+  }
 
   private colorToHex(color: number): string {
     const b = color & 0xff; color >>= 8
