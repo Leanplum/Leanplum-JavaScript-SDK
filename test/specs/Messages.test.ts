@@ -280,32 +280,32 @@ describe(Messages, () => {
     })
   })
 
-  describe('triggering', () => {
-    const MESSAGE_WITH_EVENT_TRIGGER = {
-      countdown: 1,
-      action: "Confirm",
-      startTime: 1587034800000,
-      parentCampaignId: 456,
-      whenTriggers: {
-        verb: "OR",
-        children: [ {
-          subject: "event",
-          verb: "triggers",
-          noun: "Add to cart",
-          objects: [],
-          secondaryVerb: "="
-        } ]
-      },
-      vars: { __name__:"Confirm", },
-      priority: 1000
-    }
+  const MESSAGE_WITH_EVENT_TRIGGER = {
+    countdown: 1,
+    action: "Confirm",
+    startTime: 1587034800000,
+    parentCampaignId: 456,
+    whenTriggers: {
+      verb: "OR",
+      children: [ {
+        subject: "event",
+        verb: "triggers",
+        noun: "Add to cart",
+        objects: [],
+        secondaryVerb: "="
+      } ]
+    },
+    vars: { __name__:"Confirm", },
+    priority: 1000
+  }
 
+  describe('triggers', () => {
     it('triggers messages on event triggers', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
       expect(showMessage).toHaveBeenCalledTimes(0)
 
-      events.emit('trigger', { eventName: 'Add to cart' })
+      events.emit('track', { eventName: 'Add to cart' })
 
       expect(showMessage).toHaveBeenCalledTimes(1)
       const message = showMessage.mock.calls[0][0].message
@@ -315,7 +315,7 @@ describe(Messages, () => {
     it('does not trigger messages if trigger event does not match', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
-      events.emit('start')
+      events.emit('start', { success: true })
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
@@ -323,7 +323,7 @@ describe(Messages, () => {
     it('does not show message if trigger event does not match', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
-      events.emit('trigger', { eventName: 'Checkout' })
+      events.emit('track', { eventName: 'Checkout' })
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
@@ -333,7 +333,7 @@ describe(Messages, () => {
       delete message.whenTriggers
       events.emit('messagesReceived', { "123": message })
 
-      events.emit('trigger', { eventName: 'Add to cart' })
+      events.emit('track', { eventName: 'Add to cart' })
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
@@ -345,12 +345,39 @@ describe(Messages, () => {
         startTime: now + 10,
         endTime: now + 20
       }
+      events.emit('messagesReceived', { "123": message })
 
-      events.emit('trigger', { eventName: 'Add to cart' })
+      events.emit('track', { eventName: 'Add to cart' })
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
 
-    // TODO: trigger with params
+    // TODO: trigger with params, userAttribute, resume, advanceState
+  })
+
+  describe('limits', () => {
+    it('honors limitSession', () => {
+      const message = {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            { subject: "times", verb: "limitSession", noun: 1,
+              objects: [],
+              secondaryVerb: "=",
+            }
+          ],
+        },
+      }
+      events.emit('messagesReceived', { "123": message })
+
+      events.emit('track', { eventName: 'Add to cart' })
+      // track impression
+      showMessage.mock.calls[0][0].context.track()
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
   })
 })

@@ -10,6 +10,11 @@ type MessageHash = { [key: string]: Message }
 export default class Messages {
   private _files: { [key: string]: string } = {}
   private _messageCache: MessageHash = {}
+    // TODO: persist context, record timestamp to compute limits
+  private _messageHistory = {
+    session: {},
+  }
+
 
   constructor(
     private events: EventEmitter,
@@ -20,10 +25,10 @@ export default class Messages {
     events.on('filesReceived', this.onFilesReceived.bind(this))
 
     events.on('start', this.onTrigger.bind(this, 'start'))
-    //events.on('resume', this.onResume)
-    events.on('trigger', this.onTrigger.bind(this, 'trigger'))
-    //events.on('advanceState', this.onAdvanceState)
-    //events.on('setUserAttribute', this.onSetUserAttribute)
+    //events.on('resume', this.onTrigger.bind(this, 'resume'))
+    events.on('track', this.onTrigger.bind(this, 'trackEvent'))
+    //events.on('advanceState', this.onTrigger.bind(this, 'advanceState'))
+    //events.on('setUserAttribute', this.onTrigger.bind(this, 'setUserAttribute'))
   }
 
   onFilesReceived(files): void {
@@ -41,12 +46,13 @@ export default class Messages {
     const messages = this.getMessages()
     const messageIds = Object.keys(messages)
 
+    // TODO: enable all message triggers
     // TODO: extract to triggerContextFrom(event, args), handle event args
     const triggerContext = {
       subject: event,
       verb: '',
     }
-    if (event === 'trigger') {
+    if (event === 'trackEvent') {
       Object.assign(triggerContext, {
         subject: 'event',
         verb: 'triggers',
@@ -55,7 +61,7 @@ export default class Messages {
     }
 
     messageIds
-      .filter(id => this.shouldShowMessage(messages[id], triggerContext))
+      .filter(id => this.shouldShowMessage(id, messages[id], triggerContext))
       .slice(0, 1)
       .forEach(id => this.showMessage(id, messages[id]))
   }
@@ -89,7 +95,7 @@ export default class Messages {
     this._messageCache = messages
   }
 
-  shouldShowMessage(message, triggerContext): boolean {
+  shouldShowMessage(id: string, message, triggerContext): boolean {
     if (!message.whenTriggers) {
       return false
     }
@@ -100,6 +106,21 @@ export default class Messages {
       return trigger.subject === subject && trigger.noun === noun
     })
     if (!matchesTrigger) {
+      return false
+    }
+
+    // TODO: compile limits to function
+    const whenLimits = message.whenLimits
+    const matchesLimits = !whenLimits || whenLimits.children.every((limit) => {
+      if (limit.verb === 'limitSession') {
+        // TODO: calculate context
+        const sessionOcurrences = (this._messageHistory.session[id] || 0) + 1
+        return sessionOcurrences === limit.noun
+      }
+      //TODO: handle other / subjects
+      return false
+    })
+    if (!matchesLimits) {
       return false
     }
 
@@ -120,7 +141,13 @@ export default class Messages {
     const context = {
       // these match the ActionContext API
       // https://docs.leanplum.com/reference#section-android-custom-templates
-      track: (event?: string) => this.trackMessage(id, event || null),
+      track: (event?: string) => {
+        // TODO: record occurrence
+        const history = this._messageHistory
+        const sessionOcurrences = (history.session[id] || 0) + 1
+        history.session[id] = sessionOcurrences
+        this.trackMessage(id, event || null)
+      },
       runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
       runTrackedActionNamed: (actionName: string): void => {
         const event = actionName.replace(/ action$/, '')
