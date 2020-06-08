@@ -288,9 +288,9 @@ export default class LeanplumInternal {
         this._internalState.hasStarted = true
         const startResponse = this._lpRequest.getLastResponse(response)
         const isSuccess = this._lpRequest.isResponseSuccess(startResponse)
+        this._internalState.startSuccessful = isSuccess
 
         if (isSuccess) {
-          this._internalState.startSuccessful = true
 
           this.updateSession()
 
@@ -317,7 +317,6 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
           this._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
           this._varCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
-          this._internalState.startSuccessful = false
           this._varCache.loadDiffs()
         }
 
