@@ -6,6 +6,8 @@ import { Action } from './public'
 export type MessageVariables = any
 export type Message = {
   messageId: string;
+  action: string;
+  parentCampaignId?: number;
   vars: MessageVariables;
 }
 

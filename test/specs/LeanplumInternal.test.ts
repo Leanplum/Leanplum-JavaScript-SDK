@@ -553,7 +553,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -565,7 +565,7 @@ describe(LeanplumInternal, () => {
       mockNextResponse({ response: [{ success: true }] })
       mockNextResponse({ response: [{ success: true }] })
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Open URL',
         URL: 'https://example.com',
       })
@@ -587,7 +587,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -603,7 +603,7 @@ describe(LeanplumInternal, () => {
         (method, args, options) => resolveTrackRequest = options.response
       )
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Open URL',
         URL: 'https://example.com',
       })
@@ -619,7 +619,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -631,7 +631,7 @@ describe(LeanplumInternal, () => {
       mockNextResponse({ response: [{ success: true }] })
       windowMock.location = { assign: jest.fn() } as any
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Chain to Existing Message',
         'Chained message': '12345',
       })
@@ -654,7 +654,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -669,7 +669,7 @@ describe(LeanplumInternal, () => {
       )
       windowMock.location = { assign: jest.fn() } as any
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Chain to Existing Message',
         'Chained message': '12345',
       })

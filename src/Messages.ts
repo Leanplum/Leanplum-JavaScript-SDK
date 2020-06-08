@@ -5,9 +5,11 @@ import { CreateRequestFunction, Message, MessageVariables } from './types/intern
 import EventEmitter from './EventEmitter'
 import isEqual from 'lodash.isequal'
 
+type MessageHash = { [key: string]: Message }
+
 export default class Messages {
   private _files: { [key: string]: string } = {}
-  private _messageCache: { [key: string]: any } = {}
+  private _messageCache: MessageHash = {}
 
   constructor(
     private events: EventEmitter,
@@ -35,7 +37,7 @@ export default class Messages {
     }
   }
 
-  onTrigger(event, args) {
+  onTrigger(event, args): void {
     const messages = this.getMessages()
     const messageIds = Object.keys(messages)
 
@@ -88,13 +90,11 @@ export default class Messages {
   }
 
   shouldShowMessage(message, triggerContext): boolean {
-    // TODO: process whenTriggers and whenLimits logic on client-side
-    // https://github.com/Leanplum/Leanplum-Android-SDK/blob/4a795596830d45f5cae2402c25ef32a2f94c6676/AndroidSDKCore/src/main/java/com/leanplum/internal/ActionManager.java#L240-L282
     if (!message.whenTriggers) {
       return false
     }
 
-    // TODO: compile trigggers to function
+    // TODO: compile trigggers to function, add full support
     const { subject, noun } = triggerContext
     const matchesTrigger = message.whenTriggers.children.some((trigger) => {
       return trigger.subject === subject && trigger.noun === noun
@@ -188,7 +188,7 @@ export default class Messages {
     }
   }
 
-  private getMessages(): any {
+  private getMessages(): MessageHash {
     return this._messageCache || {}
   }
 
