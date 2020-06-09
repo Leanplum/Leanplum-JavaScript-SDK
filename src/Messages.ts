@@ -7,14 +7,28 @@ import isEqual from 'lodash.isequal'
 
 type MessageHash = { [key: string]: Message }
 
+const verbToInterval = (verb: string): number => {
+  const SECOND = 1000
+  const MINUTE = 60*SECOND
+  const HOUR = 60*MINUTE
+  const DAY = 24*HOUR
+  switch (verb) {
+    case 'limitSecond': return SECOND
+    case 'limitMinute': return MINUTE
+    case 'limitHour': return HOUR
+    case 'limitDay': return DAY
+  }
+}
+
 export default class Messages {
   private _files: { [key: string]: string } = {}
   private _messageCache: MessageHash = {}
-    // TODO: persist context, record timestamp to compute limits
+  // TODO: persist context
   private _messageHistory = {
     session: {},
+    triggers: {},
+    occurrences: {}
   }
-
 
   constructor(
     private events: EventEmitter,
@@ -24,7 +38,10 @@ export default class Messages {
     events.on('messagesReceived', this.onMessagesReceived.bind(this))
     events.on('filesReceived', this.onFilesReceived.bind(this))
 
-    events.on('start', this.onTrigger.bind(this, 'start'))
+    events.on('start', (args) => {
+      this._messageHistory.session = {}
+      this.onTrigger('start', args)
+    })
     //events.on('resume', this.onTrigger.bind(this, 'resume'))
     events.on('track', this.onTrigger.bind(this, 'trackEvent'))
     //events.on('advanceState', this.onTrigger.bind(this, 'advanceState'))
@@ -96,6 +113,8 @@ export default class Messages {
   }
 
   shouldShowMessage(id: string, message, triggerContext): boolean {
+    const now = Date.now()
+
     if (!message.whenTriggers) {
       return false
     }
@@ -109,15 +128,39 @@ export default class Messages {
       return false
     }
 
+    // record trigger occurrence
+    const triggerOccurrences = this._messageHistory.triggers[id] || []
+    triggerOccurrences.push(now)
+    this._messageHistory.triggers[id] = triggerOccurrences
+
     // TODO: compile limits to function
     const whenLimits = message.whenLimits
     const matchesLimits = !whenLimits || whenLimits.children.every((limit) => {
-      if (limit.verb === 'limitSession') {
-        // TODO: calculate context
-        const sessionOcurrences = (this._messageHistory.session[id] || 0) + 1
-        return sessionOcurrences === limit.noun
+      const { subject, verb, noun } = limit
+      if (subject === 'times') {
+        if (verb === 'limitSession') {
+          const sessionOcurrences = (this._messageHistory.session[id] || 0) + 1
+          return sessionOcurrences === noun
+        } else {
+          // X in Y (seconds|minutes|days|hours)
+          const perInterval = limit.objects[0] || 1
+          const timeSlot = verbToInterval(verb) * perInterval
+          const occurrences = this._messageHistory.occurrences[id] || []
+          const count = occurrences.length
+
+          if (count < noun) {
+            return true
+          } else {
+            const slice = occurrences.slice(count - noun, count)
+            // check the time of the first of the last N occurrences
+            return slice[0] < now - timeSlot
+          }
+        }
+      } else if (subject === 'onNthOccurrence') {
+        return triggerOccurrences.length === noun
+      } else if (subject === 'everyNthOccurrence') {
+        return (triggerOccurrences.length % noun) === 0
       }
-      //TODO: handle other / subjects
       return false
     })
     if (!matchesLimits) {
@@ -125,7 +168,6 @@ export default class Messages {
     }
 
     if (message.startTime && message.endTime) {
-      const now = Date.now()
       const outsideActivePeriod = now < message.startTime || message.endTime < now
       if (outsideActivePeriod) {
         return false
@@ -142,10 +184,18 @@ export default class Messages {
       // these match the ActionContext API
       // https://docs.leanplum.com/reference#section-android-custom-templates
       track: (event?: string) => {
-        // TODO: record occurrence
+        // record occurrences
         const history = this._messageHistory
         const sessionOcurrences = (history.session[id] || 0) + 1
         history.session[id] = sessionOcurrences
+
+        const occurrences = (history.occurrences[id] || [])
+        occurrences.push(Date.now())
+        history.occurrences[id] = occurrences
+
+        // TODO: persist history
+
+        // track open
         this.trackMessage(id, event || null)
       },
       runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
@@ -229,6 +279,7 @@ export default class Messages {
 
   private resolveFields(vars: MessageVariables): MessageVariables {
     // TODO: determine types from action definitions (definition.kinds[key])
+    // TODO: get default values from action definitions
     const colorSuffix = /\bcolor/i
     const filePrefix = /^__file__/
     for (const key in vars) {

@@ -379,5 +379,133 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
+
+    it('honors onNthOccurrence', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            { subject: "onNthOccurrence", verb: "", noun: 3 }
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' }) // 1
+      events.emit('track', { eventName: 'Add to cart' }) // 2
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('track', { eventName: 'Add to cart' }) // 3
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('honors everyNthOccurrence', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            { subject: "everyNthOccurrence", verb: "", noun: 2 }
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' }) // 1
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('track', { eventName: 'Add to cart' }) // 2
+      expect(showMessage).toHaveBeenCalledTimes(1)
+
+      events.emit('track', { eventName: 'Add to cart' }) // 3
+      expect(showMessage).toHaveBeenCalledTimes(1)
+
+      events.emit('track', { eventName: 'Add to cart' }) // 4
+      expect(showMessage).toHaveBeenCalledTimes(2)
+    })
+
+    it('resets session limits on next start', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            { subject: "times", verb: "limitSession", noun: 1 }
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+      showMessage.mock.calls[0][0].context.track() // track impression
+      events.emit('start') // new session
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(2)
+    })
+
+
+    // whenLimits format for "X in Y" occurrences:
+    //   noun - amount of allowed occurrences
+    //   verb - time unit (limitSession|limitSecond|limitMinute|limitHour...)
+    //   objects[0] - number of time units
+    //   => `noun` in `objects[0]` `verb`, e.g. "limit to 2 occurrences in 5 minutes"
+
+    const MINUTE = 60*1000
+    const HOUR = 60*MINUTE
+
+    it('honors аn "X times in Y minutes" limit', () => {
+      let now = 0
+      jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            { subject: "times", objects: [1], verb: "limitMinute", noun: 1}
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+      showMessage.mock.calls[0][0].context.track()
+
+      now = MINUTE - 1
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+
+      now = MINUTE + 1
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(2)
+    })
+
+    it('honors аn "X times in Y hours" limit', () => {
+      let now = 0
+      jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            { subject: "times", objects: [2], verb: "limitHour", noun: 1}
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+      showMessage.mock.calls[0][0].context.track()
+
+      now = 2*HOUR - 1
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+
+      now = 2*HOUR + 1
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(2)
+    })
   })
 })
