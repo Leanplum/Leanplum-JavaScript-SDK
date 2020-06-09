@@ -4,6 +4,7 @@ import ArgsBuilder from './ArgsBuilder'
 import { CreateRequestFunction, Message, MessageVariables } from './types/internal'
 import EventEmitter from './EventEmitter'
 import isEqual from 'lodash.isequal'
+import LocalStorageManager from './LocalStorageManager'
 
 type MessageHash = { [key: string]: Message }
 
@@ -23,7 +24,6 @@ const verbToInterval = (verb: string): number => {
 export default class Messages {
   private _files: { [key: string]: string } = {}
   private _messageCache: MessageHash = {}
-  // TODO: persist context
   private _messageHistory = {
     session: {},
     triggers: {},
@@ -42,7 +42,18 @@ export default class Messages {
       this._messageHistory.session = {}
       this.onTrigger('start', args)
     })
-    //events.on('resume', this.onTrigger.bind(this, 'resume'))
+    events.on('resume', (args) => {
+      const cache = LocalStorageManager.getFromLocalStorage('__leanplum__message_cache')
+      if (cache) {
+        this._messageCache = JSON.parse(cache)
+      }
+
+      const history = LocalStorageManager.getFromLocalStorage('__leanplum__message_occurrences')
+      if (history) {
+        this._messageHistory = JSON.parse(history)
+      }
+      this.onTrigger('resume', args)
+    })
     events.on('track', this.onTrigger.bind(this, 'trackEvent'))
     //events.on('advanceState', this.onTrigger.bind(this, 'advanceState'))
     //events.on('setUserAttribute', this.onTrigger.bind(this, 'setUserAttribute'))
@@ -110,6 +121,7 @@ export default class Messages {
   onMessagesReceived(receivedMessages): void {
     const messages = receivedMessages || {}
     this._messageCache = messages
+    LocalStorageManager.saveToLocalStorage('__leanplum__message_cache', JSON.stringify(messages))
   }
 
   shouldShowMessage(id: string, message, triggerContext): boolean {
@@ -132,6 +144,7 @@ export default class Messages {
     const triggerOccurrences = this._messageHistory.triggers[id] || []
     triggerOccurrences.push(now)
     this._messageHistory.triggers[id] = triggerOccurrences
+    this.persistMessageHistory()
 
     // TODO: compile limits to function
     const whenLimits = message.whenLimits
@@ -193,7 +206,7 @@ export default class Messages {
         occurrences.push(Date.now())
         history.occurrences[id] = occurrences
 
-        // TODO: persist history
+        this.persistMessageHistory()
 
         // track open
         this.trackMessage(id, event || null)
@@ -311,5 +324,9 @@ export default class Messages {
         return id
       }
     }
+  }
+
+  private persistMessageHistory(): void {
+    LocalStorageManager.saveToLocalStorage('__leanplum__message_occurrences', JSON.stringify(this._messageHistory))
   }
 }

@@ -1,5 +1,6 @@
 import EventEmitter from '../../src/EventEmitter'
 import Messages from '../../src/Messages'
+import LocalStorageManager from '../../src/LocalStorageManager'
 
 describe(Messages, () => {
   let events: EventEmitter
@@ -9,6 +10,7 @@ describe(Messages, () => {
   let navigationChange: jest.Mock
 
   beforeEach(() => {
+    localStorage.clear()
     events = new EventEmitter()
     createRequest = jest.fn().mockImplementation((m, e, options) => options?.response())
     messages = new Messages(events, createRequest)
@@ -18,6 +20,8 @@ describe(Messages, () => {
     events.on('showMessage', showMessage)
     events.on('navigationChange', navigationChange)
   })
+
+  afterEach(() => jest.clearAllMocks())
 
   const MESSAGE = {
     messageId: 12345,
@@ -412,10 +416,7 @@ describe(Messages, () => {
         whenLimits: {
           verb: "AND",
           children: [
-            { subject: "times", verb: "limitSession", noun: 1,
-              objects: [],
-              secondaryVerb: "=",
-            }
+            { subject: "times", verb: "limitSession", noun: 1 }
           ],
         },
       }
@@ -590,6 +591,126 @@ describe(Messages, () => {
 
       events.emit('track', { eventName: 'Add to cart' })
       expect(showMessage).toHaveBeenCalledTimes(3)
+    })
+  })
+
+  describe('persistence', () => {
+    it('persists message cache', () => {
+      const now = Date.now()
+
+      jest.spyOn(LocalStorageManager, 'saveToLocalStorage').mockImplementation(() => {})
+      const message = {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [ { subject: "times", verb: "limitSession", noun: 1 } ],
+        },
+      }
+      events.emit('messagesReceived', { "123": message })
+
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum__message_cache', JSON.stringify({ '123': message }))
+    })
+
+    it('loads messages from localStorage', () => {
+      jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
+        (key) => {
+          if (key === '__leanplum__message_cache') {
+            return JSON.stringify({
+              "123": {
+                ...MESSAGE_WITH_EVENT_TRIGGER,
+                whenLimits: {
+                  verb: "AND",
+                  children: [ { subject: "times", verb: "limitSession", noun: 1 } ],
+                },
+              }
+            })
+          }
+        }
+      )
+
+      events.emit('resume')
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('persists message occurrences', () => {
+      const now = Date.now()
+
+      jest.spyOn(LocalStorageManager, 'saveToLocalStorage').mockImplementation(() => {})
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [ { subject: "times", verb: "limitSession", noun: 1 } ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+      showMessage.mock.calls[0][0].context.track()
+
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum__message_occurrences', JSON.stringify({
+        session: { '123': 1 },
+        triggers: { '123': [ now ] },
+        occurrences: { '123': [ now ] },
+      }))
+    })
+
+    it('persists trigger occurrences, even if message limits are enforced', () => {
+      const now = Date.now()
+
+      jest.spyOn(LocalStorageManager, 'saveToLocalStorage').mockImplementation(() => {})
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [ { subject: "times", verb: "limitSession", noun: 0 } ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum__message_occurrences', JSON.stringify({
+        session: {},
+        triggers: { '123': [ now ] },
+        occurrences: {},
+      }))
+    })
+
+    it('loads message occurrences from localStorage', () => {
+      const now = Date.now()
+
+      jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
+        (key) => {
+          if (key === '__leanplum__message_cache') {
+            return JSON.stringify({
+              "123": {
+                ...MESSAGE_WITH_EVENT_TRIGGER,
+                whenLimits: {
+                  verb: "AND",
+                  children: [ { subject: "times", verb: "limitSession", noun: 1 } ],
+                },
+              }
+            })
+          } else if (key === '__leanplum__message_occurrences') {
+            return JSON.stringify({
+              session: { '123': 1 },
+              triggers: { '123': [ now ] },
+              occurrences: { '123': [ now ] },
+            })
+          }
+        }
+      )
+
+      events.emit('resume')
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
     })
   })
 })

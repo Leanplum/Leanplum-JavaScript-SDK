@@ -299,6 +299,7 @@ Leanplum.on('showMessage', (args) => {
     body = `<iframe class="w-100 border-0" src="${message.URL}"></iframe>`
   } else {
     // unknown action, do not show
+    console.log(`Skipping unsupported (by Rondo) action: ${message.__name__}`);
     return;
   }
 
