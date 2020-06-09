@@ -297,6 +297,28 @@ Leanplum.on('showMessage', (args) => {
     }
 
     body = `<iframe class="w-100 border-0" src="${message.URL}"></iframe>`
+  } else if (message.__name__ === 'Center Popup') {
+    title = message.Title.Text;
+    body = message.Message.Text;
+
+    buttons.push(
+      { text: message['Accept button'].Text, action: 'Accept action' }
+    )
+  } else if (message.__name__ === 'Push Ask to Ask') {
+    title = message.Title.Text;
+    body = message.Message.Text;
+
+    buttons.push(
+      { text: message['Cancel button'].Text, action: 'Cancel action' },
+      { text: message['Accept button'].Text, action: 'Accept action', primary: true }
+    )
+  } else if (message.__name__ === 'Interstitial') {
+    title = message.Title.Text;
+    body = message.Message.Text;
+
+    buttons.push(
+      { text: message['Accept button'].Text, action: 'Accept action', primary: true }
+    )
   } else {
     // unknown action, do not show
     console.log(`Skipping unsupported (by Rondo) action: ${message.__name__}`);
@@ -341,6 +363,7 @@ Leanplum.on('showMessage', (args) => {
   const runTrackedAction = (e) => {
     e.preventDefault()
     const action = $(e.currentTarget).data('action')
+    if (!action) return
     context.runTrackedActionNamed(action)
   }
 
