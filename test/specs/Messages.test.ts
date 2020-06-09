@@ -240,6 +240,56 @@ describe(Messages, () => {
       expect(navigationChange).toHaveBeenCalledTimes(1)
       expect(navigationChange).toHaveBeenCalledWith("https://example.com/success")
     })
+
+    it('tracks actions', () => {
+      events.emit('messagesReceived', {
+        "123": {
+          countdown: 1,
+          action: "Confirm",
+          whenTriggers: {
+            children: [
+              { subject:"start", objects:[], verb:"", secondaryVerb:"="}
+            ],
+            verb: "OR"
+          },
+          startTime: 1587034800000,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Confirm",
+            Title: "Please confirm",
+            Message:"Ready?",
+            "Cancel text": "No",
+            "Accept text": "Yes",
+            "Accept action": {
+              "Chained message": "234",
+              __name__:"Chain to Existing Message"
+            }
+          },
+          priority: 1000
+        },
+        "234": {
+          action: "Open URL",
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Open URL",
+            URL:"https://example.com/success"
+          }
+        }
+      })
+
+      events.emit('start')
+
+      // trigger accept action
+      showMessage.mock.calls[0][0].context.runTrackedActionNamed('Accept action')
+
+      expect(createRequest).toHaveBeenCalledTimes(2)
+      const [action, args] = createRequest.mock.calls[0]
+      expect(action).toEqual('track')
+      expect(args.buildDict().messageId).toBe("123")
+
+      expect(navigationChange).toHaveBeenCalledTimes(1)
+      expect(navigationChange).toHaveBeenCalledWith("https://example.com/success")
+    })
   })
 
   describe('prioritization', () => {
@@ -451,7 +501,8 @@ describe(Messages, () => {
     //   objects[0] - number of time units
     //   => `noun` in `objects[0]` `verb`, e.g. "limit to 2 occurrences in 5 minutes"
 
-    const MINUTE = 60*1000
+    const SECOND = 1000
+    const MINUTE = 60*SECOND
     const HOUR = 60*MINUTE
 
     it('honors аn "X times in Y minutes" limit', () => {
@@ -506,6 +557,39 @@ describe(Messages, () => {
       now = 2*HOUR + 1
       events.emit('track', { eventName: 'Add to cart' })
       expect(showMessage).toHaveBeenCalledTimes(2)
+    })
+
+    it('honors аn "X times in Y seconds" limit', () => {
+      let now = 0
+      jest.spyOn(Date, 'now').mockImplementation(() => now)
+
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            { subject: "times", objects: [1], verb: "limitSecond", noun: 2}
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+      showMessage.mock.calls[0][0].context.track()
+
+      now = SECOND - 1
+
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(2)
+      showMessage.mock.calls[1][0].context.track()
+
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(2)
+
+      now = SECOND + 1
+
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(3)
     })
   })
 })

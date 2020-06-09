@@ -27,7 +27,7 @@ export default class Messages {
   private _messageHistory = {
     session: {},
     triggers: {},
-    occurrences: {}
+    occurrences: {},
   }
 
   constructor(
