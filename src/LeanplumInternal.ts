@@ -171,6 +171,7 @@ export default class LeanplumInternal {
     this.trackMessage(messageId, 'Open', () => action && this.onAction(action))
   }
 
+  // TODO(breaking change): replace with events and remove stateful handlers
   addStartResponseHandler(handler: StatusHandler): void {
     this._internalState.addStartResponseHandler(handler)
   }
