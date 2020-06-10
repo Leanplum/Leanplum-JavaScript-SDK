@@ -20,6 +20,7 @@ type TriggerContext =
   { trigger: 'start' } |
   { trigger: 'resume' } |
   { trigger: 'userAttribute'; attributes: UserAttributes } |
+  { trigger: 'state'; state: string } |
   { trigger: 'event'; eventName: string; params?: Record<string, number | string> }
 type FilterConfig = {
   verb: 'AND' | 'OR';
@@ -135,7 +136,8 @@ export default class Messages {
         params: args.params || {},
       })
     })
-    //events.on('advanceState', this.onTrigger.bind(this, 'advanceState'))
+    events.on('advanceState', (args) =>
+      this.onTrigger({ trigger: 'state', state: args.state }))
     events.on('setUserAttribute', (attributes) =>
       this.onTrigger({ trigger: 'userAttribute', attributes })
     )
@@ -374,6 +376,12 @@ export default class Messages {
             const [ value ] = trigger.objects
             return context.attributes[trigger.noun] === value
           }
+          break
+        case 'state':
+          if (subject !== 'state') {
+            return false
+          }
+          return trigger.verb === 'triggers' && trigger.noun === context.state
           break
       }
       return false
