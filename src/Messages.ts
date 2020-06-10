@@ -348,8 +348,8 @@ export default class Messages {
     return whenTriggers.children.some((trigger) => {
       const subject = trigger.subject
       switch (context.trigger) {
-        case 'start': return subject === 'start'
-        case 'resume': return subject === 'resume' // TODO: also start, TDD it
+        case 'start': return subject === 'start' || subject === 'resume'
+        case 'resume': return subject === 'resume'
         case 'event':
           if (subject !== 'event') {
             return false
