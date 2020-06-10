@@ -34,14 +34,15 @@ Leanplum.addVariablesChangedHandler(function () {
     var json = JSON.stringify(vars, null, 2);
     $('#variables').text(json);
 });
-$('#start')
-    .click(function () {
+$('#start,#startFromCache')
+    .click(function (e) {
+    var method = $(e.target).attr('id');
     var userId = $('startUserId').val();
     if (userId) {
-        Leanplum.start(userId);
+        Leanplum[method](userId);
     }
     else {
-        Leanplum.start();
+        Leanplum[method]();
     }
     $('.requires-start').removeClass('requires-start');
     $('.session-status .badge-warning').remove();
