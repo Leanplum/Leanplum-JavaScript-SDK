@@ -366,6 +366,35 @@ describe(Messages, () => {
       expect(message.messageId).toEqual("123")
     })
 
+    it('triggers messages on event with parameters', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "event",
+              objects: [
+                "category",
+                "Shoes"
+              ],
+              verb: "triggersWithParameter",
+              noun: "Purchase",
+              secondaryVerb: "="
+            }
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Purchase' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('track', { eventName: 'Purchase', params: { category: 'Shoes' } })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
     it('does not trigger messages if trigger event does not match', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
@@ -406,7 +435,7 @@ describe(Messages, () => {
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
 
-    // TODO: trigger with params, userAttribute, resume, advanceState
+    // TODO: tests for userAttribute, resume, advanceState
   })
 
   describe('limits', () => {

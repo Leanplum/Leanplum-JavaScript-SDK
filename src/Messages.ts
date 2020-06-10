@@ -7,6 +7,10 @@ import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
 
 type MessageHash = { [key: string]: Message }
+type TriggerContext =
+  { trigger: 'start' } |
+  { trigger: 'resume' } |
+  { trigger: 'event', eventName: string, params?: Object }
 
 const verbToInterval = (verb: string): number => {
   const SECOND = 1000
@@ -40,7 +44,7 @@ export default class Messages {
 
     events.on('start', (args) => {
       this._messageHistory.session = {}
-      this.onTrigger('start', args)
+      this.onTrigger({ trigger: 'start' })
     })
     events.on('resume', (args) => {
       const cache = LocalStorageManager.getFromLocalStorage('__leanplum__message_cache')
@@ -52,9 +56,15 @@ export default class Messages {
       if (history) {
         this._messageHistory = JSON.parse(history)
       }
-      this.onTrigger('resume', args)
+      this.onTrigger({ trigger: 'resume' })
     })
-    events.on('track', this.onTrigger.bind(this, 'trackEvent'))
+    events.on('track', (args) => {
+      this.onTrigger({
+        trigger: 'event',
+        eventName: args.eventName,
+        params: args.params || {}
+      })
+    })
     //events.on('advanceState', this.onTrigger.bind(this, 'advanceState'))
     //events.on('setUserAttribute', this.onTrigger.bind(this, 'setUserAttribute'))
   }
@@ -70,27 +80,13 @@ export default class Messages {
     }
   }
 
-  onTrigger(event, args): void {
+  onTrigger(context: TriggerContext): void {
     const messages = this.getMessages()
     const messageIds = Object.keys(messages)
 
-    // TODO: enable all message triggers
-    // TODO: extract to triggerContextFrom(event, args), handle event args
-    const triggerContext = {
-      subject: event,
-      verb: '',
-    }
-    if (event === 'trackEvent') {
-      Object.assign(triggerContext, {
-        subject: 'event',
-        verb: 'triggers',
-        noun: args.eventName,
-      })
-    }
-
     messageIds
-      .filter(id => this.shouldShowMessage(id, messages[id], triggerContext))
-      .slice(0, 1)
+      .filter(id => this.shouldShowMessage(id, messages[id], context))
+      .slice(0, 1) // TODO: choose randomly
       .forEach(id => this.showMessage(id, messages[id]))
   }
 
@@ -124,17 +120,32 @@ export default class Messages {
     LocalStorageManager.saveToLocalStorage('__leanplum__message_cache', JSON.stringify(messages))
   }
 
-  shouldShowMessage(id: string, message, triggerContext): boolean {
+  shouldShowMessage(id: string, message, context: TriggerContext): boolean {
     const now = Date.now()
 
     if (!message.whenTriggers) {
       return false
     }
 
-    // TODO: compile trigggers to function, add full support
-    const { subject, noun } = triggerContext
     const matchesTrigger = message.whenTriggers.children.some((trigger) => {
-      return trigger.subject === subject && trigger.noun === noun
+      const subject = trigger.subject
+      switch (context.trigger) {
+        case 'start': return subject === 'start'
+        case 'resume': return subject === 'resume' // TODO: also start, TDD it
+        case 'event':
+          if (subject !== 'event') {
+            return false
+          }
+
+          const matchesEventName = context.eventName === trigger.noun
+          if (trigger.verb === 'triggers') {
+            return matchesEventName
+          } else if (trigger.verb === 'triggersWithParameter') {
+            const [parameter, value] = trigger.objects
+            return matchesEventName && context.params[parameter] === value
+          }
+      }
+      return false
     })
     if (!matchesTrigger) {
       return false
