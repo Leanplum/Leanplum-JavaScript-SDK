@@ -69,15 +69,14 @@ export default class Messages {
       this.onTrigger({ trigger: 'start' })
     })
     events.on('resume', () => {
-      const cache = LocalStorageManager.getFromLocalStorage('__leanplum__message_cache')
-      if (cache) {
-        this._messageCache = JSON.parse(cache)
+      const maybeLoad = (key: string) => {
+        const cache = LocalStorageManager.getFromLocalStorage(key)
+        return cache ? JSON.parse(cache) : null
       }
+      this._messageCache = maybeLoad(Constants.DEFAULT_KEYS.MESSAGE_CACHE) || this._messageCache
 
-      const history = LocalStorageManager.getFromLocalStorage('__leanplum__message_occurrences')
-      if (history) {
-        this._messageHistory = JSON.parse(history)
-      }
+      this._messageHistory = maybeLoad(Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES) || this._messageHistory
+
       this.onTrigger({ trigger: 'resume' })
     })
     events.on('track', (args) => {
@@ -141,7 +140,7 @@ export default class Messages {
   onMessagesReceived(receivedMessages): void {
     const messages = receivedMessages || {}
     this._messageCache = messages
-    LocalStorageManager.saveToLocalStorage('__leanplum__message_cache', JSON.stringify(messages))
+    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.MESSAGE_CACHE, JSON.stringify(messages))
   }
 
   shouldShowMessage(id: string, message, context: TriggerContext): boolean {
@@ -371,6 +370,7 @@ export default class Messages {
   }
 
   private persistMessageHistory(): void {
-    LocalStorageManager.saveToLocalStorage('__leanplum__message_occurrences', JSON.stringify(this._messageHistory))
+    const key = Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES
+    LocalStorageManager.saveToLocalStorage(key, JSON.stringify(this._messageHistory))
   }
 }

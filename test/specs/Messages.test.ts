@@ -638,13 +638,13 @@ describe(Messages, () => {
       events.emit('messagesReceived', { "123": message })
 
       expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum__message_cache', JSON.stringify({ '123': message }))
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum_message_cache', JSON.stringify({ '123': message }))
     })
 
     it('loads messages from localStorage', () => {
       jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
         (key) => {
-          if (key === '__leanplum__message_cache') {
+          if (key === '__leanplum_message_cache') {
             return JSON.stringify({
               "123": {
                 ...MESSAGE_WITH_EVENT_TRIGGER,
@@ -681,7 +681,7 @@ describe(Messages, () => {
       showMessage.mock.calls[0][0].context.track()
 
       expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum__message_occurrences', JSON.stringify({
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum_message_occurrences', JSON.stringify({
         session: { '123': 1 },
         triggers: { '123': [ now ] },
         occurrences: { '123': [ now ] },
@@ -703,7 +703,7 @@ describe(Messages, () => {
       events.emit('track', { eventName: 'Add to cart' })
 
       expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum__message_occurrences', JSON.stringify({
+      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum_message_occurrences', JSON.stringify({
         session: {},
         triggers: { '123': [ now ] },
         occurrences: {},
@@ -715,7 +715,7 @@ describe(Messages, () => {
 
       jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
         (key) => {
-          if (key === '__leanplum__message_cache') {
+          if (key === '__leanplum_message_cache') {
             return JSON.stringify({
               "123": {
                 ...MESSAGE_WITH_EVENT_TRIGGER,
@@ -725,7 +725,7 @@ describe(Messages, () => {
                 },
               }
             })
-          } else if (key === '__leanplum__message_occurrences') {
+          } else if (key === '__leanplum_message_occurrences') {
             return JSON.stringify({
               session: { '123': 1 },
               triggers: { '123': [ now ] },
