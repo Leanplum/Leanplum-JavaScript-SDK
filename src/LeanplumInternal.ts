@@ -221,6 +221,8 @@ export default class LeanplumInternal {
           this._varCache.setVariantDebugInfo(getVarsResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
         }
 
+        // TODO: trigger messagesReceived
+
         if (callback) {
           callback(isSuccess)
         }
