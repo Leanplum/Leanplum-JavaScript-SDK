@@ -1,4 +1,4 @@
-import { Action } from './types/public'
+import { Action, UserAttributes } from './types/public'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 import { CreateRequestFunction, Message, MessageVariables } from './types/internal'
@@ -19,6 +19,7 @@ type ActionContext = {
 type TriggerContext =
   { trigger: 'start' } |
   { trigger: 'resume' } |
+  { trigger: 'userAttribute'; attributes: UserAttributes } |
   { trigger: 'event'; eventName: string; params?: Record<string, number | string> }
 type FilterConfig = {
   verb: 'AND' | 'OR';
@@ -135,7 +136,9 @@ export default class Messages {
       })
     })
     //events.on('advanceState', this.onTrigger.bind(this, 'advanceState'))
-    //events.on('setUserAttribute', this.onTrigger.bind(this, 'setUserAttribute'))
+    events.on('setUserAttribute', (attributes) =>
+      this.onTrigger({ trigger: 'userAttribute', attributes })
+    )
   }
 
   onFilesReceived(files): void {
@@ -203,7 +206,6 @@ export default class Messages {
     if (!this.matchesLimits(id, message.whenLimits, triggersCount)) {
       return false
     }
-
 
     if (message.startTime && message.endTime) {
       const outsideActivePeriod = now < message.startTime || message.endTime < now
@@ -360,6 +362,19 @@ export default class Messages {
             const [parameter, value] = trigger.objects
             return matchesEventName && context.params[parameter] === value
           }
+          break
+        case 'userAttribute':
+          if (subject !== 'userAttribute') {
+            return false
+          }
+
+          if (trigger.verb === 'changes') {
+            return trigger.noun in context.attributes
+          } else if (trigger.verb === 'changesTo') {
+            const [ value ] = trigger.objects
+            return context.attributes[trigger.noun] === value
+          }
+          break
       }
       return false
     })

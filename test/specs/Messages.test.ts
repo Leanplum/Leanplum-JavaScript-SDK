@@ -395,6 +395,59 @@ describe(Messages, () => {
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
 
+    it('triggers messages on user attribute changes', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "userAttribute",
+              verb: "changes",
+              noun: "email"
+            }
+          ],
+        },
+      } })
+
+      events.emit('setUserAttribute', { name: 'User' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('setUserAttribute', { email: 'user@example.com' })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('triggers messages on user attribute changes to value', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "userAttribute",
+              verb: "changesTo",
+              noun: "email",
+              objects: [
+                "admin@example.com"
+              ]
+            }
+          ],
+        },
+      } })
+
+      events.emit('setUserAttribute', { email: 'user@example.com' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('setUserAttribute', { email: 'admin@example.com' })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    // TODO: tests for resume, advanceState
+
     it('does not trigger messages if trigger event does not match', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
@@ -434,8 +487,6 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
-
-    // TODO: tests for userAttribute, resume, advanceState
   })
 
   describe('limits', () => {
