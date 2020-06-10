@@ -130,12 +130,12 @@ export interface InboxMessage {
 }
 export interface ChainMessage {
   __name__: 'Chain to Existing Message';
-  parentCampaignId?: string;
+  parentCampaignId?: number;
   'Chained message': string;
 }
 export interface OpenURLAction {
   __name__: 'Open URL';
-  parentCampaignId?: string;
+  parentCampaignId?: number;
   URL: string;
 }
 export type Action = ChainMessage | OpenURLAction;
