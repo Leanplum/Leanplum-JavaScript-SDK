@@ -389,8 +389,11 @@ export default class Messages {
   }
 
   private matchesLimits(id: string, whenLimits: FilterConfig, triggerOccurrences: number): boolean {
-    const now = Date.now()
-    const matchesLimits = !whenLimits || whenLimits.children.every((limit) => {
+    if (!whenLimits) {
+      return true
+    }
+
+    return whenLimits.children.every((limit) => {
       const { subject, verb } = limit
       const noun = parseInt(limit.noun.toString())
       if (subject === 'times') {
@@ -409,7 +412,7 @@ export default class Messages {
           } else {
             const slice = occurrences.slice(count - noun, count)
             // check the time of the first of the last N occurrences
-            return slice[0] < now - timeSlot
+            return slice[0] < Date.now() - timeSlot
           }
         }
       } else if (subject === 'onNthOccurrence') {
@@ -419,9 +422,5 @@ export default class Messages {
       }
       return false
     })
-    if (!matchesLimits) {
-      return false
-    }
-    return true
   }
 }
