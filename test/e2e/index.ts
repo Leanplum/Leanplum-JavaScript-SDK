@@ -44,15 +44,16 @@ Leanplum.addVariablesChangedHandler(() => {
     $('#variables').text(json)
 })
 
-$('#start')
-    .click(() => {
-        const userId = $('startUserId').val()
+$('#start,#startFromCache')
+    .click((e) => {
+      const method = $(e.target).attr('id')
+      const userId = $('startUserId').val()
 
-        if (userId) {
-            Leanplum.start(userId)
-        } else {
-            Leanplum.start()
-        }
+      if (userId) {
+          Leanplum[method](userId)
+      } else {
+          Leanplum[method]()
+      }
 
       $('.requires-start').removeClass('requires-start')
       $('.session-status .badge-warning').remove()
