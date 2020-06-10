@@ -6,11 +6,33 @@ import EventEmitter from './EventEmitter'
 import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
 
+type Timestamp = number
 type MessageHash = { [key: string]: Message }
+type ActionContext = {
+  // matches the ActionContext API in Android/iOS
+  // https://docs.leanplum.com/reference#section-android-custom-templates
+  track: (event?: string) => void;
+  runActionNamed: (actionName: string) => void;
+  runTrackedActionNamed: (actionName: string) => void;
+}
 type TriggerContext =
   { trigger: 'start' } |
   { trigger: 'resume' } |
-  { trigger: 'event', eventName: string, params?: Object }
+  { trigger: 'event'; eventName: string; params?: Record<string, number | string> }
+type FilterConfig = {
+  verb: 'AND' | 'OR';
+  children: Array<{
+    subject: string;
+    verb: string;
+    noun: string | number;
+    objects?: Array<string | number>;
+  }>;
+}
+type MessageOccurrences = {
+  session: { [key: string]: number };
+  triggers: { [key: string]: Array<Timestamp> };
+  occurrences: { [key: string]: Array<Timestamp> };
+}
 
 const verbToInterval = (verb: string): number => {
   const SECOND = 1000
@@ -28,7 +50,7 @@ const verbToInterval = (verb: string): number => {
 export default class Messages {
   private _files: { [key: string]: string } = {}
   private _messageCache: MessageHash = {}
-  private _messageHistory = {
+  private _messageHistory: MessageOccurrences = {
     session: {},
     triggers: {},
     occurrences: {},
@@ -42,11 +64,11 @@ export default class Messages {
     events.on('messagesReceived', this.onMessagesReceived.bind(this))
     events.on('filesReceived', this.onFilesReceived.bind(this))
 
-    events.on('start', (args) => {
+    events.on('start', () => {
       this._messageHistory.session = {}
       this.onTrigger({ trigger: 'start' })
     })
-    events.on('resume', (args) => {
+    events.on('resume', () => {
       const cache = LocalStorageManager.getFromLocalStorage('__leanplum__message_cache')
       if (cache) {
         this._messageCache = JSON.parse(cache)
@@ -62,7 +84,7 @@ export default class Messages {
       this.onTrigger({
         trigger: 'event',
         eventName: args.eventName,
-        params: args.params || {}
+        params: args.params || {},
       })
     })
     //events.on('advanceState', this.onTrigger.bind(this, 'advanceState'))
@@ -93,6 +115,17 @@ export default class Messages {
   onMessagePreview(message): void {
     const vars = message.action
 
+    const context: ActionContext = {
+      track: (event?: string) => {
+        const eventInfo = event ? `event '${event}'` : 'impression'
+        console.log(`Tracking ${eventInfo} for ${message.messageId}`)
+      },
+      runActionNamed: (actionName: string): void =>
+        console.log(`Running untracked action '${actionName}'`),
+      runTrackedActionNamed: (actionName: string): void =>
+        console.log(`Running tracked action '${actionName}'`),
+    }
+
     this.events.emit('showMessage', this.resolveFields({
       isPreview: true,
 
@@ -101,16 +134,7 @@ export default class Messages {
         ...vars,
       },
 
-      context: {
-        track: (event?: string) => {
-          const eventInfo = event ? `event '${event}'` : 'impression'
-          console.log(`Tracking ${eventInfo} for ${message.messageId}`)
-        },
-        runActionNamed: (actionName: string): void =>
-          console.log(`Running untracked action '${actionName}'`),
-        runTrackedActionNamed: (actionName: string): void =>
-          console.log(`Running tracked action '${actionName}'`),
-      },
+      context,
     }))
   }
 
@@ -123,31 +147,7 @@ export default class Messages {
   shouldShowMessage(id: string, message, context: TriggerContext): boolean {
     const now = Date.now()
 
-    if (!message.whenTriggers) {
-      return false
-    }
-
-    const matchesTrigger = message.whenTriggers.children.some((trigger) => {
-      const subject = trigger.subject
-      switch (context.trigger) {
-        case 'start': return subject === 'start'
-        case 'resume': return subject === 'resume' // TODO: also start, TDD it
-        case 'event':
-          if (subject !== 'event') {
-            return false
-          }
-
-          const matchesEventName = context.eventName === trigger.noun
-          if (trigger.verb === 'triggers') {
-            return matchesEventName
-          } else if (trigger.verb === 'triggersWithParameter') {
-            const [parameter, value] = trigger.objects
-            return matchesEventName && context.params[parameter] === value
-          }
-      }
-      return false
-    })
-    if (!matchesTrigger) {
+    if (!this.matchesTrigger(message.whenTriggers, context)) {
       return false
     }
 
@@ -157,39 +157,10 @@ export default class Messages {
     this._messageHistory.triggers[id] = triggerOccurrences
     this.persistMessageHistory()
 
-    // TODO: compile limits to function
-    const whenLimits = message.whenLimits
-    const matchesLimits = !whenLimits || whenLimits.children.every((limit) => {
-      const { subject, verb, noun } = limit
-      if (subject === 'times') {
-        if (verb === 'limitSession') {
-          const sessionOcurrences = (this._messageHistory.session[id] || 0) + 1
-          return sessionOcurrences === noun
-        } else {
-          // X in Y (seconds|minutes|days|hours)
-          const perInterval = limit.objects[0] || 1
-          const timeSlot = verbToInterval(verb) * perInterval
-          const occurrences = this._messageHistory.occurrences[id] || []
-          const count = occurrences.length
-
-          if (count < noun) {
-            return true
-          } else {
-            const slice = occurrences.slice(count - noun, count)
-            // check the time of the first of the last N occurrences
-            return slice[0] < now - timeSlot
-          }
-        }
-      } else if (subject === 'onNthOccurrence') {
-        return triggerOccurrences.length === noun
-      } else if (subject === 'everyNthOccurrence') {
-        return (triggerOccurrences.length % noun) === 0
-      }
-      return false
-    })
-    if (!matchesLimits) {
+    if (!this.matchesLimits(id, message.whenLimits, triggerOccurrences)) {
       return false
     }
+
 
     if (message.startTime && message.endTime) {
       const outsideActivePeriod = now < message.startTime || message.endTime < now
@@ -204,9 +175,7 @@ export default class Messages {
   private showMessage(id: string, message: Message): void {
     const vars = this.resolveFields({ ...message.vars })
 
-    const context = {
-      // these match the ActionContext API
-      // https://docs.leanplum.com/reference#section-android-custom-templates
+    const context: ActionContext = {
       track: (event?: string) => {
         // record occurrences
         const history = this._messageHistory
@@ -335,6 +304,70 @@ export default class Messages {
         return id
       }
     }
+  }
+
+  private matchesTrigger(whenTriggers: FilterConfig, context: TriggerContext): boolean {
+    if (!whenTriggers) {
+      return false
+    }
+
+    return whenTriggers.children.some((trigger) => {
+      const subject = trigger.subject
+      switch (context.trigger) {
+        case 'start': return subject === 'start'
+        case 'resume': return subject === 'resume' // TODO: also start, TDD it
+        case 'event':
+          if (subject !== 'event') {
+            return false
+          }
+
+          const matchesEventName = context.eventName === trigger.noun
+          if (trigger.verb === 'triggers') {
+            return matchesEventName
+          } else if (trigger.verb === 'triggersWithParameter') {
+            const [parameter, value] = trigger.objects
+            return matchesEventName && context.params[parameter] === value
+          }
+      }
+      return false
+    })
+  }
+
+  private matchesLimits(id: string, whenLimits: FilterConfig, triggerOccurrences: Array<Timestamp>): boolean {
+    const now = Date.now()
+    const matchesLimits = !whenLimits || whenLimits.children.every((limit) => {
+      const { subject, verb } = limit
+      const noun = parseInt(limit.noun.toString())
+      if (subject === 'times') {
+        if (verb === 'limitSession') {
+          const sessionOcurrences = (this._messageHistory.session[id] || 0) + 1
+          return sessionOcurrences === noun
+        } else {
+          // X in Y (seconds|minutes|days|hours)
+          const perInterval = parseInt(limit.objects[0].toString()) || 1
+          const timeSlot = verbToInterval(verb) * perInterval
+          const occurrences = this._messageHistory.occurrences[id] || []
+          const count = occurrences.length
+
+          if (count < noun) {
+            return true
+          } else {
+            const slice = occurrences.slice(count - noun, count)
+            // check the time of the first of the last N occurrences
+            return slice[0] < now - timeSlot
+          }
+        }
+      } else if (subject === 'onNthOccurrence') {
+        return triggerOccurrences.length === noun
+      } else if (subject === 'everyNthOccurrence') {
+        return (triggerOccurrences.length % noun) === 0
+      }
+      return false
+    })
+    if (!matchesLimits) {
+      return false
+    }
+    return true
   }
 
   private persistMessageHistory(): void {
