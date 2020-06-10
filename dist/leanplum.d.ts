@@ -101,6 +101,8 @@ export default class Leanplum {
         name: string;
         args: Array<any>;
     }>): void;
+    static on(eventName: string, handler: Function): void;
+    static off(eventName: string, handler: Function): void;
     static __destroy(): void;
 }
 

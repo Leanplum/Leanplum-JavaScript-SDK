@@ -257,6 +257,14 @@ export default class Leanplum {
     Leanplum._lp.applyQueue(queue)
   }
 
+  static on(eventName: string, handler: Function): void {
+    Leanplum._lp.on(eventName, handler)
+  }
+
+  static off(eventName: string, handler: Function): void {
+    Leanplum._lp.off(eventName, handler)
+  }
+
   static __destroy(): void {
     this._lp = new LeanplumInternal(window)
   }

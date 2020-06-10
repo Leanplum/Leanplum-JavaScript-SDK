@@ -700,6 +700,86 @@ describe(LeanplumInternal, () => {
     })
   })
 
+  describe('events', () => {
+    it('emits start event on start calls', () => {
+      const handler = jest.fn()
+      lp.on('start', handler)
+
+      mockNextResponse({ response: [{ success: true }] })
+      lp.start()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits resume event on startFromCache calls', () => {
+      const handler = jest.fn()
+      lp.on('resume', handler)
+
+      lp.startFromCache()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits track event on track calls', () => {
+      const handler = jest.fn()
+      lp.on('track', handler)
+
+      lp.track('Checkout')
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits track event on trackPurchase calls', () => {
+      const handler = jest.fn()
+      lp.on('track', handler)
+
+      lp.trackPurchase(10)
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith({ eventName: 'Purchase' })
+    })
+
+    it('emits track with parameters', () => {
+      const handler = jest.fn()
+      lp.on('track', handler)
+
+      lp.track('Checkout', { value: 10 })
+
+      expect(handler).toHaveBeenCalledWith({
+        eventName: 'Checkout',
+        params: { value: 10 }
+      })
+    })
+
+    it('emits resume event on resumeSession calls', () => {
+      const handler = jest.fn()
+      lp.on('resume', handler)
+
+      lp.resumeSession()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits advanceState on advanceTo calls', () => {
+      const handler = jest.fn()
+      lp.on('advanceState', handler)
+
+      lp.advanceTo('Level 2')
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits setUserAttribute on setUserAttributes calls', () => {
+      const handler = jest.fn()
+      lp.on('setUserAttribute', handler)
+
+      lp.setUserAttributes({ 'email': 'user@example.com' })
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith({ 'email': 'user@example.com' })
+    })
+  })
+
   describe('Misc', () => {
     describe('getVariantDebugInfo', () => {
       it('calls internal method', () => {
