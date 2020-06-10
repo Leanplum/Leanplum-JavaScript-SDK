@@ -6,6 +6,7 @@ import EventEmitter from './EventEmitter'
 import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
 
+type MessageId = string
 type Timestamp = number
 type MessageHash = { [key: string]: Message }
 type ActionContext = {
@@ -28,10 +29,63 @@ type FilterConfig = {
     objects?: Array<string | number>;
   }>;
 }
-type MessageOccurrences = {
-  session: { [key: string]: number };
-  triggers: { [key: string]: Array<Timestamp> };
-  occurrences: { [key: string]: Array<Timestamp> };
+
+class OccurrenceTracker {
+  recordOccurrence(id: MessageId): void {
+    const sessionOccurrences = (this.session[id] || 0) + 1
+    this.session[id] = sessionOccurrences
+
+    const occurrences = (this.occurrences[id] || [])
+    occurrences.push(Date.now())
+    this.occurrences[id] = occurrences
+
+    this.save()
+  }
+
+  recordTriggerOccurrence(id: MessageId): number {
+    const triggerOccurrences = this.triggers[id] || []
+    triggerOccurrences.push(Date.now())
+    this.triggers[id] = triggerOccurrences
+
+    this.save()
+
+    return triggerOccurrences.length
+  }
+
+  getSessionOccurranceCount(id: MessageId): number {
+    return this.session[id] || 0
+  }
+
+  getOccurrences(id: MessageId): Array<Timestamp> {
+    return this.occurrences[id] || []
+  }
+
+  clearSession(): void {
+    this.session = {}
+  }
+
+  load(): void {
+    const cache = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES)
+    if (cache) {
+      const json = JSON.parse(cache)
+      this.session = json.session
+      this.triggers = json.triggers
+      this.occurrences = json.occurrences
+    }
+  }
+
+  save(): void {
+    const key = Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES
+    LocalStorageManager.saveToLocalStorage(key, JSON.stringify({
+      session: this.session,
+      triggers: this.triggers,
+      occurrences: this.occurrences,
+    }))
+  }
+
+  private session: { [key: string]: number } = {}
+  private triggers: { [key: string]: Array<Timestamp> } = {}
+  private occurrences: { [key: string]: Array<Timestamp> } = {}
 }
 
 const verbToInterval = (verb: string): number => {
@@ -50,11 +104,7 @@ const verbToInterval = (verb: string): number => {
 export default class Messages {
   private _files: { [key: string]: string } = {}
   private _messageCache: MessageHash = {}
-  private _messageHistory: MessageOccurrences = {
-    session: {},
-    triggers: {},
-    occurrences: {},
-  }
+  private occurrenceTracker = new OccurrenceTracker()
 
   constructor(
     private events: EventEmitter,
@@ -65,17 +115,15 @@ export default class Messages {
     events.on('filesReceived', this.onFilesReceived.bind(this))
 
     events.on('start', () => {
-      this._messageHistory.session = {}
+      this.occurrenceTracker.clearSession()
       this.onTrigger({ trigger: 'start' })
     })
     events.on('resume', () => {
-      const maybeLoad = (key: string) => {
-        const cache = LocalStorageManager.getFromLocalStorage(key)
-        return cache ? JSON.parse(cache) : null
-      }
-      this._messageCache = maybeLoad(Constants.DEFAULT_KEYS.MESSAGE_CACHE) || this._messageCache
+      const key = Constants.DEFAULT_KEYS.MESSAGE_CACHE
+      const cache = LocalStorageManager.getFromLocalStorage(key)
+      this._messageCache = cache ? JSON.parse(cache) : this._messageCache
 
-      this._messageHistory = maybeLoad(Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES) || this._messageHistory
+      this.occurrenceTracker.load()
 
       this.onTrigger({ trigger: 'resume' })
     })
@@ -150,13 +198,9 @@ export default class Messages {
       return false
     }
 
-    // record trigger occurrence
-    const triggerOccurrences = this._messageHistory.triggers[id] || []
-    triggerOccurrences.push(now)
-    this._messageHistory.triggers[id] = triggerOccurrences
-    this.persistMessageHistory()
+    const triggersCount = this.occurrenceTracker.recordTriggerOccurrence(id)
 
-    if (!this.matchesLimits(id, message.whenLimits, triggerOccurrences)) {
+    if (!this.matchesLimits(id, message.whenLimits, triggersCount)) {
       return false
     }
 
@@ -176,18 +220,7 @@ export default class Messages {
 
     const context: ActionContext = {
       track: (event?: string) => {
-        // record occurrences
-        const history = this._messageHistory
-        const sessionOcurrences = (history.session[id] || 0) + 1
-        history.session[id] = sessionOcurrences
-
-        const occurrences = (history.occurrences[id] || [])
-        occurrences.push(Date.now())
-        history.occurrences[id] = occurrences
-
-        this.persistMessageHistory()
-
-        // track open
+        this.occurrenceTracker.recordOccurrence(id)
         this.trackMessage(id, event || null)
       },
       runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
@@ -332,20 +365,20 @@ export default class Messages {
     })
   }
 
-  private matchesLimits(id: string, whenLimits: FilterConfig, triggerOccurrences: Array<Timestamp>): boolean {
+  private matchesLimits(id: string, whenLimits: FilterConfig, triggerOccurrences: number): boolean {
     const now = Date.now()
     const matchesLimits = !whenLimits || whenLimits.children.every((limit) => {
       const { subject, verb } = limit
       const noun = parseInt(limit.noun.toString())
       if (subject === 'times') {
         if (verb === 'limitSession') {
-          const sessionOcurrences = (this._messageHistory.session[id] || 0) + 1
-          return sessionOcurrences === noun
+          const sessionOccurrences = this.occurrenceTracker.getSessionOccurranceCount(id)
+          return sessionOccurrences + 1 === noun
         } else {
           // X in Y (seconds|minutes|days|hours)
           const perInterval = parseInt(limit.objects[0].toString()) || 1
           const timeSlot = verbToInterval(verb) * perInterval
-          const occurrences = this._messageHistory.occurrences[id] || []
+          const occurrences = this.occurrenceTracker.getOccurrences(id)
           const count = occurrences.length
 
           if (count < noun) {
@@ -357,9 +390,9 @@ export default class Messages {
           }
         }
       } else if (subject === 'onNthOccurrence') {
-        return triggerOccurrences.length === noun
+        return triggerOccurrences === noun
       } else if (subject === 'everyNthOccurrence') {
-        return (triggerOccurrences.length % noun) === 0
+        return (triggerOccurrences % noun) === 0
       }
       return false
     })
@@ -367,10 +400,5 @@ export default class Messages {
       return false
     }
     return true
-  }
-
-  private persistMessageHistory(): void {
-    const key = Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES
-    LocalStorageManager.saveToLocalStorage(key, JSON.stringify(this._messageHistory))
   }
 }
