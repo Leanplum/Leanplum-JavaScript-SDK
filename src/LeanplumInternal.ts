@@ -27,6 +27,7 @@ import isEqual from 'lodash.isequal'
 import EventEmitter from './EventEmitter'
 import {
   Action,
+  EventType,
   Inbox,
   SimpleHandler,
   StatusHandler,
@@ -159,11 +160,11 @@ export default class LeanplumInternal {
     return this._lpInbox
   }
 
-  on(eventName: string, handler: Function): void {
+  on(eventName: EventType, handler: Function): void {
     this._events.on(eventName, handler)
   }
 
-  off(eventName: string, handler: Function): void {
+  off(eventName: EventType, handler: Function): void {
     this._events.off(eventName, handler)
   }
 
