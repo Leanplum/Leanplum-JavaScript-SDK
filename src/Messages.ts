@@ -112,7 +112,6 @@ export default class Messages {
     private events: EventEmitter,
     private createRequest: CreateRequestFunction
   ) {
-    events.on('previewRequest', this.onMessagePreview.bind(this))
     events.on('messagesReceived', this.onMessagesReceived.bind(this))
     events.on('filesReceived', this.onFilesReceived.bind(this))
 
@@ -162,32 +161,6 @@ export default class Messages {
       .filter(id => this.shouldShowMessage(id, messages[id], context))
       .slice(0, 1) // TODO: choose randomly
       .forEach(id => this.showMessage(id, messages[id]))
-  }
-
-  onMessagePreview(message): void {
-    const vars = message.action
-
-    const context: ActionContext = {
-      track: (event?: string) => {
-        const eventInfo = event ? `event '${event}'` : 'impression'
-        console.log(`Tracking ${eventInfo} for ${message.messageId}`)
-      },
-      runActionNamed: (actionName: string): void =>
-        console.log(`Running untracked action '${actionName}'`),
-      runTrackedActionNamed: (actionName: string): void =>
-        console.log(`Running tracked action '${actionName}'`),
-    }
-
-    this.events.emit('showMessage', this.resolveFields({
-      isPreview: true,
-
-      message: {
-        messageId: message.messageId,
-        ...vars,
-      },
-
-      context,
-    }))
   }
 
   onMessagesReceived(receivedMessages): void {

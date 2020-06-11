@@ -50,14 +50,9 @@ export default class LeanplumInternal {
     this.onInboxAction.bind(this)
   )
   private _lpRequest: LeanplumRequest = new LeanplumRequest()
-  private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
-  private _lpSocket: LeanplumSocket = new LeanplumSocket(
-    this._varCache,
-    this.createRequest.bind(this),
-    this._lpRequest.getLastResponse.bind(this._lpRequest),
-    this._events
-  )
+  private _lpSocket: LeanplumSocket = new LeanplumSocket()
   private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
+  private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
   private _webPushOptions: WebPushOptions
   private _messages: Messages = new Messages(
     this._events,
@@ -586,10 +581,13 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
   private connectSocket(): void {
     this._lpSocket.connect(
+      this._varCache,
       {
         appId: this._lpRequest.appId,
         deviceId: this._lpRequest.deviceId,
-      }
+      },
+      this.createRequest.bind(this),
+      this._lpRequest.getLastResponse.bind(this._lpRequest)
     )
   }
 
