@@ -24,8 +24,10 @@ import LeanplumSocket from './LeanplumSocket'
 import LocalStorageManager from './LocalStorageManager'
 import PushManager from './PushManager'
 import isEqual from 'lodash.isequal'
+import EventEmitter from './EventEmitter'
 import {
   Action,
+  EventType,
   Inbox,
   SimpleHandler,
   StatusHandler,
@@ -40,6 +42,7 @@ import VarCache from './VarCache'
 const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
 
 export default class LeanplumInternal {
+  private _events: EventEmitter = new EventEmitter();
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
   private _lpInbox: Inbox = new LeanplumInbox(
@@ -157,10 +160,19 @@ export default class LeanplumInternal {
     return this._lpInbox
   }
 
+  on(eventName: EventType, handler: Function): void {
+    this._events.on(eventName, handler)
+  }
+
+  off(eventName: EventType, handler: Function): void {
+    this._events.off(eventName, handler)
+  }
+
   onInboxAction(messageId: string, action?: Action): void {
     this.trackMessage(messageId, 'Open', () => action && this.onAction(action))
   }
 
+  // TODO(breaking change): replace with events and remove stateful handlers
   addStartResponseHandler(handler: StatusHandler): void {
     this._internalState.addStartResponseHandler(handler)
   }
@@ -262,8 +274,9 @@ export default class LeanplumInternal {
       response: (response) => {
         this._internalState.hasStarted = true
         const startResponse = this._lpRequest.getLastResponse(response)
+        const isSuccess = this._lpRequest.isResponseSuccess(startResponse)
 
-        if (this._lpRequest.isResponseSuccess(startResponse)) {
+        if (isSuccess) {
           this._internalState.startSuccessful = true
 
           this.updateSession()
@@ -294,6 +307,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
           this._varCache.loadDiffs()
         }
 
+        this._events.emit('start', { success: isSuccess })
         this._internalState.triggerStartHandlers()
       },
     })
@@ -332,6 +346,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     }
 
     this._varCache.loadDiffs()
+    this._events.emit('resume')
     this._internalState.triggerStartHandlers()
   }
 
@@ -353,6 +368,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   }
 
   resumeSession(): void {
+    this._events.emit('resume')
     this.createRequest(Constants.METHODS.RESUME_SESSION, undefined, {
       sendNow: true,
       queued: true,
@@ -398,6 +414,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
         userAttributes ? JSON.stringify(userAttributes) : undefined)
       .add(Constants.PARAMS.NEW_USER_ID, userId)
 
+    this._events.emit('setUserAttribute', userAttributes)
+
     this.createRequest(Constants.METHODS.SET_USER_ATTRIBUTES, args, {
       queued: true,
     })
@@ -431,6 +449,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.INFO, info)
       .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
 
+    this._events.emit('track', { eventName: event, params })
+
     this.createRequest(Constants.METHODS.TRACK, args, {
       queued: true,
       response: () => this.updateSession(),
@@ -446,6 +466,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     if (currencyCode) {
       args.add(Constants.PARAMS.CURRENCY_CODE, currencyCode)
     }
+
+    this._events.emit('track', { eventName: event })
 
     this.createRequest(Constants.METHODS.TRACK, args, {
       queued: true,
@@ -464,6 +486,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.STATE, state)
       .add(Constants.PARAMS.INFO, info)
       .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
+
+    this._events.emit('advanceState', { state })
 
     this.createRequest(Constants.METHODS.ADVANCE, args, {
       queued: true,

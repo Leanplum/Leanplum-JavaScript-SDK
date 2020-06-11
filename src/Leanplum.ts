@@ -17,6 +17,7 @@
 import Constants from './Constants'
 import LeanplumInternal from './LeanplumInternal'
 import {
+  EventType,
   Inbox,
   SimpleHandler,
   StatusHandler,
@@ -255,6 +256,14 @@ export default class Leanplum {
 
   static applyQueue(queue: Array<{ name: string; args: Array<any> }>): void {
     Leanplum._lp.applyQueue(queue)
+  }
+
+  static on(eventName: EventType, handler: Function): void {
+    Leanplum._lp.on(eventName, handler)
+  }
+
+  static off(eventName: EventType, handler: Function): void {
+    Leanplum._lp.off(eventName, handler)
   }
 
   static __destroy(): void {
