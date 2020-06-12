@@ -92,9 +92,9 @@ class OccurrenceTracker {
 
 const verbToInterval = (verb: string): number => {
   const SECOND = 1000
-  const MINUTE = 60*SECOND
-  const HOUR = 60*MINUTE
-  const DAY = 24*HOUR
+  const MINUTE = 60 * SECOND
+  const HOUR = 60 * MINUTE
+  const DAY = 24 * HOUR
   switch (verb) {
     case 'limitSecond': return SECOND
     case 'limitMinute': return MINUTE
