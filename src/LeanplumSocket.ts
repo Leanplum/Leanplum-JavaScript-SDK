@@ -20,20 +20,28 @@ import isEqual from 'lodash.isequal'
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import SocketIoClient from './SocketIoClient'
-import { CreateRequestFunction } from './types/internal'
+import { CreateRequestFunction, Message } from './types/internal'
 import VarCache from './VarCache'
+import EventEmitter from './EventEmitter'
+
+type RegisterMessage = { email: string }
+type DevServerMessage = RegisterMessage | Message
 
 export default class LeanplumSocket {
   private networkTimeoutSeconds = 10
   private socketClient: SocketIoClient | null = null
   private socketHost = 'dev.leanplum.com'
 
-  public connect(
-    cache: VarCache,
-    auth: { appId: string; deviceId: string },
-    createRequest: CreateRequestFunction,
+  constructor(
+    private cache: VarCache,
+    private createRequest: CreateRequestFunction,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getLastResponse: (response: any) => any
+    private getLastResponse: (response: any) => any,
+    private events: EventEmitter,
+  ) { }
+
+  public connect(
+    auth: { appId: string; deviceId: string }
   ): void {
     if (!WebSocket) {
       console.log('Your browser doesn\'t support WebSockets.')
@@ -60,37 +68,7 @@ export default class LeanplumSocket {
       console.log('Leanplum: Socket error', event)
     }
 
-    this.socketClient.onmessage = (event: string, args: { email: string }[]) => {
-      if (event === 'updateVars') {
-        const args = new ArgsBuilder().add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-        createRequest(Constants.METHODS.GET_VARS, args, {
-          queued: false,
-          sendNow: true,
-          response: function(response) {
-            const getVarsResponse = getLastResponse(response)
-            const values = getVarsResponse[Constants.KEYS.VARS]
-            const variants = getVarsResponse[Constants.KEYS.VARIANTS]
-            const actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
-            if (!isEqual(values, cache.diffs)) {
-              cache.applyDiffs(values, variants, actionMetadata)
-            }
-          },
-        })
-      } else if (event === 'getVariables') {
-        cache.sendVariables()
-        this.socketClient.send('getContentResponse', {
-          'updated': true,
-        })
-      } else if (event === 'getActions') {
-        // Unsupported in JavaScript SDK.
-        this.socketClient.send('getContentResponse', {
-          'updated': false,
-        })
-      } else if (event === 'registerDevice') {
-        // eslint-disable-next-line no-alert
-        alert(`Your device has been registered to ${args[0].email}.`)
-      }
-    }
+    this.socketClient.onmessage = this.onMessageReceived.bind(this)
 
     this.socketClient.onclose = () => {
       console.log('Leanplum: Disconnected from development server.')
@@ -117,5 +95,41 @@ export default class LeanplumSocket {
   public setNetworkTimeout(seconds): void {
     this.networkTimeoutSeconds = seconds
     this.socketClient?.setNetworkTimeout(seconds)
+  }
+
+  public onMessageReceived(event: string, args: Array<DevServerMessage>): void {
+    if (event === 'updateVars') {
+      const args = new ArgsBuilder().add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
+      this.createRequest(Constants.METHODS.GET_VARS, args, {
+        queued: false,
+        sendNow: true,
+        response: function(response) {
+          const getVarsResponse = this.getLastResponse(response)
+          const values = getVarsResponse[Constants.KEYS.VARS]
+          const variants = getVarsResponse[Constants.KEYS.VARIANTS]
+          const actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
+          if (!isEqual(values, this.cache.diffs)) {
+            this.cache.applyDiffs(values, variants, actionMetadata)
+          }
+        },
+      })
+    } else if (event === 'getVariables') {
+      this.cache.sendVariables()
+      this.socketClient.send('getContentResponse', {
+        'updated': true,
+      })
+    } else if (event === 'getActions') {
+      // Unsupported in JavaScript SDK.
+      this.socketClient.send('getContentResponse', {
+        'updated': false,
+      })
+    } else if (event === 'registerDevice') {
+      const message = args[0] as RegisterMessage
+      // eslint-disable-next-line no-alert
+      alert(`Your device has been registered to ${message.email}.`)
+    } else if (event === 'trigger') {
+      const message = args[0] as Message
+      this.events.emit('previewRequest', message)
+    }
   }
 }
