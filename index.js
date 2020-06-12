@@ -193,3 +193,97 @@ function renderAppInbox() {
         .toggleClass('badge-secondary', unreadCount === 0)
         .toggleClass('badge-primary', unreadCount > 0);
 }
+// register handler for in-app messages
+Leanplum.on('showMessage', function (args) {
+    var message = args.message, context = args.context;
+    var title, body, buttons = [];
+    if (message.__name__ === 'HTML' && message.__file__Template === 'lp_public_floating-interstitial-10.html') {
+        title = message.Title['Text value'];
+        body = message.Message['Text value'];
+        var imageInfo = message['Hero image'];
+        var imageUrl = imageInfo['Image URL'];
+        if (imageUrl) {
+            var imageHtml = "<p><img src=\"" + imageUrl + "\" width=\"" + imageInfo.width + "\" height=\"" + imageInfo.height + "\" /></p>";
+            if (imageInfo['Display above headline']) {
+                body = imageHtml + body;
+            }
+            else {
+                body += imageHtml;
+            }
+        }
+        var maybeAdd = function (buttonName) {
+            var button = message[buttonName];
+            if (!button) {
+                console.log("Could not find " + buttonName + " in message: ", message);
+                return;
+            }
+            if (!button['Show button']) {
+                return;
+            }
+            buttons.push({
+                text: button.Text['Text value'],
+                action: "Select " + buttonName.toLowerCase() + " action"
+            });
+        };
+        maybeAdd('Button 1');
+        maybeAdd('Button 2');
+    }
+    else if (message.__name__ === 'Confirm') {
+        title = message.Title;
+        body = message.Message;
+        buttons.push({ text: message['Cancel text'], action: 'Cancel action' }, { text: message['Accept text'], action: 'Accept action', primary: true });
+    }
+    else if (message.__name__ === 'Alert') {
+        title = message.Title;
+        body = message.Message;
+        buttons.push({ text: 'Dismiss', action: 'Dismiss action' });
+    }
+    else if (message.__name__ === 'Web Interstitial') {
+        if (message['Has dismiss button']) {
+            // Dismiss button has no action
+            buttons.push({ text: 'Dismiss' });
+        }
+        body = "<iframe class=\"w-100 border-0\" src=\"" + message.URL + "\"></iframe>";
+    }
+    else if (message.__name__ === 'Center Popup') {
+        title = message.Title.Text;
+        body = message.Message.Text;
+        buttons.push({ text: message['Accept button'].Text, action: 'Accept action' });
+    }
+    else if (message.__name__ === 'Push Ask to Ask') {
+        title = message.Title.Text;
+        body = message.Message.Text;
+        buttons.push({ text: message['Cancel button'].Text, action: 'Cancel action' }, { text: message['Accept button'].Text, action: 'Accept action', primary: true });
+    }
+    else if (message.__name__ === 'Interstitial') {
+        title = message.Title.Text;
+        body = message.Message.Text;
+        buttons.push({ text: message['Accept button'].Text, action: 'Accept action', primary: true });
+    }
+    else {
+        // unknown action, do not show
+        console.log("Skipping unsupported (by Rondo) action: " + message.__name__);
+        return;
+    }
+    var modalId = "lpModal-" + message.messageId + (args.isPreview ? '-preview' : '');
+    var buttonHtml = function (button) {
+        return "<button\n        class=\"btn btn-" + (button.primary ? 'primary' : 'secondary') + "\"\n        data-action=\"" + button.action + "\"\n        data-toggle=\"modal\"\n        data-target=\"#" + modalId + "\">\n      " + button.text + "\n    </button>";
+    };
+    var footer = !buttons.length ? '' :
+        "<div class=\"modal-footer\">" + buttons.map(buttonHtml).join('') + "</div>";
+    var header = !title ? '' :
+        "<div class=\"modal-header\">\n      <h5 class=\"modal-title\">" + title + "</h5>\n      <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n    </div>";
+    var modal = "\n  <div class=\"modal\" id=\"" + modalId + "\" tabIndex=\"-1\" role=\"dialog\">\n    <form class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n      <div class=\"modal-content\">\n        " + header + "\n        <div class=\"modal-body\">\n          " + body + "\n        </div>\n        " + footer + "\n      </div>\n    </form>\n  </div>\n";
+    var runTrackedAction = function (e) {
+        e.preventDefault();
+        var action = $(e.currentTarget).data('action');
+        if (!action)
+            return;
+        context.runTrackedActionNamed(action);
+    };
+    $(modal).hide().appendTo('body')
+        .on('shown.bs.modal', function () { return context.track(); })
+        .on('hidden.bs.modal', function () { return $("#" + modalId).remove(); })
+        .find('button').on('click', runTrackedAction).end()
+        .modal({ show: true });
+});
