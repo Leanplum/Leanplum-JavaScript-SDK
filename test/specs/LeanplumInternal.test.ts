@@ -760,6 +760,22 @@ describe(LeanplumInternal, () => {
       expect(handler).toHaveBeenCalledTimes(1)
       expect(handler).toHaveBeenCalledWith({ 'email': 'user@example.com' })
     })
+
+    it('emits messagesReceived on forceContentUpdate', () => {
+      const handler = jest.fn()
+      lp.on('messagesReceived' as any, handler)
+
+      const messages = { "123": { action: 'Custom' } }
+      mockNextResponse({ response: [{
+        success: true,
+        messages
+      }] })
+
+      lp.forceContentUpdate()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith(messages)
+    })
   })
 
   describe('Misc', () => {
