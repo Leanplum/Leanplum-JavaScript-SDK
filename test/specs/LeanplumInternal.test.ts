@@ -85,15 +85,6 @@ describe(LeanplumInternal, () => {
       lp.start()
 
       expect(lpSocketMock.connect).toHaveBeenCalledTimes(1)
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [cahe, auth, createRequest, getLastResponse] = lpSocketMock.connect.mock.calls[0]
-
-      createRequest(expect.any(String), expect.any(Object), expect.any(Object))
-      getLastResponse({ response: [] })
-
-      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
-      expect(lpRequestMock.getLastResponse).toHaveBeenCalledTimes(2)
     })
 
     describe('useSessionLength', () => {
@@ -219,15 +210,6 @@ describe(LeanplumInternal, () => {
       lp.start()
 
       expect(lpSocketMock.connect).toHaveBeenCalledTimes(1)
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [cahe, auth, createRequest, getLastResponse] = lpSocketMock.connect.mock.calls[0]
-
-      createRequest(expect.any(String), expect.any(Object), expect.any(Object))
-      getLastResponse({ response: [] })
-
-      expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
-      expect(lpRequestMock.getLastResponse).toHaveBeenCalledTimes(2)
     })
   })
 
@@ -571,7 +553,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -583,7 +565,7 @@ describe(LeanplumInternal, () => {
       mockNextResponse({ response: [{ success: true }] })
       mockNextResponse({ response: [{ success: true }] })
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Open URL',
         URL: 'https://example.com',
       })
@@ -605,7 +587,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -621,7 +603,7 @@ describe(LeanplumInternal, () => {
         (method, args, options) => resolveTrackRequest = options.response
       )
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Open URL',
         URL: 'https://example.com',
       })
@@ -637,7 +619,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -649,7 +631,7 @@ describe(LeanplumInternal, () => {
       mockNextResponse({ response: [{ success: true }] })
       windowMock.location = { assign: jest.fn() } as any
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Chain to Existing Message',
         'Chained message': '12345',
       })
@@ -672,7 +654,7 @@ describe(LeanplumInternal, () => {
       mockMessageCache({
         '12345': {
           action: 'Open URL',
-          parentCampaignId: '999',
+          parentCampaignId: 999,
           vars: {
             __name__: 'Open URL',
             URL: 'https://example.com',
@@ -687,7 +669,7 @@ describe(LeanplumInternal, () => {
       )
       windowMock.location = { assign: jest.fn() } as any
       lp.onInboxAction('123', {
-        parentCampaignId: '999',
+        parentCampaignId: 999,
         __name__: 'Chain to Existing Message',
         'Chained message': '12345',
       })
@@ -777,6 +759,22 @@ describe(LeanplumInternal, () => {
 
       expect(handler).toHaveBeenCalledTimes(1)
       expect(handler).toHaveBeenCalledWith({ 'email': 'user@example.com' })
+    })
+
+    it('emits messagesReceived on forceContentUpdate', () => {
+      const handler = jest.fn()
+      lp.on('messagesReceived' as any, handler)
+
+      const messages = { "123": { action: 'Custom' } }
+      mockNextResponse({ response: [{
+        success: true,
+        messages
+      }] })
+
+      lp.forceContentUpdate()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith(messages)
     })
   })
 

@@ -2,7 +2,14 @@ import ArgsBuilder from '../ArgsBuilder'
 import { LeanplumRequestOptions } from '../LeanplumRequest'
 import { Action } from './public'
 
-export type MessageId = string
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MessageVariables = any
+export type Message = {
+  messageId: string;
+  action: string;
+  parentCampaignId?: number;
+  vars: MessageVariables;
+}
 
 export type CreateRequestFunction = (
   action: string,

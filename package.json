@@ -6,13 +6,14 @@
     "start": "cross-env NODE_ENV=development webpack --watch",
     "e2e-build": "tsc --project tsconfig.e2e.json && yarn run e2e-copy",
     "e2e-copy": "cp ./test/e2e/*.html ./dist/e2e/ && cp ./dist/*.js ./dist/e2e/ && cp ./dist/sw/*.js ./dist/e2e/",
-    "e2e-deploy": "yarn run e2e-build && now deploy dist/e2e",
+    "e2e-deploy": "yarn run e2e-build && now deploy dist/e2e --confirm --local-config vercel.json",
     "e2e-serve": "yarn run e2e-build && http-server dist/e2e -p 8989 -a localhost",
     "publish-gtm": "yarn ts-node build/gtm-script.ts",
     "test": "jest"
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/bootstrap": "^4.5.0",
     "@types/jest": "^25.2.1",
     "@types/jquery": "^3.3.38",
     "@types/node": "^13.13.4",
