@@ -33,94 +33,46 @@ describe(Messages, () => {
     }
   }
 
+  const TRIGGER_ON_START = {
+    verb: "OR",
+    children: [ { subject: "start" } ]
+  }
+
   describe('in-app messages', () => {
     it('does not trigger actions without whenTriggers', () => {
       events.emit('messagesReceived', {
         "123": {
-          countdown: 0,
-          action: "Open URL",
-          startTime: 1587034800000,
-          parentCampaignId: 456,
           vars: {
             __name__:"Open URL",
             URL:"https://example.com/dismiss"
-          },
-          priority: 1000
+          }
         }
       })
 
       expect(showMessage).not.toHaveBeenCalled()
     })
 
-    it('triggers showMessage for messages at start', () => {
-      events.emit('messagesReceived', {
-        "123": {
-          countdown: 1,
-          action: "Confirm",
-          startTime: 1587034800000,
-          parentCampaignId: 456,
-          whenTriggers: {
-            verb: "OR",
-            children: [
-              { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
-            ]
-          },
-          vars: {
-            __name__:"Confirm",
-            Title: "Please confirm",
-            Message: "Ready?",
-            "Cancel text":"No",
-            "Accept text":"Yes",
-            "Accept action": { }
-          },
-          priority:1000
-        }
-      })
-
-      events.emit('start')
-
-      expect(showMessage).toHaveBeenCalledTimes(1)
-    })
-
     it('triggers showMessage for chained message', () => {
       events.emit('messagesReceived', {
         "123": {
-          countdown: 1,
           action: "Confirm",
-          whenTriggers: {
-            children: [
-              { subject:"start", objects:[], verb:"", secondaryVerb:"="}
-            ],
-            verb: "OR"
-          },
-          startTime: 1587034800000,
+          whenTriggers: TRIGGER_ON_START,
           parentCampaignId: 456,
           vars: {
             __name__: "Confirm",
-            Title: "Please confirm",
-            Message:"Ready?",
-            "Cancel text": "No",
-            "Accept text": "Yes",
             "Accept action": {
               "Chained message": "234",
               __name__:"Chain to Existing Message"
             }
           },
-          priority: 1000
         },
         "234": {
-          countdown: 1,
           action: "Confirm",
-          startTime: 1587034800000,
           parentCampaignId: 456,
           vars: {
             __name__: "Confirm",
             Title: "Confirm again",
-            Message:"Ready?",
-            "Cancel text": "No",
-            "Accept text": "Yes",
           },
-          priority: 1000
         }
       })
 
@@ -140,39 +92,25 @@ describe(Messages, () => {
     it('triggers chained message action', () => {
       events.emit('messagesReceived', {
         "123": {
-          countdown: 1,
           action: "Confirm",
-          whenTriggers: {
-            children: [
-              { subject:"start", objects:[], verb:"", secondaryVerb:"="}
-            ],
-            verb: "OR"
-          },
-          startTime: 1587034800000,
+          whenTriggers: TRIGGER_ON_START,
           parentCampaignId: 456,
           vars: {
             __name__: "Confirm",
             Title: "Please confirm",
-            Message:"Ready?",
-            "Cancel text": "No",
-            "Accept text": "Yes",
             "Accept action": {
               "Chained message": "234",
               __name__:"Chain to Existing Message"
             }
           },
-          priority: 1000
         },
         "234": {
-          countdown: 1,
           action: "Open URL",
-          startTime: 1587034800000,
           parentCampaignId: 456,
           vars: {
             __name__: "Open URL",
             URL:"https://example.com/success"
           },
-          priority: 1000
         }
       })
 
@@ -189,28 +127,16 @@ describe(Messages, () => {
     it('tracks actions', () => {
       events.emit('messagesReceived', {
         "123": {
-          countdown: 1,
           action: "Confirm",
-          whenTriggers: {
-            children: [
-              { subject:"start", objects:[], verb:"", secondaryVerb:"="}
-            ],
-            verb: "OR"
-          },
-          startTime: 1587034800000,
+          whenTriggers: TRIGGER_ON_START,
           parentCampaignId: 456,
           vars: {
             __name__: "Confirm",
-            Title: "Please confirm",
-            Message:"Ready?",
-            "Cancel text": "No",
-            "Accept text": "Yes",
             "Accept action": {
               "Chained message": "234",
               __name__:"Chain to Existing Message"
             }
           },
-          priority: 1000
         },
         "234": {
           action: "Open URL",
@@ -241,30 +167,16 @@ describe(Messages, () => {
     it('chooses one in-app message to show', () => {
       events.emit('messagesReceived', {
         "123": {
-          countdown: 1,
           action: "Confirm",
-          startTime: 1587034800000,
           parentCampaignId: 456,
-          whenTriggers: {
-            verb: "OR",
-            children: [
-              { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
-            ]
-          },
+          whenTriggers: TRIGGER_ON_START,
           vars: { __name__:"Confirm", },
           priority: 1000
         },
         "456": {
-          countdown: 1,
           action: "Confirm",
-          startTime: 1587034800000,
           parentCampaignId: 456,
-          whenTriggers: {
-            verb: "OR",
-            children: [
-              { subject: "start", objects: [], verb: "", secondaryVerb: "=" }
-            ]
-          },
+          whenTriggers: TRIGGER_ON_START,
           vars: { __name__:"Confirm", },
           priority: 1000
         }
@@ -290,8 +202,7 @@ describe(Messages, () => {
         secondaryVerb: "="
       } ]
     },
-    vars: { __name__:"Confirm", },
-    priority: 1000
+    vars: { __name__:"Confirm", }
   }
 
   describe('triggers', () => {
