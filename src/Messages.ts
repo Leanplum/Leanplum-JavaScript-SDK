@@ -314,12 +314,13 @@ export default class Messages {
       return vars
     }
 
-    function useDefaults(obj: MessageVariables, values: MessageVariables): MessageVariables {
-      for (const key in values) {
-        if (typeof values[key] === 'object') {
-          obj[key] = useDefaults(obj[key] || {}, values[key])
+    function useDefaults(obj: MessageVariables, defaultValues: MessageVariables): MessageVariables {
+      for (const key in defaultValues) {
+        const value = defaultValues[key]
+        if (typeof value === 'object') {
+          obj[key] = useDefaults(obj[key] || {}, value)
         } else if (!obj[key]) {
-          obj[key] = values[key]
+          obj[key] = value
         }
       }
       return obj
