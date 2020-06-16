@@ -297,7 +297,11 @@ export default class LeanplumInternal {
           this.updateSession()
 
           this._events.emit('filesReceived', startResponse.fileAttributes)
-          this._events.emit('messagesReceived', startResponse[Constants.KEYS.MESSAGES])
+          const messages = startResponse[Constants.KEYS.MESSAGES]
+          if (startResponse.actionDefinitions) {
+            messages.actionDefinitions = startResponse.actionDefinitions
+          }
+          this._events.emit('messagesReceived', messages)
 
           if (startResponse[Constants.KEYS.SYNC_INBOX]) {
             this._lpInbox.downloadMessages()

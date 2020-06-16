@@ -163,6 +163,20 @@ describe(Messages, () => {
     })
 
     it('applies defaults from action definition', () => {
+      const actionDefinitions = {
+        Confirm: {
+          "kind": 3,
+          "kinds": {
+            "Title": "GROUP",
+            "Title.Text": "TEXT"
+          },
+          values: {
+            Title: {
+              Text: "LeanplumSample"
+            }
+          }
+        }
+      }
       events.emit('messagesReceived', {
         "123": {
           action: "Confirm",
@@ -171,20 +185,7 @@ describe(Messages, () => {
           vars: { __name__: "Confirm" },
         },
 
-        __action_kinds: {
-          Confirm: {
-            "kind": 3,
-            "kinds": {
-              "Title": "GROUP",
-              "Title.Text": "TEXT"
-            },
-            values: {
-              Title: {
-                Text: "LeanplumSample"
-              }
-            }
-          }
-        }
+        actionDefinitions
       })
 
       events.emit('start')

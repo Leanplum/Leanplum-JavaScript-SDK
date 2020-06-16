@@ -307,25 +307,25 @@ export default class Messages {
   }
 
   private addDefaults(vars: MessageVariables): MessageVariables {
-    const kinds = this.getMessages().__action_kinds || {}
+    const kinds = this.getMessages().actionDefinitions || {}
     const defaults = kinds[vars.__name__]
 
     if (!defaults) {
       return vars
     }
 
-    function add(obj, def) {
-      for (let i in def) {
-        if (typeof def[i] === 'object') {
-          obj[i] = add(obj[i] || {}, def[i])
-        } else if (!obj[i]) {
-          obj[i] = def[i]
+    function useDefaults(obj: MessageVariables, values: MessageVariables): MessageVariables {
+      for (const key in values) {
+        if (typeof values[key] === 'object') {
+          obj[key] = useDefaults(obj[key] || {}, values[key])
+        } else if (!obj[key]) {
+          obj[key] = values[key]
         }
       }
       return obj
     }
 
-    return add({ ...vars }, defaults.values)
+    return useDefaults({ ...vars }, defaults.values)
   }
 
   private resolveFields(vars: MessageVariables): MessageVariables {

@@ -776,6 +776,34 @@ describe(LeanplumInternal, () => {
       expect(handler).toHaveBeenCalledTimes(1)
       expect(handler).toHaveBeenCalledWith(messages)
     })
+
+    it('provides action definitions with messages', () => {
+      const handler = jest.fn()
+      lp.on('messagesReceived' as any, handler)
+
+      const messages = { "123": { action: 'Custom' } }
+      const actionDefinitions = {
+        'Custom': {
+          kind: 3,
+          values: {
+            Text: 'Default'
+          },
+          kinds: {
+            Text: 'TEXT'
+          }
+        }
+      }
+      mockNextResponse({ response: [{
+        success: true,
+        messages,
+        actionDefinitions
+      }] })
+
+      lp.start()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler.mock.calls[0][0]).toHaveProperty('actionDefinitions', actionDefinitions)
+    })
   })
 
   describe('Misc', () => {
