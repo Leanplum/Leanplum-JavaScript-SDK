@@ -220,7 +220,7 @@ export default class Messages {
   }
 
   private showMessage(id: string, message: Message): void {
-    const vars = this.resolveFields({ ...message.vars })
+    const vars = this.resolveFields(this.addDefaults({ ...message.vars }))
 
     const context: ActionContext = {
       track: (event?: string) => {
@@ -306,9 +306,31 @@ export default class Messages {
     return `rgba(${r},${g},${b},${a})`
   }
 
+  private addDefaults(vars: MessageVariables): MessageVariables {
+    const kinds = this.getMessages().actionDefinitions || {}
+    const defaults = kinds[vars.__name__]
+
+    if (!defaults) {
+      return vars
+    }
+
+    function useDefaults(obj: MessageVariables, defaultValues: MessageVariables): MessageVariables {
+      for (const key of Object.keys(defaultValues)) {
+        const value = defaultValues[key]
+        if (typeof value === 'object') {
+          obj[key] = useDefaults(obj[key] || {}, value)
+        } else if (typeof obj[key] === 'undefined') {
+          obj[key] = value
+        }
+      }
+      return obj
+    }
+
+    return useDefaults({ ...vars }, defaults.values)
+  }
+
   private resolveFields(vars: MessageVariables): MessageVariables {
     // TODO: determine types from action definitions (definition.kinds[key])
-    // TODO: get default values from action definitions
     const colorSuffix = /\bcolor/i
     const filePrefix = /^__file__/
     for (const key in vars) {

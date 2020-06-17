@@ -161,6 +161,44 @@ describe(Messages, () => {
       expect(navigationChange).toHaveBeenCalledTimes(1)
       expect(navigationChange).toHaveBeenCalledWith("https://example.com/success")
     })
+
+    it('applies defaults from action definition', () => {
+      const actionDefinitions = {
+        Confirm: {
+          "kind": 3,
+          "kinds": {
+            "Title": "GROUP",
+            "Title.Text": "TEXT",
+            "ShowButton": "BOOLEAN"
+          },
+          values: {
+            ShowButton: true,
+            Title: {
+              Text: "LeanplumSample"
+            }
+          }
+        }
+      }
+      events.emit('messagesReceived', {
+        "123": {
+          action: "Confirm",
+          whenTriggers: TRIGGER_ON_START,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Confirm",
+            ShowButton: false
+          },
+        },
+
+        actionDefinitions
+      })
+
+      events.emit('start')
+
+      const message = showMessage.mock.calls[0][0].message
+      expect(message).toHaveProperty('Title.Text', 'LeanplumSample')
+      expect(message).toHaveProperty('ShowButton', false)
+    })
   })
 
   describe('prioritization', () => {
