@@ -315,7 +315,7 @@ export default class Messages {
     }
 
     function useDefaults(obj: MessageVariables, defaultValues: MessageVariables): MessageVariables {
-      for (const key in defaultValues) {
+      for (const key of Object.keys(defaultValues)) {
         const value = defaultValues[key]
         if (typeof value === 'object') {
           obj[key] = useDefaults(obj[key] || {}, value)
