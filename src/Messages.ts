@@ -319,7 +319,7 @@ export default class Messages {
         const value = defaultValues[key]
         if (typeof value === 'object') {
           obj[key] = useDefaults(obj[key] || {}, value)
-        } else if (!obj[key]) {
+        } else if (typeof obj[key] === 'undefined') {
           obj[key] = value
         }
       }

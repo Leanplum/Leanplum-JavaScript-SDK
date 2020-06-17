@@ -168,9 +168,11 @@ describe(Messages, () => {
           "kind": 3,
           "kinds": {
             "Title": "GROUP",
-            "Title.Text": "TEXT"
+            "Title.Text": "TEXT",
+            "ShowButton": "BOOLEAN"
           },
           values: {
+            ShowButton: true,
             Title: {
               Text: "LeanplumSample"
             }
@@ -182,7 +184,10 @@ describe(Messages, () => {
           action: "Confirm",
           whenTriggers: TRIGGER_ON_START,
           parentCampaignId: 456,
-          vars: { __name__: "Confirm" },
+          vars: {
+            __name__: "Confirm",
+            ShowButton: false
+          },
         },
 
         actionDefinitions
@@ -192,6 +197,7 @@ describe(Messages, () => {
 
       const message = showMessage.mock.calls[0][0].message
       expect(message).toHaveProperty('Title.Text', 'LeanplumSample')
+      expect(message).toHaveProperty('ShowButton', false)
     })
   })
 
