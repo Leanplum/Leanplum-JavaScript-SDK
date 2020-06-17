@@ -249,7 +249,7 @@ Leanplum.on('showMessage', (args) => {
     body = message.Message['Text value'];
 
     const imageInfo = message['Hero image']
-    const imageUrl = imageInfo['Image URL']
+    const imageUrl = imageInfo && imageInfo['Image URL']
     if (imageUrl) {
       const imageHtml = `<p><img src="${imageUrl}" width="${imageInfo.width}" height="${imageInfo.height}" /></p>`
       if (imageInfo['Display above headline']) {
