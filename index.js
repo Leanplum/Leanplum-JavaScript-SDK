@@ -201,7 +201,7 @@ Leanplum.on('showMessage', function (args) {
         title = message.Title['Text value'];
         body = message.Message['Text value'];
         var imageInfo = message['Hero image'];
-        var imageUrl = imageInfo['Image URL'];
+        var imageUrl = imageInfo === null || imageInfo === void 0 ? void 0 : imageInfo['Image URL'];
         if (imageUrl) {
             var imageHtml = "<p><img src=\"" + imageUrl + "\" width=\"" + imageInfo.width + "\" height=\"" + imageInfo.height + "\" /></p>";
             if (imageInfo['Display above headline']) {
