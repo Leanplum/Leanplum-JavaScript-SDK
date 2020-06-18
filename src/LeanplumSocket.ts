@@ -103,7 +103,7 @@ export default class LeanplumSocket {
       this.createRequest(Constants.METHODS.GET_VARS, args, {
         queued: false,
         sendNow: true,
-        response: function(response) {
+        response: (response) => {
           const getVarsResponse = this.getLastResponse(response)
           const values = getVarsResponse[Constants.KEYS.VARS]
           const variants = getVarsResponse[Constants.KEYS.VARIANTS]
