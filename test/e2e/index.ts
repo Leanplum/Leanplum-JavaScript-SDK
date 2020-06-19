@@ -116,8 +116,8 @@ $('[data-action=advanceToState]')
     .submit((e) => {
         e.preventDefault()
         const state = $('#stateName').val() as string
-        const paramKey = $('#eventParamKey').val() as string
-        const paramValue = $('#eventParamValue').val()
+        const paramKey = $('#stateParamKey').val() as string
+        const paramValue = $('#stateParamValue').val()
 
         let params
         if (paramKey && paramValue) {
