@@ -608,6 +608,31 @@ describe(Messages, () => {
       events.emit('track', { eventName: 'Add to cart' })
       expect(showMessage).toHaveBeenCalledTimes(3)
     })
+
+    it('honrs limitUser', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [
+            {
+              subject: "times",
+              objects: [],
+              verb: "limitUser",
+              noun: 2,
+              secondaryVerb: "="
+            }
+          ]
+        }
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+      showMessage.mock.calls[0][0].context.track()
+      events.emit('track', { eventName: 'Add to cart' })
+      showMessage.mock.calls[0][0].context.track()
+      events.emit('track', { eventName: 'Add to cart' })
+      expect(showMessage).toHaveBeenCalledTimes(2)
+    })
   })
 
   describe('persistence', () => {

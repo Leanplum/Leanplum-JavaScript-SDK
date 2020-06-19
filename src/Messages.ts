@@ -422,6 +422,9 @@ export default class Messages {
         if (verb === 'limitSession') {
           const sessionOccurrences = this.occurrenceTracker.getSessionOccurranceCount(id)
           return sessionOccurrences + 1 === noun
+        } else if (verb === 'limitUser') {
+          const occurrences = this.occurrenceTracker.getOccurrences(id).length
+          return occurrences + 1 <= noun
         } else {
           // X in Y (seconds|minutes|days|hours)
           const perInterval = parseInt(limit.objects[0].toString()) || 1
