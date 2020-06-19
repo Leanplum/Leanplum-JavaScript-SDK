@@ -102,8 +102,8 @@ $('[data-action=advanceToState]')
     .submit(function (e) {
     e.preventDefault();
     var state = $('#stateName').val();
-    var paramKey = $('#eventParamKey').val();
-    var paramValue = $('#eventParamValue').val();
+    var paramKey = $('#stateParamKey').val();
+    var paramValue = $('#stateParamValue').val();
     var params;
     if (paramKey && paramValue) {
         params = {};
