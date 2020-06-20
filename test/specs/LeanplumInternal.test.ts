@@ -751,6 +751,18 @@ describe(LeanplumInternal, () => {
       expect(handler).toHaveBeenCalledTimes(1)
     })
 
+    it('emits advanceState with paramters', () => {
+      const handler = jest.fn()
+      lp.on('advanceState', handler)
+
+      lp.advanceTo('Level 2', { room: 2 })
+
+      expect(handler).toHaveBeenCalledWith({
+        state: 'Level 2',
+        params: { room: 2 }
+      })
+    })
+
     it('emits setUserAttribute on setUserAttributes calls', () => {
       const handler = jest.fn()
       lp.on('setUserAttribute', handler)

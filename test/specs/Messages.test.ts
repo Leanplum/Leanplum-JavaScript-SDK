@@ -384,6 +384,28 @@ describe(Messages, () => {
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
 
+    it('triggers messages on state changes with parameters', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [ {
+            subject: "state",
+            noun: "level2",
+            verb: "triggersWithParameter",
+            objects: [ "room", "two" ],
+            secondaryVerb: "="
+          } ],
+        },
+      } })
+
+      events.emit('advanceState', { state: 'level2', params: { room: "one" } })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('advanceState', { state: 'level2', params: { room: "two" } })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
     it('does not trigger messages if trigger event does not match', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
