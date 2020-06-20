@@ -408,12 +408,17 @@ export default class Messages {
             return false
           }
 
+          const ignoreCaseEqual = (a, b) =>
+            a.toString().localeCompare(b.toString(), undefined, { sensitivity: 'accent' }) === 0
+
           const matchesState = trigger.noun === context.state
           if (trigger.verb === 'triggers') {
             return matchesState
           } else if (trigger.verb === 'triggersWithParameter') {
             const [parameter, value] = trigger.objects
-            return matchesState && context.params[parameter] === value
+            const containsParam = parameter in context.params
+            const matchesParam = ignoreCaseEqual(value, context.params[parameter])
+            return matchesState && containsParam && matchesParam
           }
           break
       }

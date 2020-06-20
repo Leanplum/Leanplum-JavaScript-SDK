@@ -406,6 +406,52 @@ describe(Messages, () => {
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
 
+    it('ignores the type of triggerWithParameter', () => {
+      // because the dashboard always serializes strings
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [ {
+            subject: "state",
+            noun: "level2",
+            verb: "triggersWithParameter",
+            objects: [ "room", "2" ],
+            secondaryVerb: "="
+          } ],
+        },
+      } })
+
+      events.emit('advanceState', { state: 'level2', params: { room: 1 } })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('advanceState', { state: 'level2', params: { room: 2 } })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores the case of triggerWithParameter', () => {
+      // to match the behavior of other SDKs
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [ {
+            subject: "state",
+            noun: "level2",
+            verb: "triggersWithParameter",
+            objects: [ "room", "TWO" ],
+            secondaryVerb: "="
+          } ],
+        },
+      } })
+
+      events.emit('advanceState', { state: 'level2', params: { room: "one" } })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('advanceState', { state: 'level2', params: { room: "two" } })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
     it('does not trigger messages if trigger event does not match', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
