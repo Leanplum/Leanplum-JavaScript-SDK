@@ -373,6 +373,21 @@ export default class Messages {
       return false
     }
 
+    const ignoreCaseEquals = (a, b): boolean =>
+      a.toString().localeCompare(b.toString(), undefined, { sensitivity: 'accent' }) === 0
+
+    const matchesTriggers = (contextNoun: string, params, trigger): boolean => {
+      const matchesNoun = contextNoun === trigger.noun
+      if (trigger.verb === 'triggers') {
+        return matchesNoun
+      } else if (trigger.verb === 'triggersWithParameter') {
+        const [parameter, value] = trigger.objects
+        const containsParam = parameter in params
+        const matchesParam = ignoreCaseEquals(value, params[parameter])
+        return matchesNoun && containsParam && matchesParam
+      }
+    }
+
     return whenTriggers.children.some((trigger) => {
       const subject = trigger.subject
       switch (context.trigger) {
@@ -408,19 +423,7 @@ export default class Messages {
             return false
           }
 
-          const ignoreCaseEqual = (a, b) =>
-            a.toString().localeCompare(b.toString(), undefined, { sensitivity: 'accent' }) === 0
-
-          const matchesState = trigger.noun === context.state
-          if (trigger.verb === 'triggers') {
-            return matchesState
-          } else if (trigger.verb === 'triggersWithParameter') {
-            const [parameter, value] = trigger.objects
-            const containsParam = parameter in context.params
-            const matchesParam = ignoreCaseEqual(value, context.params[parameter])
-            return matchesState && containsParam && matchesParam
-          }
-          break
+          return matchesTriggers(context.state, context.params, trigger)
       }
       return false
     })
