@@ -203,7 +203,9 @@ export default class Messages {
   shouldShowMessage(id: string, message, context: TriggerContext): boolean {
     const now = Date.now()
 
-    if (!this.matchesTrigger(message.whenTriggers, context)) {
+    const matchesTrigger = this.matchesTrigger(message.whenTriggers, context)
+    const matchesUnless = this.matchesTrigger(message.unlessTriggers, context)
+    if (!matchesTrigger || matchesUnless) {
       return false
     }
 

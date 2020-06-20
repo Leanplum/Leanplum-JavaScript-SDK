@@ -546,6 +546,45 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
+
+    it('does not trigger if unlessTriggers match', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "event",
+              verb: "triggers",
+              noun: "Purchase",
+            }
+          ],
+        },
+        unlessTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "event",
+              verb: "triggersWithParameter",
+              noun: "Purchase",
+              objects: [
+                "category",
+                "Shoes"
+              ],
+              secondaryVerb: "="
+            }
+          ],
+        }
+      } })
+
+      events.emit('track', { eventName: 'Purchase', params: { category: 'Shoes' } })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('track', { eventName: 'Purchase', params: { category: 'Belts' }  })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('limits', () => {
