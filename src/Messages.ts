@@ -404,10 +404,11 @@ export default class Messages {
             return false
           }
 
+          const containsAttribute = trigger.noun in context.attributes
           if (trigger.verb === 'changes') {
-            return trigger.noun in context.attributes
+            return containsAttribute
           } else if (trigger.verb === 'changesTo') {
-            if (!(trigger.noun in context.attributes)) {
+            if (!containsAttribute) {
               return false
             }
             const contextValue = context.attributes[trigger.noun]
