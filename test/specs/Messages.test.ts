@@ -349,7 +349,8 @@ describe(Messages, () => {
               verb: "changesTo",
               noun: "email",
               objects: [
-                "admin@example.com"
+                "maintenance@example.com",
+                "Admin@Example.Com"
               ]
             }
           ],
@@ -362,6 +363,31 @@ describe(Messages, () => {
 
       events.emit('setUserAttribute', { email: 'admin@example.com' })
 
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('triggers messages on user attribute changes to null', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "userAttribute",
+              verb: "changesTo",
+              noun: "email",
+              objects: [
+                null
+              ]
+            }
+          ],
+        },
+      } })
+
+      events.emit('setUserAttribute', { email: 'user@example.com' })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('setUserAttribute', { email: null })
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
 

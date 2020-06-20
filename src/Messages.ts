@@ -407,8 +407,16 @@ export default class Messages {
           if (trigger.verb === 'changes') {
             return trigger.noun in context.attributes
           } else if (trigger.verb === 'changesTo') {
-            const [ value ] = trigger.objects
-            return context.attributes[trigger.noun] === value
+            if (!(trigger.noun in context.attributes)) {
+              return false
+            }
+            const contextValue = context.attributes[trigger.noun]
+            return trigger.objects.some(value => {
+              if (value === null && contextValue === null) {
+                return true
+              }
+              return value && contextValue && ignoreCaseEquals(value, contextValue)
+            })
           }
           break
         case 'state':
