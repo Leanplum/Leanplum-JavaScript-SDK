@@ -280,7 +280,36 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(0)
 
-      events.emit('track', { eventName: 'Purchase', params: { category: 'Shoes' } })
+      events.emit('track', { eventName: 'Purchase', params: { category: 'shoes' } })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores type on event parameters', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "event",
+              objects: [
+                "category",
+                "1"
+              ],
+              verb: "triggersWithParameter",
+              noun: "Purchase",
+              secondaryVerb: "="
+            }
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Purchase' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('track', { eventName: 'Purchase', params: { category: 1 } })
 
       expect(showMessage).toHaveBeenCalledTimes(1)
     })

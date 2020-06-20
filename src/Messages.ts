@@ -383,8 +383,8 @@ export default class Messages {
       } else if (trigger.verb === 'triggersWithParameter') {
         const [parameter, value] = trigger.objects
         const containsParam = parameter in params
-        const matchesParam = ignoreCaseEquals(value, params[parameter])
-        return matchesNoun && containsParam && matchesParam
+        const matchesParam = containsParam && ignoreCaseEquals(value, params[parameter])
+        return matchesNoun && matchesParam
       }
     }
 
@@ -398,14 +398,7 @@ export default class Messages {
             return false
           }
 
-          const matchesEventName = context.eventName === trigger.noun
-          if (trigger.verb === 'triggers') {
-            return matchesEventName
-          } else if (trigger.verb === 'triggersWithParameter') {
-            const [parameter, value] = trigger.objects
-            return matchesEventName && context.params[parameter] === value
-          }
-          break
+          return matchesTriggers(context.eventName, context.params, trigger)
         case 'userAttribute':
           if (subject !== 'userAttribute') {
             return false
