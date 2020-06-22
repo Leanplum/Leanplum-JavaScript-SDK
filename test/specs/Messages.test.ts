@@ -280,7 +280,36 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(0)
 
-      events.emit('track', { eventName: 'Purchase', params: { category: 'Shoes' } })
+      events.emit('track', { eventName: 'Purchase', params: { category: 'shoes' } })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores type on event parameters', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "event",
+              objects: [
+                "category",
+                "1"
+              ],
+              verb: "triggersWithParameter",
+              noun: "Purchase",
+              secondaryVerb: "="
+            }
+          ],
+        },
+      } })
+
+      events.emit('track', { eventName: 'Purchase' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('track', { eventName: 'Purchase', params: { category: 1 } })
 
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
@@ -320,7 +349,8 @@ describe(Messages, () => {
               verb: "changesTo",
               noun: "email",
               objects: [
-                "admin@example.com"
+                "maintenance@example.com",
+                "Admin@Example.Com"
               ]
             }
           ],
@@ -333,6 +363,31 @@ describe(Messages, () => {
 
       events.emit('setUserAttribute', { email: 'admin@example.com' })
 
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('triggers messages on user attribute changes to null', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "userAttribute",
+              verb: "changesTo",
+              noun: "email",
+              objects: [
+                null
+              ]
+            }
+          ],
+        },
+      } })
+
+      events.emit('setUserAttribute', { email: 'user@example.com' })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('setUserAttribute', { email: null })
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
 
@@ -384,6 +439,74 @@ describe(Messages, () => {
       expect(showMessage).toHaveBeenCalledTimes(1)
     })
 
+    it('triggers messages on state changes with parameters', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [ {
+            subject: "state",
+            noun: "level2",
+            verb: "triggersWithParameter",
+            objects: [ "room", "two" ],
+            secondaryVerb: "="
+          } ],
+        },
+      } })
+
+      events.emit('advanceState', { state: 'level2', params: { room: "one" } })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('advanceState', { state: 'level2', params: { room: "two" } })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores the type of triggerWithParameter', () => {
+      // because the dashboard always serializes strings
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [ {
+            subject: "state",
+            noun: "level2",
+            verb: "triggersWithParameter",
+            objects: [ "room", "2" ],
+            secondaryVerb: "="
+          } ],
+        },
+      } })
+
+      events.emit('advanceState', { state: 'level2', params: { room: 1 } })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('advanceState', { state: 'level2', params: { room: 2 } })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores the case of triggerWithParameter', () => {
+      // to match the behavior of other SDKs
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [ {
+            subject: "state",
+            noun: "level2",
+            verb: "triggersWithParameter",
+            objects: [ "room", "TWO" ],
+            secondaryVerb: "="
+          } ],
+        },
+      } })
+
+      events.emit('advanceState', { state: 'level2', params: { room: "one" } })
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('advanceState', { state: 'level2', params: { room: "two" } })
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
     it('does not trigger messages if trigger event does not match', () => {
       events.emit('messagesReceived', { "123": MESSAGE_WITH_EVENT_TRIGGER })
 
@@ -422,6 +545,45 @@ describe(Messages, () => {
       events.emit('track', { eventName: 'Add to cart' })
 
       expect(showMessage).toHaveBeenCalledTimes(0)
+    })
+
+    it('does not trigger if unlessTriggers match', () => {
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "event",
+              verb: "triggers",
+              noun: "Purchase",
+            }
+          ],
+        },
+        unlessTriggers: {
+          verb: "OR",
+          children: [
+            {
+              subject: "event",
+              verb: "triggersWithParameter",
+              noun: "Purchase",
+              objects: [
+                "category",
+                "Shoes"
+              ],
+              secondaryVerb: "="
+            }
+          ],
+        }
+      } })
+
+      events.emit('track', { eventName: 'Purchase', params: { category: 'Shoes' } })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+
+      events.emit('track', { eventName: 'Purchase', params: { category: 'Belts' }  })
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
     })
   })
 
