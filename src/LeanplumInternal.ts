@@ -506,7 +506,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       .add(Constants.PARAMS.INFO, info)
       .add(Constants.PARAMS.PARAMS, JSON.stringify(params))
 
-    this._events.emit('advanceState', { state })
+    this._events.emit('advanceState', { state, params })
 
     this.createRequest(Constants.METHODS.ADVANCE, args, {
       queued: true,

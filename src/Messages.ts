@@ -20,7 +20,7 @@ type TriggerContext =
   { trigger: 'start' } |
   { trigger: 'resume' } |
   { trigger: 'userAttribute'; attributes: UserAttributes } |
-  { trigger: 'state'; state: string } |
+  { trigger: 'state'; state: string; params?: Record<string, number | string> } |
   { trigger: 'event'; eventName: string; params?: Record<string, number | string> }
 type FilterConfig = {
   verb: 'AND' | 'OR';
@@ -137,7 +137,11 @@ export default class Messages {
       })
     })
     events.on('advanceState', (args) =>
-      this.onTrigger({ trigger: 'state', state: args.state }))
+      this.onTrigger({
+        trigger: 'state',
+        state: args.state,
+        params: args.params || {},
+      }))
     events.on('setUserAttribute', (attributes) =>
       this.onTrigger({ trigger: 'userAttribute', attributes })
     )
@@ -199,7 +203,9 @@ export default class Messages {
   shouldShowMessage(id: string, message, context: TriggerContext): boolean {
     const now = Date.now()
 
-    if (!this.matchesTrigger(message.whenTriggers, context)) {
+    const matchesTrigger = this.matchesTrigger(message.whenTriggers, context)
+    const matchesUnless = this.matchesTrigger(message.unlessTriggers, context)
+    if (!matchesTrigger || matchesUnless) {
       return false
     }
 
@@ -369,6 +375,21 @@ export default class Messages {
       return false
     }
 
+    const ignoreCaseEquals = (a, b): boolean =>
+      a.toString().localeCompare(b.toString(), undefined, { sensitivity: 'accent' }) === 0
+
+    const matchesTriggers = (contextNoun: string, params, trigger): boolean => {
+      const matchesNoun = contextNoun === trigger.noun
+      if (trigger.verb === 'triggers') {
+        return matchesNoun
+      } else if (trigger.verb === 'triggersWithParameter') {
+        const [parameter, value] = trigger.objects
+        const containsParam = parameter in params
+        const matchesParam = containsParam && ignoreCaseEquals(value, params[parameter])
+        return matchesNoun && matchesParam
+      }
+    }
+
     return whenTriggers.children.some((trigger) => {
       const subject = trigger.subject
       switch (context.trigger) {
@@ -379,32 +400,34 @@ export default class Messages {
             return false
           }
 
-          const matchesEventName = context.eventName === trigger.noun
-          if (trigger.verb === 'triggers') {
-            return matchesEventName
-          } else if (trigger.verb === 'triggersWithParameter') {
-            const [parameter, value] = trigger.objects
-            return matchesEventName && context.params[parameter] === value
-          }
-          break
+          return matchesTriggers(context.eventName, context.params, trigger)
         case 'userAttribute':
           if (subject !== 'userAttribute') {
             return false
           }
 
+          const containsAttribute = trigger.noun in context.attributes
           if (trigger.verb === 'changes') {
-            return trigger.noun in context.attributes
+            return containsAttribute
           } else if (trigger.verb === 'changesTo') {
-            const [ value ] = trigger.objects
-            return context.attributes[trigger.noun] === value
+            if (!containsAttribute) {
+              return false
+            }
+            const contextValue = context.attributes[trigger.noun]
+            return trigger.objects.some(value => {
+              if (value === null && contextValue === null) {
+                return true
+              }
+              return value && contextValue && ignoreCaseEquals(value, contextValue)
+            })
           }
           break
         case 'state':
           if (subject !== 'state') {
             return false
           }
-          return trigger.verb === 'triggers' && trigger.noun === context.state
-          break
+
+          return matchesTriggers(context.state, context.params, trigger)
       }
       return false
     })
