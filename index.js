@@ -195,11 +195,12 @@ function renderAppInbox() {
 }
 // register handler for in-app messages
 Leanplum.on('showMessage', function (args) {
+    var _a, _b;
     var message = args.message, context = args.context;
     var title, body, buttons = [];
     if (message.__name__ === 'HTML' && message.__file__Template === 'lp_public_floating-interstitial-10.html') {
-        title = message.Title['Text value'];
-        body = message.Message['Text value'];
+        title = (_a = message.Title) === null || _a === void 0 ? void 0 : _a['Text value'];
+        body = (_b = message.Message) === null || _b === void 0 ? void 0 : _b['Text value'];
         var imageInfo = message['Hero image'];
         var imageUrl = imageInfo === null || imageInfo === void 0 ? void 0 : imageInfo['Image URL'];
         if (imageUrl) {
