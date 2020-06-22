@@ -245,8 +245,8 @@ Leanplum.on('showMessage', (args) => {
   let title, body, buttons = [];
 
   if (message.__name__ === 'HTML' && message.__file__Template === 'lp_public_floating-interstitial-10.html') {
-    title = message.Title['Text value'];
-    body = message.Message['Text value'];
+    title = message.Title?.['Text value'];
+    body = message.Message?.['Text value'];
 
     const imageInfo = message['Hero image']
     const imageUrl = imageInfo?.['Image URL']
