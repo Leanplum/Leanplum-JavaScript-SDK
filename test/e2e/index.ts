@@ -265,7 +265,7 @@ Leanplum.on('showMessage', (args) => {
         console.log(`Could not find ${buttonName} in message: `, message);
         return
       }
-      if ('Show button' in button && !button['Show button']) {
+      if (button['Show button'] === false) {
         return
       }
       buttons.push({
