@@ -145,6 +145,15 @@ export default class LeanplumRequest {
     }
   }
 
+  public getFileUrl(filename: string): string {
+    const args = new ArgsBuilder()
+        .attachApiKeys(this.appId, this.clientKey)
+        .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
+        .add(Constants.PARAMS.ACTION, 'downloadFile')
+        .add('filename', filename)
+    return `${this.apiPath}?${args.build()}`
+  }
+
   /**
    * Sets the network timeout.
    * @param {number} seconds The timeout in seconds.
