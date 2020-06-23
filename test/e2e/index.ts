@@ -251,7 +251,7 @@ Leanplum.on('showMessage', (args) => {
     const imageInfo = message['Hero image']
     const imageUrl = imageInfo?.['Image URL']
     if (imageUrl) {
-      const imageHtml = `<p><img src="${imageUrl}" width="${imageInfo.width || '100%'}" height="${imageInfo.height || ''}" /></p>`
+      const imageHtml = `<p><img src="${imageUrl}" width="100%" /></p>`
       if (!imageInfo['Display above headline']) {
         body += imageHtml;
       } else {
