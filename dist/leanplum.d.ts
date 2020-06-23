@@ -103,6 +103,7 @@ export default class Leanplum {
     }>): void;
     static on(eventName: EventType, handler: Function): void;
     static off(eventName: EventType, handler: Function): void;
+    static getFileUrl(filename: string): string;
     static __destroy(): void;
 }
 
