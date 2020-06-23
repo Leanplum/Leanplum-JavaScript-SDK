@@ -204,7 +204,7 @@ Leanplum.on('showMessage', function (args) {
         var imageInfo = message['Hero image'];
         var imageUrl = imageInfo === null || imageInfo === void 0 ? void 0 : imageInfo['Image URL'];
         if (imageUrl) {
-            var imageHtml = "<p><img src=\"" + imageUrl + "\" width=\"" + (imageInfo.width || '100%') + "\" height=\"" + (imageInfo.height || '') + "\" /></p>";
+            var imageHtml = "<p><img src=\"" + imageUrl + "\" width=\"100%\" /></p>";
             if (!imageInfo['Display above headline']) {
                 body += imageHtml;
             }
@@ -218,7 +218,7 @@ Leanplum.on('showMessage', function (args) {
                 console.log("Could not find " + buttonName + " in message: ", message);
                 return;
             }
-            if (!button['Show button']) {
+            if (button['Show button'] === false) {
                 return;
             }
             buttons.push({
