@@ -204,12 +204,12 @@ Leanplum.on('showMessage', function (args) {
         var imageInfo = message['Hero image'];
         var imageUrl = imageInfo === null || imageInfo === void 0 ? void 0 : imageInfo['Image URL'];
         if (imageUrl) {
-            var imageHtml = "<p><img src=\"" + imageUrl + "\" width=\"" + imageInfo.width + "\" height=\"" + imageInfo.height + "\" /></p>";
-            if (imageInfo['Display above headline']) {
-                body = imageHtml + body;
+            var imageHtml = "<p><img src=\"" + imageUrl + "\" width=\"" + (imageInfo.width || '100%') + "\" height=\"" + (imageInfo.height || '') + "\" /></p>";
+            if (!imageInfo['Display above headline']) {
+                body += imageHtml;
             }
             else {
-                body += imageHtml;
+                body = imageHtml + body;
             }
         }
         var maybeAdd = function (buttonName) {
