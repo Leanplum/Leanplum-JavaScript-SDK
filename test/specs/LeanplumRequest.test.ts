@@ -2,6 +2,7 @@
 
 import LeanplumRequest from '../../src/LeanplumRequest'
 import LocalStorageManager from '../../src/LocalStorageManager'
+import Constants from '../../src/Constants'
 
 describe(LeanplumRequest, () => {
   let request: LeanplumRequest
@@ -35,5 +36,18 @@ describe(LeanplumRequest, () => {
 
     expect(request.userId).toBe('DE123')
     expect(lsGetSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('resolves file urls', () => {
+    const filename = 'image.png'
+    const version = Constants.SDK_VERSION
+    const appId = 'app_123'
+    const secret = 'prod_234'
+    request.appId = appId
+    request.clientKey = secret
+
+    const url = request.getFileUrl(filename)
+
+    expect(url).toEqual(`https://api.leanplum.com/api?appId=${appId}&client=js&clientKey=${secret}&sdkVersion=${version}&action=downloadFile&filename=${filename}`)
   })
 })

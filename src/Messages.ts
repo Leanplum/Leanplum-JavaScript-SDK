@@ -110,11 +110,11 @@ export default class Messages {
 
   constructor(
     private events: EventEmitter,
-    private createRequest: CreateRequestFunction
+    private createRequest: CreateRequestFunction,
+    private getFileUrl: (filename: string) => string
   ) {
     events.on('previewRequest', this.onMessagePreview.bind(this))
     events.on('messagesReceived', this.onMessagesReceived.bind(this))
-    events.on('filesReceived', this.onFilesReceived.bind(this))
 
     events.on('start', () => {
       this.occurrenceTracker.clearSession()
@@ -145,17 +145,6 @@ export default class Messages {
     events.on('setUserAttribute', (attributes) =>
       this.onTrigger({ trigger: 'userAttribute', attributes })
     )
-  }
-
-  onFilesReceived(files): void {
-    if (files) {
-      this._files = Object.keys(files).reduce((acc, filename) => {
-        acc[filename] = files[filename][''].servingUrl
-        return acc
-      }, {})
-    } else {
-      this._files = {}
-    }
   }
 
   onTrigger(context: TriggerContext): void {
@@ -342,8 +331,7 @@ export default class Messages {
     for (const key in vars) {
       if (filePrefix.test(key)) {
         const name = key.replace(filePrefix, '')
-        const servingUrl = this._files[vars[key]]
-        vars[name + ' URL'] = servingUrl
+        vars[name + ' URL'] = this.getFileUrl(vars[key])
       } else if (colorSuffix.test(key)) {
         vars[key] = this.colorToHex(vars[key])
       } else if (typeof vars[key] === 'object') {

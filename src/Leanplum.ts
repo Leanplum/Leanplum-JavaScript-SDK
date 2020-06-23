@@ -266,6 +266,10 @@ export default class Leanplum {
     Leanplum._lp.off(eventName, handler)
   }
 
+  static getFileUrl(filename: string): string {
+    return Leanplum._lp.getFileUrl(filename)
+  }
+
   static __destroy(): void {
     this._lp = new LeanplumInternal(window)
   }

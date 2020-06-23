@@ -836,6 +836,16 @@ describe(LeanplumInternal, () => {
     })
   })
 
+  describe('getFileUrl', () => {
+    it('calls lpRequest.getFileUrl', () => {
+      const filename = 'image.png'
+      lp.getFileUrl(filename)
+
+      expect(lpRequestMock.getFileUrl).toHaveBeenCalledTimes(1)
+      expect(lpRequestMock.getFileUrl).toHaveBeenCalledWith(filename)
+    })
+  })
+
   function getRequestData(request: any): any {
     const [action, args] = request
     const {messageId, event} = args.buildDict()

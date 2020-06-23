@@ -62,6 +62,7 @@ export default class LeanplumInternal {
   private _messages: Messages = new Messages(
     this._events,
     this.createRequest.bind(this),
+    this.getFileUrl.bind(this),
   )
 
   private _email: string
@@ -202,6 +203,10 @@ export default class LeanplumInternal {
     this._varCache.removeVariablesChangedHandler(handler)
   }
 
+  getFileUrl(filename: string): string {
+    return this._lpRequest.getFileUrl(filename)
+  }
+
   forceContentUpdate(callback?: StatusHandler): void {
     const args = new ArgsBuilder()
       .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
@@ -296,7 +301,6 @@ export default class LeanplumInternal {
 
           this.updateSession()
 
-          this._events.emit('filesReceived', startResponse.fileAttributes)
           const messages = startResponse[Constants.KEYS.MESSAGES]
           if (startResponse.actionDefinitions) {
             messages.actionDefinitions = startResponse.actionDefinitions

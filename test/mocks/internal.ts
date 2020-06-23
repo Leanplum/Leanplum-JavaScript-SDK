@@ -6,6 +6,7 @@ export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
   getLastResponse: jest.fn().mockImplementation((data) => data.response[0]),
   isResponseSuccess: jest.fn().mockImplementation((response) => Boolean(response?.success)),
   request: jest.fn(),
+  getFileUrl: jest.fn(),
 }
 
 export const lpSocketMock = {

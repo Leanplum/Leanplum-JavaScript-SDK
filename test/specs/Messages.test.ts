@@ -8,12 +8,14 @@ describe(Messages, () => {
   let showMessage: jest.Mock
   let createRequest: jest.Mock
   let navigationChange: jest.Mock
+  let getFileUrl: jest.Mock
 
   beforeEach(() => {
     localStorage.clear()
     events = new EventEmitter()
     createRequest = jest.fn().mockImplementation((m, e, options) => options?.response())
-    messages = new Messages(events, createRequest)
+    getFileUrl = jest.fn()
+    messages = new Messages(events, createRequest, getFileUrl)
 
     navigationChange = jest.fn()
     showMessage = jest.fn()
@@ -941,9 +943,7 @@ describe(Messages, () => {
       const fileName = 'lp_public_sf_ui_font.css'
       const fileUrl = 'https://example.com/styles.css'
 
-      events.emit('filesReceived', {
-        [fileName]: { '': { servingUrl: fileUrl } }
-      })
+      getFileUrl.mockReturnValue(fileUrl)
 
       events.emit('previewRequest', {
         messageId: 123,
