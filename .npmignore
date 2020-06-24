@@ -8,3 +8,7 @@ test/
 .arcconfig
 .eslintrc.js
 .lock
+coverage/
+ISSUE_TEMPLATE.md
+PULL_REQUEST_TEMPLATE.md
+build/
