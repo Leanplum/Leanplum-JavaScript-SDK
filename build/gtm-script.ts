@@ -74,7 +74,7 @@ async function run() {
 
   await execSequential([
     `git -C ${GTM_REPO_PATH} add .`,
-    `git -C ${GTM_REPO_PATH} commit -m "chore: publish release with SDD ${version}"`,
+    `git -C ${GTM_REPO_PATH} commit -m "chore: publish release with SDK ${version}"`,
     `git -C ${GTM_REPO_PATH} push`,
     `rm -rf ${GTM_REPO_PATH}`
   ]);
