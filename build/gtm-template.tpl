@@ -284,15 +284,14 @@ const makeNumber = require('makeNumber');
 const LP_URL = 'https://cdn.jsdelivr.net/npm/leanplum-sdk@{LP_SDK_VERSION}/dist/leanplum.min.js';
 
 // command queue
-var lp = {};
 var queue = [
-  { "name": "setAppIdForProductionMode", "args": [data.applicationKey, data.productionKey] }
+  { "name": "setAppIdForProductionMode", "args": [data.applicationKey, data.productionKey] },
+  { "name": "useSessionLength", "args": [2*60*60] }
 ];
 
 if (data.method !== "load") {
   // start a session
   queue.push(
-    { "name": "useSessionLength", "args": [2*60*60] },
     { "name": "start", "args": [] }
   );
 }
@@ -334,6 +333,8 @@ switch (data.method) {
     break;
 }
 
+// global object stubs
+var lp = {};
 {LP_SDK_METHODS}.forEach(function(name) {
   lp[name] = function() {
     queue.push({ name: name, args: arguments });
@@ -483,22 +484,15 @@ ___WEB_PERMISSIONS___
 ___TESTS___
 
 scenarios:
-- name: Runs applyQueue once script loads
+- name: Injects the Leanplum SDK script
   code: |-
-    mock('injectScript', function(url, onSuccess, onFailure) {
-        onSuccess();
-    });
-
     runCode({
       applicationKey: "app_foo",
       productionKey: "prod_bar",
+      method: "load"
     });
 
-    assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
-      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
-      { "name": "useSessionLength", "args": [2*60*60] },
-      { "name": "start", "args": [] }
-    ]);
+    assertApi('injectScript').wasCalled();
 - name: Can track events
   code: |-
     mock('injectScript', function(url, onSuccess, onFailure) {
@@ -635,7 +629,8 @@ scenarios:
     });
 
     assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
-      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] }
+      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
+      { "name": "useSessionLength", "args": [2*60*60] }
     ]);
 
 
