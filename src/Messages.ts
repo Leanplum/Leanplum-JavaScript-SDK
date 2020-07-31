@@ -147,6 +147,12 @@ export default class Messages {
     )
   }
 
+  private _showRichIAM: boolean = false
+
+  enableRichInAppMessages(enabled: boolean): void {
+    this._showRichIAM = enabled
+  }
+
   onTrigger(context: TriggerContext): void {
     const messages = this.getMessages()
     const messageIds = Object.keys(messages)
@@ -171,7 +177,7 @@ export default class Messages {
         console.log(`Running tracked action '${actionName}'`),
     }
 
-    this.events.emit('showMessage', this.resolveFields({
+    this.handleMessage({
       isPreview: true,
 
       message: {
@@ -180,7 +186,7 @@ export default class Messages {
       },
 
       context,
-    }))
+    })
   }
 
   onMessagesReceived(receivedMessages): void {
@@ -215,7 +221,7 @@ export default class Messages {
   }
 
   private showMessage(id: string, message: Message): void {
-    const vars = this.resolveFields(this.addDefaults({ ...message.vars }))
+    const vars = this.addDefaults({ ...message.vars })
 
     const context: ActionContext = {
       track: (event?: string) => {
@@ -229,13 +235,58 @@ export default class Messages {
       },
     }
 
-    this.events.emit('showMessage', {
+    this.handleMessage({
       context,
       message: {
         messageId: id,
         ...vars,
       },
     })
+  }
+
+  handleMessage(options: { isPreview?: boolean, context: ActionContext, message: Message }) {
+    if (this._showRichIAM && (options.message as any).__name__ === 'HTML') {
+      // TODO: use downloadFile, cache?
+      // fetch(options.message['Template URL'])
+      // TODO: load CSS from downloadFile?
+      let messageFrame;
+      fetch('/lp_public_floating-interstitial-11.html')
+        .then(res => res.text())
+        .then(html => {
+          console.log('rendering rich iam', options.message)
+          const vars = JSON.stringify(options.message)
+          const iframe = document.createElement('iframe');
+          iframe.style.cssText = "border-width: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%;"
+          document.body.appendChild(iframe);
+          const doc = iframe.contentWindow.document
+          doc.open()
+          doc.write(html.replace('##Vars##', vars))
+          doc.close()
+
+          messageFrame = iframe;
+        })
+
+      this.events.on('iam-event', (e) => {
+        // TODO: handle events
+        // runAction
+        // runTrackedAction
+        // closeMessage
+        // showMessage
+        // callTrack
+        console.log('received iam-event', e);
+        if (!messageFrame) {
+          return;
+        }
+
+        if (e === "http://leanplum/close") {
+          messageFrame.parentNode.removeChild(messageFrame);
+          messageFrame = null;
+        }
+      });
+    } else {
+      // TODO: resolve vars to maintain compatibility
+      this.events.emit('showMessage', options);
+    }
   }
 
   trackMessage(

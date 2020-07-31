@@ -150,6 +150,10 @@ export default class LeanplumInternal {
     this._internalState.variantDebugInfoEnabled = variantDebugInfoEnabled
   }
 
+  enableRichInAppMessages(enabled: boolean): void {
+    this._messages.enableRichInAppMessages(enabled);
+  }
+
   getVariantDebugInfo(): Record<string, any> {
     return this._varCache.getVariantDebugInfo()
   }

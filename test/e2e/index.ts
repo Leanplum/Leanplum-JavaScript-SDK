@@ -240,42 +240,12 @@ function renderAppInbox(): void {
 }
 
 // register handler for in-app messages
+Leanplum.enableRichInAppMessages(true);
 Leanplum.on('showMessage', (args) => {
   const { message, context } = args;
   let title, body, buttons = [];
 
-  if (message.__name__ === 'HTML' && message.__file__Template === 'lp_public_floating-interstitial-10.html') {
-    title = message.Title?.['Text value'];
-    body = message.Message?.['Text value'];
-
-    const imageInfo = message['Hero image']
-    const imageUrl = imageInfo?.['Image URL']
-    if (imageUrl) {
-      const imageHtml = `<p><img src="${imageUrl}" width="100%" /></p>`
-      if (!imageInfo['Display above headline']) {
-        body += imageHtml;
-      } else {
-        body = imageHtml + body;
-      }
-    }
-
-    const maybeAdd = (buttonName) => {
-      const button = message[buttonName];
-      if (!button) {
-        console.log(`Could not find ${buttonName} in message: `, message);
-        return
-      }
-      if (button['Show button'] === false) {
-        return
-      }
-      buttons.push({
-        text: button.Text['Text value'],
-        action: `Select ${buttonName.toLowerCase()} action`
-      })
-    }
-    maybeAdd('Button 1');
-    maybeAdd('Button 2');
-  } else if (message.__name__ === 'Confirm') {
+  if (message.__name__ === 'Confirm') {
     title = message.Title;
     body = message.Message;
     buttons.push(

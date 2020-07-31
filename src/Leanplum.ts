@@ -97,6 +97,10 @@ export default class Leanplum {
     Leanplum._lp.setVariantDebugInfoEnabled(variantDebugInfoEnabled)
   }
 
+  static enableRichInAppMessages(enabled: boolean): void {
+    Leanplum._lp.enableRichInAppMessages(enabled);
+  }
+
   static getVariantDebugInfo(): Record<string, any> {
     return Leanplum._lp.getVariantDebugInfo()
   }

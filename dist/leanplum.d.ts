@@ -35,6 +35,7 @@ export default class Leanplum {
     static setSystemVersion(systemVersion: string): void;
     static setVariables(variables: Record<string, any>): void;
     static setVariantDebugInfoEnabled(variantDebugInfoEnabled: boolean): void;
+    static enableRichInAppMessages(enabled: boolean): void;
     static getVariantDebugInfo(): Record<string, any>;
     static getVariables(): any;
     static getVariable(...args: string[]): any;
