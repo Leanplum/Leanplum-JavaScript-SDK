@@ -154,6 +154,10 @@ export default class LeanplumInternal {
     this._messages.enableRichInAppMessages(enabled);
   }
 
+  processMessageEvent(messageId: string, message: string): void {
+    this._messages.processMessageEvent(messageId, message);
+  }
+
   getVariantDebugInfo(): Record<string, any> {
     return this._varCache.getVariantDebugInfo()
   }

@@ -101,6 +101,10 @@ export default class Leanplum {
     Leanplum._lp.enableRichInAppMessages(enabled);
   }
 
+  static processMessageEvent(messageId: string, message: string): void {
+    Leanplum._lp.processMessageEvent(messageId, message);
+  }
+
   static getVariantDebugInfo(): Record<string, any> {
     return Leanplum._lp.getVariantDebugInfo()
   }

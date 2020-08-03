@@ -244,48 +244,98 @@ export default class Messages {
     })
   }
 
+  processMessageEvent(messageId: string, eventUrl: string): void {
+    const iframe = document.getElementById(`lp-message-${messageId}`)
+    if (!iframe) {
+      console.log('message closed, skipping event processing');
+      return;
+    }
+
+    const [event, query] = eventUrl.replace(/^http:\/\/leanplum\//, "").split('?')
+    const params = new URLSearchParams(query)
+    const { message, context } = (iframe as any).metadata;
+
+    switch (event) {
+      case "loadFinished":
+        iframe.style.visibility = "visible";
+        iframe.style.left = "0";
+        if (message['HTML Height'] > 0) {
+          const width = message['HTML Width']
+          iframe.style.height = `${message['HTML Height']}px`
+          iframe.style.width = width
+          iframe.style.left = `calc((100% - ${width}) / 2)`;
+
+          const anchorProp = message['HTML Align'].toLowerCase()
+          iframe.style[anchorProp] = "0"
+        } else {
+          iframe.style.top = "0"
+        }
+        break;
+      case "track":
+        context.track(
+          params.get("event")
+          // TODO: add ActionContext parameters
+          //params.get("value"),
+          //params.get("parameters"),
+          //params.get("info")
+        );
+        break;
+      case "runAction":
+      case "runTrackedAction":
+        context[`${event}Named`](params.get("action"));
+        // fall through and close
+      case "close":
+        (iframe as any).metadata = null;
+        iframe.parentNode.removeChild(iframe);
+        break;
+    }
+  }
+
   handleMessage(options: { isPreview?: boolean, context: ActionContext, message: Message }) {
     if (this._showRichIAM && (options.message as any).__name__ === 'HTML') {
-      // TODO: use downloadFile, cache?
-      // fetch(options.message['Template URL'])
-      // TODO: load CSS from downloadFile?
-      let messageFrame;
-      fetch('/lp_public_floating-interstitial-11.html')
+      this.resolveFiles(options.message)
+      fetch(options.message['Template'])
         .then(res => res.text())
         .then(html => {
-          console.log('rendering rich iam', options.message)
+          const messageId = options.message.messageId
           const vars = JSON.stringify(options.message)
           const iframe = document.createElement('iframe');
-          iframe.style.cssText = "border-width: 0; position: fixed; top: 0; left: 0; width: 100%; height: 100%;"
+          iframe.setAttribute("id", `lp-message-${messageId}`)
+          iframe.style.cssText = "border-width: 0; position: fixed; top: -100%; left: -100%; width: 100%; height: 100%; visibility: hidden"
           document.body.appendChild(iframe);
+
+          // pass message info
+          (iframe as any).metadata = options
+
+          // content
+          const content = html
+            .replace('##Vars##', vars)
+            // TODO: move to templates
+            .replace('function routeToBridge(', `function routeToBridge(x) { window.parent.Leanplum.processMessageEvent('${messageId}', x); }\nfunction oldRouteToBridge(`)
+            .replace('</style>', `
+              .rating-icon {
+                cursor: pointer;
+              }
+              #close-button:hover {
+                cursor: pointer;
+                opacity: .8;
+              }
+              #submit-button:hover,
+              #button-1:hover,
+              #button-2:hover {
+                cursor: pointer;
+                background-color: rgba(0,0,0,.1);
+              }
+              </style>
+            `);
+
           const doc = iframe.contentWindow.document
           doc.open()
-          doc.write(html.replace('##Vars##', vars))
+          doc.write(content)
           doc.close()
-
-          messageFrame = iframe;
         })
-
-      this.events.on('iam-event', (e) => {
-        // TODO: handle events
-        // runAction
-        // runTrackedAction
-        // closeMessage
-        // showMessage
-        // callTrack
-        console.log('received iam-event', e);
-        if (!messageFrame) {
-          return;
-        }
-
-        if (e === "http://leanplum/close") {
-          messageFrame.parentNode.removeChild(messageFrame);
-          messageFrame = null;
-        }
-      });
     } else {
-      // TODO: resolve vars to maintain compatibility
-      this.events.emit('showMessage', options);
+      this.events.emit('showMessage', this.resolveFields(options));
     }
   }
 
@@ -375,8 +425,21 @@ export default class Messages {
     return useDefaults({ ...vars }, defaults.values)
   }
 
+  private resolveFiles(vars: MessageVariables): MessageVariables {
+    const filePrefix = /^__file__/
+    for (const key in vars) {
+      if (filePrefix.test(key)) {
+        const name = key.replace(filePrefix, '')
+        vars[name] = this.getFileUrl(vars[key])
+      } else if (typeof vars[key] === 'object') {
+        vars[key] = this.resolveFiles(vars[key])
+      }
+    }
+
+    return vars
+  }
+
   private resolveFields(vars: MessageVariables): MessageVariables {
-    // TODO: determine types from action definitions (definition.kinds[key])
     const colorSuffix = /\bcolor/i
     const filePrefix = /^__file__/
     for (const key in vars) {

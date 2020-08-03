@@ -146,6 +146,10 @@ export default class LeanplumRequest {
   }
 
   public getFileUrl(filename: string): string {
+    if (!filename) {
+      return '';
+    }
+
     const args = new ArgsBuilder()
         .attachApiKeys(this.appId, this.clientKey)
         .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
