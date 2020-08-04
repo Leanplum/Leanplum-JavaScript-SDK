@@ -31,6 +31,11 @@ type FilterConfig = {
     objects?: Array<string | number>;
   }>;
 }
+type RenderOptions = {
+  isPreview?: boolean,
+  context: ActionContext,
+  message: Message
+}
 
 class OccurrenceTracker {
   recordOccurrence(id: MessageId): void {
@@ -291,52 +296,55 @@ export default class Messages {
     }
   }
 
-  handleMessage(options: { isPreview?: boolean, context: ActionContext, message: Message }) {
+  handleMessage(options: RenderOptions) {
     if (this._showRichIAM && (options.message as any).__name__ === 'HTML') {
       this.resolveFiles(options.message)
       fetch(options.message['Template'])
         .then(res => res.text())
-        .then(html => {
-          const messageId = options.message.messageId
-          const vars = JSON.stringify(options.message)
-          const iframe = document.createElement('iframe');
-          iframe.setAttribute("id", `lp-message-${messageId}`)
-          iframe.style.cssText = "border-width: 0; position: fixed; top: -100%; left: -100%; width: 100%; height: 100%; visibility: hidden"
-          document.body.appendChild(iframe);
-
-          // pass message info
-          (iframe as any).metadata = options
-
-          // content
-          const content = html
-            .replace('##Vars##', vars)
-            // TODO: move to templates
-            .replace('function routeToBridge(', `function routeToBridge(x) { window.parent.Leanplum.processMessageEvent('${messageId}', x); }\nfunction oldRouteToBridge(`)
-            .replace('</style>', `
-              .rating-icon {
-                cursor: pointer;
-              }
-              #close-button:hover {
-                cursor: pointer;
-                opacity: .8;
-              }
-              #submit-button:hover,
-              #button-1:hover,
-              #button-2:hover {
-                cursor: pointer;
-                background-color: rgba(0,0,0,.1);
-              }
-              </style>
-            `);
-
-          const doc = iframe.contentWindow.document
-          doc.open()
-          doc.write(content)
-          doc.close()
-        })
+        .then(template => this.renderRichInAppMessage(template, options))
     } else {
       this.events.emit('showMessage', this.resolveFields(options));
     }
+  }
+
+  private renderRichInAppMessage(template: string, options: RenderOptions) {
+    const messageId = options.message.messageId
+    const vars = JSON.stringify(options.message)
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute("id", `lp-message-${messageId}`)
+    iframe.style.cssText = "border-width: 0; position: fixed; top: -100%; left: -100%; width: 100%; height: 100%; visibility: hidden"
+    document.body.appendChild(iframe);
+
+    // pass message info
+    (iframe as any).metadata = options;
+    (iframe.contentWindow as any).messageId = messageId;
+
+    // content
+    const content = template
+      .replace('##Vars##', vars)
+      // TODO: remove patches once v11 templates are published
+      .replace('function routeToBridge(', `function routeToBridge(x) { window.parent.Leanplum.processMessageEvent(window.messageId, x); }\nfunction oldRouteToBridge(`)
+      .replace('</style>', `
+.rating-icon {
+  cursor: pointer;
+}
+#close-button:hover {
+  cursor: pointer;
+  opacity: .8;
+}
+#submit-button:hover,
+#button-1:hover,
+#button-2:hover {
+  cursor: pointer;
+  background-color: rgba(0,0,0,.1);
+}
+</style>`);
+      // </TODO>
+
+    const doc = iframe.contentWindow.document
+    doc.open()
+    doc.write(content)
+    doc.close()
   }
 
   trackMessage(
