@@ -12,7 +12,7 @@ type MessageHash = { [key: string]: Message }
 type ActionContext = {
   // matches the ActionContext API in Android/iOS
   // https://docs.leanplum.com/reference#section-android-custom-templates
-  track: (event?: string) => void;
+  track: (event?: string, value?: number, info?: string, params?: Object) => void;
   runActionNamed: (actionName: string) => void;
   runTrackedActionNamed: (actionName: string) => void;
 }
@@ -35,6 +35,12 @@ type RenderOptions = {
   isPreview?: boolean,
   context: ActionContext,
   message: Message
+}
+type TrackOptions = {
+  event?: string,
+  value?: number,
+  info?: string,
+  params?: Object
 }
 
 class OccurrenceTracker {
@@ -172,7 +178,7 @@ export default class Messages {
     const vars = message.action
 
     const context: ActionContext = {
-      track: (event?: string) => {
+      track: (event?: string, value?: number, info?: string, params?: Object) => {
         const eventInfo = event ? `event '${event}'` : 'impression'
         console.log(`Tracking ${eventInfo} for ${message.messageId}`)
       },
@@ -229,14 +235,14 @@ export default class Messages {
     const vars = this.addDefaults({ ...message.vars })
 
     const context: ActionContext = {
-      track: (event?: string) => {
+      track: (event?: string, value?: number, info?: string, params?: Object) => {
         this.occurrenceTracker.recordOccurrence(id)
-        this.trackMessage(id, event || null)
+        this.trackMessage(id, { event, value, info, params })
       },
       runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
       runTrackedActionNamed: (actionName: string): void => {
         const event = actionName.replace(/ action$/, '')
-        this.trackMessage(id, event, () => this.onAction(vars[actionName]))
+        this.trackMessage(id, { event }, () => this.onAction(vars[actionName]))
       },
     }
 
@@ -275,14 +281,15 @@ export default class Messages {
         } else {
           iframe.style.top = "0"
         }
+
+        context.track()
         break;
       case "track":
         context.track(
-          params.get("event")
-          // TODO: add ActionContext parameters
-          //params.get("value"),
-          //params.get("parameters"),
-          //params.get("info")
+          params.get("event"),
+          params.get("value"),
+          params.get("parameters"),
+          params.get("info")
         );
         break;
       case "runAction":
@@ -349,14 +356,28 @@ export default class Messages {
 
   trackMessage(
     messageId: string,
-    event: string = null,
+    trackOptions: TrackOptions = { event: null },
     response: Function = () => { /* noop */ }
   ): void {
     const args = new ArgsBuilder()
       .add(Constants.PARAMS.MESSAGE_ID, messageId)
 
-    if (event) {
-      args.add(Constants.PARAMS.EVENT, event)
+    const defined = x => typeof x !== 'undefined'
+
+    if (trackOptions.event) {
+      args.add(Constants.PARAMS.EVENT, trackOptions.event)
+    }
+
+    if (defined(trackOptions.value)) {
+      args.add(Constants.PARAMS.VALUE, trackOptions.value || 0.0)
+    }
+
+    if (defined(trackOptions.info)) {
+      args.add(Constants.PARAMS.INFO, trackOptions.info)
+    }
+
+    if (defined(trackOptions.params)) {
+      args.add(Constants.PARAMS.PARAMS, JSON.stringify(trackOptions.params))
     }
 
     this.createRequest(Constants.METHODS.TRACK, args, {
@@ -376,7 +397,7 @@ export default class Messages {
       const chainedMessageId = action['Chained message']
       const message = messages[chainedMessageId]
       if (message.action === 'Open URL') {
-        this.trackMessage(chainedMessageId, 'View', () => this.onAction(message.vars))
+        this.trackMessage(chainedMessageId, { event: 'View' }, () => this.onAction(message.vars))
       } else {
         this.showMessage(chainedMessageId, message)
       }
@@ -392,7 +413,7 @@ export default class Messages {
     }
     const messageId = this.messageIdFromAction(action)
     if (messageId) {
-      this.trackMessage(messageId, null, processAction)
+      this.trackMessage(messageId, { event: null }, processAction)
     } else {
       processAction()
     }

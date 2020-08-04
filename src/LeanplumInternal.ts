@@ -189,7 +189,7 @@ export default class LeanplumInternal {
   onInboxAction(messageId: string, action?: Action): void {
     this._messages.trackMessage(
       messageId,
-      'Open',
+      { event: 'Open' },
       () => action && this._messages.onAction(action)
     )
   }
