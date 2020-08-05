@@ -147,7 +147,7 @@ export default class LeanplumRequest {
 
   public getFileUrl(filename: string): string {
     if (!filename) {
-      return '';
+      return ''
     }
 
     const args = new ArgsBuilder()

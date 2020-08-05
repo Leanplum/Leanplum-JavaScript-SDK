@@ -6,6 +6,8 @@ import EventEmitter from './EventEmitter'
 import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 type MessageId = string
 type Timestamp = number
 type MessageHash = { [key: string]: Message }
@@ -32,15 +34,20 @@ type FilterConfig = {
   }>;
 }
 type RenderOptions = {
-  isPreview?: boolean,
-  context: ActionContext,
-  message: Message
+  isPreview?: boolean;
+  context: ActionContext;
+  message: MessageVariables;
 }
 type TrackOptions = {
-  event?: string,
-  value?: number,
-  info?: string,
-  params?: Object
+  event?: string;
+  value?: number;
+  info?: string;
+  params?: Object;
+}
+
+type MessageFrame = HTMLIFrameElement & {
+  metadata: RenderOptions;
+  contentWindow: Window & { messageId: string };
 }
 
 class OccurrenceTracker {
@@ -158,7 +165,7 @@ export default class Messages {
     )
   }
 
-  private _showRichIAM: boolean = false
+  private _showRichIAM = false
 
   enableRichInAppMessages(enabled: boolean): void {
     this._showRichIAM = enabled
@@ -178,7 +185,7 @@ export default class Messages {
     const vars = message.action
 
     const context: ActionContext = {
-      track: (event?: string, value?: number, info?: string, params?: Object) => {
+      track: (event?: string) => {
         const eventInfo = event ? `event '${event}'` : 'impression'
         console.log(`Tracking ${eventInfo} for ${message.messageId}`)
       },
@@ -256,81 +263,95 @@ export default class Messages {
   }
 
   processMessageEvent(messageId: string, eventUrl: string): void {
-    const iframe = document.getElementById(`lp-message-${messageId}`)
+    const iframe = document.getElementById(`lp-message-${messageId}`) as MessageFrame
     if (!iframe) {
-      console.log('message closed, skipping event processing');
-      return;
+      console.log('message closed, skipping event processing')
+      return
     }
 
-    const [event, query] = eventUrl.replace(/^http:\/\/leanplum\//, "").split('?')
+    const [event, query] = eventUrl.replace(/^http:\/\/leanplum\//, '').split('?')
     const params = new URLSearchParams(query)
-    const { message, context } = (iframe as any).metadata;
+    const { message, context } = iframe.metadata
 
     switch (event) {
-      case "loadFinished":
-        iframe.style.visibility = "visible";
-        iframe.style.left = "0";
+      case 'loadFinished':
+        iframe.style.visibility = 'visible'
+        iframe.style.left = '0'
         if (message['HTML Height'] > 0) {
           const width = message['HTML Width']
           iframe.style.height = `${message['HTML Height']}px`
           iframe.style.width = width
-          iframe.style.left = `calc((100% - ${width}) / 2)`;
+          iframe.style.left = `calc((100% - ${width}) / 2)`
 
           const anchorProp = message['HTML Align'].toLowerCase()
-          iframe.style[anchorProp] = "0"
+          iframe.style[anchorProp] = '0'
         } else {
-          iframe.style.top = "0"
+          iframe.style.top = '0'
         }
 
         context.track()
-        break;
-      case "track":
+        break
+      case 'track':
         context.track(
-          params.get("event"),
-          params.get("value"),
-          params.get("parameters"),
-          params.get("info")
-        );
-        break;
-      case "runAction":
-      case "runTrackedAction":
-        context[`${event}Named`](params.get("action"));
+          params.get('event'),
+          parseFloat(params.get('value')),
+          params.get('parameters'),
+          params.get('info')
+        )
+        break
+      case 'runAction':
+      case 'runTrackedAction':
+        context[`${event}Named`](params.get('action'))
         // fall through and close
-      case "close":
-        (iframe as any).metadata = null;
-        iframe.parentNode.removeChild(iframe);
-        break;
+      case 'close':
+        iframe.metadata = null
+        iframe.parentNode.removeChild(iframe)
+        break
     }
   }
 
-  handleMessage(options: RenderOptions) {
-    if (this._showRichIAM && (options.message as any).__name__ === 'HTML') {
+  handleMessage(options: RenderOptions): void {
+    if (this._showRichIAM && options.message.__name__ === 'HTML') {
       this.resolveFiles(options.message)
       fetch(options.message['Template'])
         .then(res => res.text())
         .then(template => this.renderRichInAppMessage(template, options))
     } else {
-      this.events.emit('showMessage', this.resolveFields(options));
+      this.events.emit('showMessage', this.resolveFields(options))
     }
   }
 
-  private renderRichInAppMessage(template: string, options: RenderOptions) {
+  private renderRichInAppMessage(template: string, options: RenderOptions): void {
     const messageId = options.message.messageId
     const vars = JSON.stringify(options.message)
-    const iframe = document.createElement('iframe');
-    iframe.setAttribute("id", `lp-message-${messageId}`)
-    iframe.style.cssText = "border-width: 0; position: fixed; top: -100%; left: -100%; width: 100%; height: 100%; visibility: hidden"
-    document.body.appendChild(iframe);
+    const iframe = document.createElement('iframe') as MessageFrame
+    iframe.setAttribute('id', `lp-message-${messageId}`)
+    Object.assign(iframe.style, {
+      borderWidth: 0,
+      position: 'fixed',
+      top: '-100%',
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      visibility: 'hidden',
+    })
+    document.body.appendChild(iframe)
 
     // pass message info
-    (iframe as any).metadata = options;
-    (iframe.contentWindow as any).messageId = messageId;
+    iframe.metadata = options
+    iframe.contentWindow.messageId = messageId
 
     // content
     const content = template
       .replace('##Vars##', vars)
       // TODO: remove patches once v11 templates are published
-      .replace('function routeToBridge(', `function routeToBridge(x) { window.parent.Leanplum.processMessageEvent(window.messageId, x); }\nfunction oldRouteToBridge(`)
+      .replace(
+        'function routeToBridge(',
+        `function routeToBridge(x) {
+          window.parent.Leanplum.processMessageEvent(window.messageId, x);
+        }
+        function oldRouteToBridge(`
+      )
       .replace('</style>', `
 .rating-icon {
   cursor: pointer;
@@ -345,7 +366,7 @@ export default class Messages {
   cursor: pointer;
   background-color: rgba(0,0,0,.1);
 }
-</style>`);
+</style>`)
       // </TODO>
 
     const doc = iframe.contentWindow.document
@@ -362,7 +383,7 @@ export default class Messages {
     const args = new ArgsBuilder()
       .add(Constants.PARAMS.MESSAGE_ID, messageId)
 
-    const defined = x => typeof x !== 'undefined'
+    const defined = (x): boolean => typeof x !== 'undefined'
 
     if (trackOptions.event) {
       args.add(Constants.PARAMS.EVENT, trackOptions.event)

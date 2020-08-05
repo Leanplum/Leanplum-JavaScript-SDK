@@ -1068,7 +1068,7 @@ describe(Messages, () => {
       messages.processMessageEvent("123", "http://leanplum/track?event=Submit")
 
       const track = renderedMessage.metadata.context.track
-      expect(track).toHaveBeenCalledWith("Submit", null, null, null)
+      expect(track).toHaveBeenCalledWith("Submit", NaN, null, null)
     })
 
     it("tracks impressions on loadFinished events", () => {
