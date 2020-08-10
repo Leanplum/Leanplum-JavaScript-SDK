@@ -194,42 +194,11 @@ function renderAppInbox() {
         .toggleClass('badge-primary', unreadCount > 0);
 }
 // register handler for in-app messages
+Leanplum.enableRichInAppMessages(true);
 Leanplum.on('showMessage', function (args) {
-    var _a, _b;
     var message = args.message, context = args.context;
     var title, body, buttons = [];
-    if (message.__name__ === 'HTML' && message.__file__Template === 'lp_public_floating-interstitial-10.html') {
-        title = (_a = message.Title) === null || _a === void 0 ? void 0 : _a['Text value'];
-        body = (_b = message.Message) === null || _b === void 0 ? void 0 : _b['Text value'];
-        var imageInfo = message['Hero image'];
-        var imageUrl = imageInfo === null || imageInfo === void 0 ? void 0 : imageInfo['Image URL'];
-        if (imageUrl) {
-            var imageHtml = "<p><img src=\"" + imageUrl + "\" width=\"100%\" /></p>";
-            if (!imageInfo['Display above headline']) {
-                body += imageHtml;
-            }
-            else {
-                body = imageHtml + body;
-            }
-        }
-        var maybeAdd = function (buttonName) {
-            var button = message[buttonName];
-            if (!button) {
-                console.log("Could not find " + buttonName + " in message: ", message);
-                return;
-            }
-            if (button['Show button'] === false) {
-                return;
-            }
-            buttons.push({
-                text: button.Text['Text value'],
-                action: "Select " + buttonName.toLowerCase() + " action"
-            });
-        };
-        maybeAdd('Button 1');
-        maybeAdd('Button 2');
-    }
-    else if (message.__name__ === 'Confirm') {
+    if (message.__name__ === 'Confirm') {
         title = message.Title;
         body = message.Message;
         buttons.push({ text: message['Cancel text'], action: 'Cancel action' }, { text: message['Accept text'], action: 'Accept action', primary: true });
