@@ -12,6 +12,9 @@ describe(Messages, () => {
 
   beforeEach(() => {
     localStorage.clear()
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      text: () => Promise.resolve('')
+    })
     events = new EventEmitter()
     createRequest = jest.fn().mockImplementation((m, e, options) => options?.response())
     getFileUrl = jest.fn()
@@ -773,7 +776,7 @@ describe(Messages, () => {
       expect(showMessage).toHaveBeenCalledTimes(3)
     })
 
-    it('honrs limitUser', () => {
+    it('honors limitUser', () => {
       events.emit('messagesReceived', { "123": {
         ...MESSAGE_WITH_EVENT_TRIGGER,
         whenLimits: {
@@ -974,5 +977,141 @@ describe(Messages, () => {
       expect(message).toHaveProperty('Green Color', 'rgba(0,255,0,1)')
       expect(message).toHaveProperty('White Color', 'rgba(255,255,255,1)')
     })
+  })
+
+  describe("rich in-app message rendering", () => {
+    beforeEach(() => messages.enableRichInAppMessages(true))
+
+    const TEMPLATE_FILENAME = 'message-template.html'
+
+    it("does not call showMessage when previewing HTML messages", () => {
+      events.emit('previewRequest', {
+        messageId: 12345,
+        action: {
+          __name__: 'HTML',
+          Template: TEMPLATE_FILENAME
+        }
+      })
+
+      expect(showMessage).not.toHaveBeenCalled()
+    })
+
+    it("calls showMessage when previewing non-HTML messages", () => {
+      events.emit('previewRequest', MESSAGE)
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not call showMessage when showing HTML messages", () => {
+      events.emit('messagesReceived', { "12345": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        vars: { __name__: "HTML" }
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(showMessage).not.toHaveBeenCalled()
+    })
+
+    it("fetches the message template for rendering the in-app message", () => {
+      events.emit('messagesReceived', { "12345": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        vars: { __name__: "HTML", Template: TEMPLATE_FILENAME }
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+      expect(globalThis.fetch).toHaveBeenCalledWith(TEMPLATE_FILENAME)
+    })
+
+    it("renders an iframe with the template content, resolving vars", async () => {
+      Document.prototype.write = jest.fn(() => {})
+      globalThis.fetch = jest.fn().mockResolvedValue({
+        text: () => '<body>##Vars##</body>'
+      })
+      const vars = { __name__: "HTML", Template: TEMPLATE_FILENAME }
+      events.emit('messagesReceived', { "12345": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        vars
+      } })
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      await (new Promise(resolve => setImmediate(resolve)));
+      const messageVars = JSON.stringify({ messageId: "12345", ...vars })
+      expect(Document.prototype.write).toHaveBeenCalledWith(
+        `<body>${messageVars}</body>`
+      )
+    })
+
+    it("shows the message on loadFinished events", () => {
+      const renderedMessage = createMockMessageRender()
+
+      messages.processMessageEvent("123", "http://leanplum/loadFinished")
+
+      expect(renderedMessage.style.visibility).toEqual("visible")
+    })
+
+    it("removes the message on close events", () => {
+      const renderedMessage = createMockMessageRender()
+
+      messages.processMessageEvent("123", "http://leanplum/close")
+
+      expect(renderedMessage.metadata).toEqual(null)
+      expect(renderedMessage.parentNode).toEqual(null)
+    })
+
+    it("calls context.track on track events", () => {
+      const renderedMessage = createMockMessageRender()
+
+      messages.processMessageEvent("123", "http://leanplum/track?event=Submit")
+
+      const track = renderedMessage.metadata.context.track
+      expect(track).toHaveBeenCalledWith("Submit", NaN, null, null)
+    })
+
+    it("tracks impressions on loadFinished events", () => {
+      const renderedMessage = createMockMessageRender()
+
+      messages.processMessageEvent("123", "http://leanplum/loadFinished")
+
+      const track = renderedMessage.metadata.context.track
+      expect(track).toHaveBeenCalledWith()
+    })
+
+    it("shows banner-type messages", () => {
+      const renderedMessage = createMockMessageRender({
+        'HTML Height': 60,
+        'HTML Width': '100%',
+        'HTML Align': 'Bottom'
+      })
+
+      messages.processMessageEvent("123", "http://leanplum/loadFinished")
+
+      expect(renderedMessage.style.height).toEqual("60px")
+      expect(renderedMessage.style.width).toEqual("100%")
+      expect(renderedMessage.style.bottom).toEqual("0px")
+      expect(renderedMessage.style.top).toBeFalsy()
+    })
+
+    type RenderedMessage = HTMLElement & { metadata: any }
+
+    function createMockMessageRender(message: any = {}): RenderedMessage {
+      const renderedMessage = document.createElement('a') as unknown as RenderedMessage
+      renderedMessage.style.visibility = "hidden";
+      document.body.appendChild(renderedMessage);
+      renderedMessage.metadata = {
+        message,
+        context: {
+          track: jest.fn(),
+          runActionNamed: jest.fn(),
+          runTrackedActionNamed: jest.fn()
+        }
+      }
+      jest.spyOn(document, 'getElementById').mockReturnValue(renderedMessage)
+
+      return renderedMessage
+    }
   })
 })

@@ -6,13 +6,15 @@ import EventEmitter from './EventEmitter'
 import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 type MessageId = string
 type Timestamp = number
 type MessageHash = { [key: string]: Message }
 type ActionContext = {
   // matches the ActionContext API in Android/iOS
   // https://docs.leanplum.com/reference#section-android-custom-templates
-  track: (event?: string) => void;
+  track: (event?: string, value?: number, info?: string, params?: Object) => void;
   runActionNamed: (actionName: string) => void;
   runTrackedActionNamed: (actionName: string) => void;
 }
@@ -30,6 +32,22 @@ type FilterConfig = {
     noun: string | number;
     objects?: Array<string | number>;
   }>;
+}
+type RenderOptions = {
+  isPreview?: boolean;
+  context: ActionContext;
+  message: MessageVariables;
+}
+type TrackOptions = {
+  event?: string;
+  value?: number;
+  info?: string;
+  params?: Object;
+}
+
+type MessageFrame = HTMLIFrameElement & {
+  metadata: RenderOptions;
+  contentWindow: Window & { messageId: string };
 }
 
 class OccurrenceTracker {
@@ -147,6 +165,12 @@ export default class Messages {
     )
   }
 
+  private _showRichIAM = false
+
+  enableRichInAppMessages(enabled: boolean): void {
+    this._showRichIAM = enabled
+  }
+
   onTrigger(context: TriggerContext): void {
     const messages = this.getMessages()
     const messageIds = Object.keys(messages)
@@ -171,7 +195,7 @@ export default class Messages {
         console.log(`Running tracked action '${actionName}'`),
     }
 
-    this.events.emit('showMessage', this.resolveFields({
+    this.handleMessage({
       isPreview: true,
 
       message: {
@@ -180,7 +204,7 @@ export default class Messages {
       },
 
       context,
-    }))
+    })
   }
 
   onMessagesReceived(receivedMessages): void {
@@ -215,21 +239,21 @@ export default class Messages {
   }
 
   private showMessage(id: string, message: Message): void {
-    const vars = this.resolveFields(this.addDefaults({ ...message.vars }))
+    const vars = this.addDefaults({ ...message.vars })
 
     const context: ActionContext = {
-      track: (event?: string) => {
+      track: (event?: string, value?: number, info?: string, params?: Object) => {
         this.occurrenceTracker.recordOccurrence(id)
-        this.trackMessage(id, event || null)
+        this.trackMessage(id, { event, value, info, params })
       },
       runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
       runTrackedActionNamed: (actionName: string): void => {
         const event = actionName.replace(/ action$/, '')
-        this.trackMessage(id, event, () => this.onAction(vars[actionName]))
+        this.trackMessage(id, { event }, () => this.onAction(vars[actionName]))
       },
     }
 
-    this.events.emit('showMessage', {
+    this.handleMessage({
       context,
       message: {
         messageId: id,
@@ -238,16 +262,143 @@ export default class Messages {
     })
   }
 
+  processMessageEvent(messageId: string, eventUrl: string): void {
+    const iframe = document.getElementById(`lp-message-${messageId}`) as MessageFrame
+    if (!iframe) {
+      console.log('message closed, skipping event processing')
+      return
+    }
+
+    const [event, query] = eventUrl.replace(/^http:\/\/leanplum\//, '').split('?')
+    const params = new URLSearchParams(query)
+    const { message, context } = iframe.metadata
+
+    switch (event) {
+      case 'loadFinished':
+        iframe.style.visibility = 'visible'
+        iframe.style.left = '0'
+        if (message['HTML Height'] > 0) {
+          const width = message['HTML Width']
+          iframe.style.height = `${message['HTML Height']}px`
+          iframe.style.width = width
+          iframe.style.left = `calc((100% - ${width}) / 2)`
+
+          const anchorProp = message['HTML Align'].toLowerCase()
+          iframe.style[anchorProp] = '0'
+        } else {
+          iframe.style.top = '0'
+        }
+
+        context.track()
+        break
+      case 'track':
+        context.track(
+          params.get('event'),
+          parseFloat(params.get('value')),
+          params.get('parameters'),
+          params.get('info')
+        )
+        break
+      case 'runAction':
+      case 'runTrackedAction':
+        context[`${event}Named`](params.get('action'))
+        // fall through and close
+      case 'close':
+        iframe.metadata = null
+        iframe.parentNode.removeChild(iframe)
+        break
+    }
+  }
+
+  handleMessage(options: RenderOptions): void {
+    if (this._showRichIAM && options.message.__name__ === 'HTML') {
+      this.resolveFiles(options.message)
+      fetch(options.message['Template'])
+        .then(res => res.text())
+        .then(template => this.renderRichInAppMessage(template, options))
+    } else {
+      this.events.emit('showMessage', this.resolveFields(options))
+    }
+  }
+
+  private renderRichInAppMessage(template: string, options: RenderOptions): void {
+    const messageId = options.message.messageId
+    const vars = JSON.stringify(options.message)
+    const iframe = document.createElement('iframe') as MessageFrame
+    iframe.setAttribute('id', `lp-message-${messageId}`)
+    Object.assign(iframe.style, {
+      borderWidth: 0,
+      position: 'fixed',
+      top: '-100%',
+      left: '-100%',
+      width: '100%',
+      height: '100%',
+      visibility: 'hidden',
+    })
+    document.body.appendChild(iframe)
+
+    // pass message info
+    iframe.metadata = options
+    iframe.contentWindow.messageId = messageId
+
+    // content
+    const content = template
+      .replace('##Vars##', vars)
+      // TODO: remove patches once v11 templates are published
+      .replace(
+        'function routeToBridge(',
+        `function routeToBridge(x) {
+          window.parent.Leanplum.processMessageEvent(window.messageId, x);
+        }
+        function oldRouteToBridge(`
+      )
+      .replace('</style>', `
+.rating-icon {
+  cursor: pointer;
+}
+#close-button:hover {
+  cursor: pointer;
+  opacity: .8;
+}
+#submit-button:hover,
+#button-1:hover,
+#button-2:hover {
+  cursor: pointer;
+  background-color: rgba(0,0,0,.1);
+}
+</style>`)
+      // </TODO>
+
+    const doc = iframe.contentWindow.document
+    doc.open()
+    doc.write(content)
+    doc.close()
+  }
+
   trackMessage(
     messageId: string,
-    event: string = null,
+    trackOptions: TrackOptions = { event: null },
     response: Function = () => { /* noop */ }
   ): void {
     const args = new ArgsBuilder()
       .add(Constants.PARAMS.MESSAGE_ID, messageId)
 
-    if (event) {
-      args.add(Constants.PARAMS.EVENT, event)
+    const defined = (x): boolean => typeof x !== 'undefined'
+
+    if (trackOptions.event) {
+      args.add(Constants.PARAMS.EVENT, trackOptions.event)
+    }
+
+    if (defined(trackOptions.value)) {
+      args.add(Constants.PARAMS.VALUE, trackOptions.value || 0.0)
+    }
+
+    if (defined(trackOptions.info)) {
+      args.add(Constants.PARAMS.INFO, trackOptions.info)
+    }
+
+    if (defined(trackOptions.params)) {
+      args.add(Constants.PARAMS.PARAMS, JSON.stringify(trackOptions.params))
     }
 
     this.createRequest(Constants.METHODS.TRACK, args, {
@@ -267,7 +418,7 @@ export default class Messages {
       const chainedMessageId = action['Chained message']
       const message = messages[chainedMessageId]
       if (message.action === 'Open URL') {
-        this.trackMessage(chainedMessageId, 'View', () => this.onAction(message.vars))
+        this.trackMessage(chainedMessageId, { event: 'View' }, () => this.onAction(message.vars))
       } else {
         this.showMessage(chainedMessageId, message)
       }
@@ -283,7 +434,7 @@ export default class Messages {
     }
     const messageId = this.messageIdFromAction(action)
     if (messageId) {
-      this.trackMessage(messageId, null, processAction)
+      this.trackMessage(messageId, { event: null }, processAction)
     } else {
       processAction()
     }
@@ -324,8 +475,21 @@ export default class Messages {
     return useDefaults({ ...vars }, defaults.values)
   }
 
+  private resolveFiles(vars: MessageVariables): MessageVariables {
+    const filePrefix = /^__file__/
+    for (const key in vars) {
+      if (filePrefix.test(key)) {
+        const name = key.replace(filePrefix, '')
+        vars[name] = this.getFileUrl(vars[key])
+      } else if (typeof vars[key] === 'object') {
+        vars[key] = this.resolveFiles(vars[key])
+      }
+    }
+
+    return vars
+  }
+
   private resolveFields(vars: MessageVariables): MessageVariables {
-    // TODO: determine types from action definitions (definition.kinds[key])
     const colorSuffix = /\bcolor/i
     const filePrefix = /^__file__/
     for (const key in vars) {

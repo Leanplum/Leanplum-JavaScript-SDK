@@ -50,4 +50,8 @@ describe(LeanplumRequest, () => {
 
     expect(url).toEqual(`https://api.leanplum.com/api?appId=${appId}&client=js&clientKey=${secret}&sdkVersion=${version}&action=downloadFile&filename=${filename}`)
   })
+
+  it('returns empty string for empty filenames', () => {
+    expect(request.getFileUrl('')).toEqual('')
+  })
 })

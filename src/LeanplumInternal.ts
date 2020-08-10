@@ -150,6 +150,14 @@ export default class LeanplumInternal {
     this._internalState.variantDebugInfoEnabled = variantDebugInfoEnabled
   }
 
+  enableRichInAppMessages(enabled: boolean): void {
+    this._messages.enableRichInAppMessages(enabled)
+  }
+
+  processMessageEvent(messageId: string, message: string): void {
+    this._messages.processMessageEvent(messageId, message)
+  }
+
   getVariantDebugInfo(): Record<string, any> {
     return this._varCache.getVariantDebugInfo()
   }
@@ -181,7 +189,7 @@ export default class LeanplumInternal {
   onInboxAction(messageId: string, action?: Action): void {
     this._messages.trackMessage(
       messageId,
-      'Open',
+      { event: 'Open' },
       () => action && this._messages.onAction(action)
     )
   }
