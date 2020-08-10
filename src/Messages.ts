@@ -313,7 +313,8 @@ export default class Messages {
   handleMessage(options: RenderOptions): void {
     if (this._showRichIAM && options.message.__name__ === 'HTML') {
       this.resolveFiles(options.message)
-      fetch(options.message['Template'])
+      const templateName = options.message['Template'] || ''
+      fetch(templateName.replace('-10.html', '-11.html'))
         .then(res => res.text())
         .then(template => this.renderRichInAppMessage(template, options))
     } else {
@@ -341,34 +342,7 @@ export default class Messages {
     iframe.metadata = options
     iframe.contentWindow.messageId = messageId
 
-    // content
-    const content = template
-      .replace('##Vars##', vars)
-      // TODO: remove patches once v11 templates are published
-      .replace(
-        'function routeToBridge(',
-        `function routeToBridge(x) {
-          window.parent.Leanplum.processMessageEvent(window.messageId, x);
-        }
-        function oldRouteToBridge(`
-      )
-      .replace('</style>', `
-.rating-icon {
-  cursor: pointer;
-}
-#close-button:hover {
-  cursor: pointer;
-  opacity: .8;
-}
-#submit-button:hover,
-#button-1:hover,
-#button-2:hover {
-  cursor: pointer;
-  background-color: rgba(0,0,0,.1);
-}
-</style>`)
-      // </TODO>
-
+    const content = template.replace('##Vars##', vars)
     const doc = iframe.contentWindow.document
     doc.open()
     doc.write(content)
