@@ -1,6 +1,7 @@
 import EventEmitter from '../../src/EventEmitter'
 import Messages from '../../src/Messages'
 import LocalStorageManager from '../../src/LocalStorageManager'
+import Network from '../../src/Network'
 
 describe(Messages, () => {
   let events: EventEmitter
@@ -12,9 +13,7 @@ describe(Messages, () => {
 
   beforeEach(() => {
     localStorage.clear()
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      text: () => Promise.resolve('')
-    })
+    Network.prototype.ajax = jest.fn()
     events = new EventEmitter()
     createRequest = jest.fn().mockImplementation((m, e, options) => options?.response())
     getFileUrl = jest.fn()
@@ -1021,15 +1020,17 @@ describe(Messages, () => {
 
       events.emit('track', { eventName: 'Add to cart' })
 
-      expect(globalThis.fetch).toHaveBeenCalledTimes(1)
-      expect(globalThis.fetch).toHaveBeenCalledWith(TEMPLATE_FILENAME)
+      const ajax = Network.prototype.ajax as jest.Mock
+      expect(ajax).toHaveBeenCalledTimes(1)
+      expect(ajax.mock.calls[0][1]).toEqual(TEMPLATE_FILENAME)
     })
 
     it("renders an iframe with the template content, resolving vars", async () => {
       Document.prototype.write = jest.fn(() => {})
-      globalThis.fetch = jest.fn().mockResolvedValue({
-        text: () => '<body>##Vars##</body>'
-      })
+
+      jest.spyOn(Network.prototype, 'ajax').mockImplementationOnce(
+        (method, type, data, success) => success('<body>##Vars##</body>')
+      )
       const vars = { __name__: "HTML", Template: TEMPLATE_FILENAME }
       events.emit('messagesReceived', { "12345": {
         ...MESSAGE_WITH_EVENT_TRIGGER,
@@ -1041,7 +1042,7 @@ describe(Messages, () => {
       await (new Promise(resolve => setImmediate(resolve)));
       const messageVars = JSON.stringify({ messageId: "12345", ...vars })
       expect(Document.prototype.write).toHaveBeenCalledWith(
-        `<body>${messageVars}</body>`
+        `<body><script>window.messageId='12345'</script>${messageVars}</body>`
       )
     })
 
@@ -1068,7 +1069,7 @@ describe(Messages, () => {
       messages.processMessageEvent("123", "http://leanplum/track?event=Submit")
 
       const track = renderedMessage.metadata.context.track
-      expect(track).toHaveBeenCalledWith("Submit", NaN, null, null)
+      expect(track).toHaveBeenCalledWith("Submit", NaN, undefined, undefined)
     })
 
     it("tracks impressions on loadFinished events", () => {

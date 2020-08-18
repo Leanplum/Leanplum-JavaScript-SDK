@@ -3,6 +3,7 @@ import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 import { CreateRequestFunction, Message, MessageVariables } from './types/internal'
 import EventEmitter from './EventEmitter'
+import Network from './Network'
 import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
 
@@ -269,8 +270,13 @@ export default class Messages {
       return
     }
 
-    const [event, query] = eventUrl.replace(/^http:\/\/leanplum\//, '').split('?')
-    const params = new URLSearchParams(query)
+    const [event, query = ''] = eventUrl.replace(/^http:\/\/leanplum\//, '').split('?')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const params: any = query.split('&').reduce((acc, param) => {
+      const [key, value] = param.split('=')
+      acc[key] = decodeURIComponent(value)
+      return acc
+    }, {})
     const { message, context } = iframe.metadata
 
     switch (event) {
@@ -293,15 +299,15 @@ export default class Messages {
         break
       case 'track':
         context.track(
-          params.get('event'),
-          parseFloat(params.get('value')),
-          params.get('parameters'),
-          params.get('info')
+          params.event,
+          parseFloat(params.value),
+          params.parameters,
+          params.info
         )
         break
       case 'runAction':
       case 'runTrackedAction':
-        context[`${event}Named`](params.get('action'))
+        context[`${event}Named`](params.action)
         // fall through and close
       case 'close':
         iframe.metadata = null
@@ -314,9 +320,15 @@ export default class Messages {
     if (this._showRichIAM && options.message.__name__ === 'HTML') {
       this.resolveFiles(options.message)
       const templateName = options.message['Template'] || ''
-      fetch(templateName.replace('-10.html', '-11.html'))
-        .then(res => res.text())
-        .then(template => this.renderRichInAppMessage(template, options))
+      new Network().ajax(
+        'get',
+        templateName.replace('-10.html', '-11.html'),
+        '',
+        template => this.renderRichInAppMessage(template, options),
+        () => { /* skip rendering on error */ },
+        false,
+        true
+      )
     } else {
       this.events.emit('showMessage', this.resolveFields(options))
     }
@@ -327,22 +339,24 @@ export default class Messages {
     const vars = JSON.stringify(options.message)
     const iframe = document.createElement('iframe') as MessageFrame
     iframe.setAttribute('id', `lp-message-${messageId}`)
-    Object.assign(iframe.style, {
-      borderWidth: 0,
-      position: 'fixed',
-      top: '-100%',
-      left: '-100%',
-      width: '100%',
-      height: '100%',
-      visibility: 'hidden',
-    })
+    iframe.style.cssText = [
+      'border-width: 0',
+      'position: fixed',
+      'top: -100%',
+      'left: -100%',
+      'width: 100%',
+      'height: 100%',
+      'visibility: hidden',
+    ].join(';')
     document.body.appendChild(iframe)
 
     // pass message info
     iframe.metadata = options
     iframe.contentWindow.messageId = messageId
 
-    const content = template.replace('##Vars##', vars)
+    const content = template
+      .replace('##Vars##', vars)
+      .replace('<body>', `<body><script>window.messageId='${messageId}'</script>`)
     const doc = iframe.contentWindow.document
     doc.open()
     doc.write(content)
