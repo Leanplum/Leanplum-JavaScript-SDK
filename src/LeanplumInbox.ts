@@ -3,6 +3,10 @@ import Constants from './Constants'
 import { CreateRequestFunction, MessageObject } from './types/internal'
 import { Action, Inbox, InboxMessage } from './types/public'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const values = (obj: Record<string,any>): Array<any> =>
+  Object.keys(obj).map((key: string) => obj[key])
+
 export default class LeanplumInbox implements Inbox {
   private messageMap: { [key: string]: MessageObject } = {}
   private changeHandlers: Function[] = []
@@ -93,10 +97,10 @@ export default class LeanplumInbox implements Inbox {
   }
 
   public count(): number {
-    return Object.values(this.messageMap).length
+    return values(this.messageMap).length
   }
   public unreadCount(): number {
-    return Object.values(this.messageMap).filter(x => !x.isRead).length
+    return values(this.messageMap).filter(x => !x.isRead).length
   }
   private messages(filter: Function): InboxMessage[] {
     const result = []
