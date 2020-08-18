@@ -290,7 +290,9 @@ export default class Messages {
           iframe.style.left = `calc((100% - ${width}) / 2)`
 
           const anchorProp = message['HTML Align'].toLowerCase()
+          const altProp = anchorProp === 'top' ? 'bottom' : 'top'
           iframe.style[anchorProp] = '0'
+          iframe.style[altProp] = ''
         } else {
           iframe.style.top = '0'
         }
