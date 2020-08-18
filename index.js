@@ -137,7 +137,11 @@ $('#sdkVersion').text(Leanplum.VERSION);
 updateUserId();
 refreshWebPush();
 function refreshWebPush() {
-    $('#isWebPushSupported').text(Leanplum.isWebPushSupported() ? 'Yes' : 'No');
+    var isSupported = Leanplum.isWebPushSupported();
+    $('#isWebPushSupported').text(isSupported ? 'Yes' : 'No');
+    if (!isSupported) {
+        return;
+    }
     Leanplum.isWebPushSubscribed()
         .then(function (isSubscribed) { return $('#isWebPushSubscribed').text(isSubscribed ? 'Yes' : 'No'); });
 }
