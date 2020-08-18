@@ -157,9 +157,13 @@ updateUserId()
 refreshWebPush()
 
 function refreshWebPush(): void {
-    $('#isWebPushSupported').text(Leanplum.isWebPushSupported() ? 'Yes' : 'No')
-    Leanplum.isWebPushSubscribed()
-        .then(isSubscribed => $('#isWebPushSubscribed').text(isSubscribed ? 'Yes' : 'No'))
+  const isSupported = Leanplum.isWebPushSupported();
+  $('#isWebPushSupported').text(isSupported ? 'Yes' : 'No')
+  if (!isSupported) {
+    return;
+  }
+  Leanplum.isWebPushSubscribed()
+      .then(isSubscribed => $('#isWebPushSubscribed').text(isSubscribed ? 'Yes' : 'No'))
 }
 function updateUserId(): void {
   const userId = Leanplum.getUserId()
