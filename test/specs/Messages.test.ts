@@ -1093,7 +1093,7 @@ describe(Messages, () => {
       expect(renderedMessage.style.height).toEqual("60px")
       expect(renderedMessage.style.width).toEqual("100%")
       expect(renderedMessage.style.bottom).toEqual("0px")
-      expect(renderedMessage.style.top).toBeFalsy()
+      expect(renderedMessage.style.top).toEqual("")
     })
 
     type RenderedMessage = HTMLElement & { metadata: any }
@@ -1101,6 +1101,8 @@ describe(Messages, () => {
     function createMockMessageRender(message: any = {}): RenderedMessage {
       const renderedMessage = document.createElement('a') as unknown as RenderedMessage
       renderedMessage.style.visibility = "hidden";
+      renderedMessage.style.top = '-100%'
+      renderedMessage.style.left = '-100%'
       document.body.appendChild(renderedMessage);
       renderedMessage.metadata = {
         message,
