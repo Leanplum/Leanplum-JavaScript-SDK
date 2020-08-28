@@ -47,7 +47,7 @@ Leanplum.addVariablesChangedHandler(() => {
 $('#start,#startFromCache')
     .click((e) => {
       const method = $(e.target).attr('id')
-      const userId = $('startUserId').val()
+      const userId = $('#userId').val()
 
       if (userId) {
           Leanplum[method](userId)
