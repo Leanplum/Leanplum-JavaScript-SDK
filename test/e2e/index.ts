@@ -157,10 +157,10 @@ updateUserId()
 refreshWebPush()
 
 function refreshWebPush(): void {
-  const isSupported = Leanplum.isWebPushSupported();
+  const isSupported = Leanplum.isWebPushSupported()
   $('#isWebPushSupported').text(isSupported ? 'Yes' : 'No')
   if (!isSupported) {
-    return;
+    return
   }
   Leanplum.isWebPushSubscribed()
       .then(isSubscribed => $('#isWebPushSubscribed').text(isSubscribed ? 'Yes' : 'No'))
@@ -244,21 +244,22 @@ function renderAppInbox(): void {
 }
 
 // register handler for in-app messages
-Leanplum.enableRichInAppMessages(true);
+Leanplum.enableRichInAppMessages(true)
 Leanplum.on('showMessage', (args) => {
-  const { message, context } = args;
-  let title, body, buttons = [];
+  const { message, context } = args
+  let title, body
+  const buttons = []
 
   if (message.__name__ === 'Confirm') {
-    title = message.Title;
-    body = message.Message;
+    title = message.Title
+    body = message.Message
     buttons.push(
       { text: message['Cancel text'], action: 'Cancel action' },
       { text: message['Accept text'], action: 'Accept action', primary: true }
     )
   } else if (message.__name__ === 'Alert') {
-    title = message.Title;
-    body = message.Message;
+    title = message.Title
+    body = message.Message
     buttons.push(
       { text: 'Dismiss', action: 'Dismiss action' }
     )
@@ -272,78 +273,86 @@ Leanplum.on('showMessage', (args) => {
 
     body = `<iframe class="w-100 border-0" src="${message.URL}"></iframe>`
   } else if (message.__name__ === 'Center Popup') {
-    title = message.Title.Text;
-    body = message.Message.Text;
+    title = message.Title.Text
+    body = message.Message.Text
 
     buttons.push(
       { text: message['Accept button'].Text, action: 'Accept action' }
     )
   } else if (message.__name__ === 'Push Ask to Ask') {
-    title = message.Title.Text;
-    body = message.Message.Text;
+    title = message.Title.Text
+    body = message.Message.Text
 
     buttons.push(
       { text: message['Cancel button'].Text, action: 'Cancel action' },
       { text: message['Accept button'].Text, action: 'Accept action', primary: true }
     )
   } else if (message.__name__ === 'Interstitial') {
-    title = message.Title.Text;
-    body = message.Message.Text;
+    title = message.Title.Text
+    body = message.Message.Text
 
     buttons.push(
       { text: message['Accept button'].Text, action: 'Accept action', primary: true }
     )
   } else {
     // unknown action, do not show
-    console.log(`Skipping unsupported (by Rondo) action: ${message.__name__}`);
-    return;
+    console.log(`Skipping unsupported (by Rondo) action: ${message.__name__}`)
+    return
   }
 
   const modalId = `lpModal-${message.messageId}${args.isPreview ? '-preview' : ''}`
 
-  const buttonHtml = button =>
-    `<button
-        class="btn btn-${ button.primary ? 'primary' : 'secondary' }"
-        data-action="${button.action}"
-        data-toggle="modal"
-        data-target="#${modalId}">
+  const getButtonHtml = (button): string => (`
+    <button
+      class="btn btn-${button.primary ? 'primary' : 'secondary'}"
+      data-action="${button.action}"
+      data-toggle="modal"
+      data-target="#${modalId}"
+    >
       ${button.text}
-    </button>`
-  const footer = !buttons.length ? '' :
-    `<div class="modal-footer">${buttons.map(buttonHtml).join('')}</div>`
+    </button>
+  `)
 
-  const header = !title ? '' :
-    `<div class="modal-header">
+  const footerHtml = buttons.length && (`
+    <div class="modal-footer">${buttons.map(getButtonHtml).join('')}</div>
+  `)
+
+  const headerHtml = title && (`
+    <div class="modal-header">
       <h5 class="modal-title">${title}</h5>
       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </button>
-    </div>`
+    </div>
+  `)
 
-  const modal = `
-  <div class="modal" id="${modalId}" tabIndex="-1" role="dialog">
-    <form class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        ${header}
-        <div class="modal-body">
-          ${body}
+  const modalHtml = (`
+    <div class="modal" id="${modalId}" tabIndex="-1" role="dialog">
+      <form class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          ${headerHtml || ''}
+          <div class="modal-body">
+            ${body}
+          </div>
+          ${footerHtml || ''}
         </div>
-        ${footer}
-      </div>
-    </form>
-  </div>
-`
+      </form>
+    </div>
+  `)
 
-  const runTrackedAction = (e) => {
+  const runTrackedAction = (e): void => {
     e.preventDefault()
     const action = $(e.currentTarget).data('action')
     if (!action) return
     context.runTrackedActionNamed(action)
   }
 
-  $(modal).hide().appendTo('body')
-    .on('shown.bs.modal', () => context.track())
-    .on('hidden.bs.modal', () => $(`#${modalId}`).remove())
-    .find('button').on('click', runTrackedAction).end()
-    .modal({ show: true })
+  const modal: (JQuery<HTMLDivElement> & { modal?: (options?) => JQuery<HTMLDivElement> }) =
+    $<HTMLDivElement>(modalHtml)
+      .on('shown.bs.modal', () => context.track())
+      .on('hidden.bs.modal', () => $(`#${modalId}`).remove())
+
+  modal.hide().appendTo('body')
+  modal.find('button').on('click', runTrackedAction)
+  modal.modal({ show: true })
 })
