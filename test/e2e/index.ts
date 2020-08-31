@@ -347,7 +347,7 @@ Leanplum.on('showMessage', (args) => {
     context.runTrackedActionNamed(action)
   }
 
-  const modal: (JQuery<HTMLDivElement> & { modal?: (options?) => JQuery<HTMLDivElement> }) =
+  const modal =
     $<HTMLDivElement>(modalHtml)
       .on('shown.bs.modal', () => context.track())
       .on('hidden.bs.modal', () => $(`#${modalId}`).remove())
