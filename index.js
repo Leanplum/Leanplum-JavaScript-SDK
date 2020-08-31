@@ -201,7 +201,8 @@ function renderAppInbox() {
 Leanplum.enableRichInAppMessages(true);
 Leanplum.on('showMessage', function (args) {
     var message = args.message, context = args.context;
-    var title, body, buttons = [];
+    var title, body;
+    var buttons = [];
     if (message.__name__ === 'Confirm') {
         title = message.Title;
         body = message.Message;
@@ -240,14 +241,10 @@ Leanplum.on('showMessage', function (args) {
         return;
     }
     var modalId = "lpModal-" + message.messageId + (args.isPreview ? '-preview' : '');
-    var buttonHtml = function (button) {
-        return "<button\n        class=\"btn btn-" + (button.primary ? 'primary' : 'secondary') + "\"\n        data-action=\"" + button.action + "\"\n        data-toggle=\"modal\"\n        data-target=\"#" + modalId + "\">\n      " + button.text + "\n    </button>";
-    };
-    var footer = !buttons.length ? '' :
-        "<div class=\"modal-footer\">" + buttons.map(buttonHtml).join('') + "</div>";
-    var header = !title ? '' :
-        "<div class=\"modal-header\">\n      <h5 class=\"modal-title\">" + title + "</h5>\n      <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n    </div>";
-    var modal = "\n  <div class=\"modal\" id=\"" + modalId + "\" tabIndex=\"-1\" role=\"dialog\">\n    <form class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n      <div class=\"modal-content\">\n        " + header + "\n        <div class=\"modal-body\">\n          " + body + "\n        </div>\n        " + footer + "\n      </div>\n    </form>\n  </div>\n";
+    var getButtonHtml = function (button) { return ("\n    <button\n      class=\"btn btn-" + (button.primary ? 'primary' : 'secondary') + "\"\n      data-action=\"" + button.action + "\"\n      data-toggle=\"modal\"\n      data-target=\"#" + modalId + "\"\n    >\n      " + button.text + "\n    </button>\n  "); };
+    var footerHtml = buttons.length && ("\n    <div class=\"modal-footer\">" + buttons.map(getButtonHtml).join('') + "</div>\n  ");
+    var headerHtml = title && ("\n    <div class=\"modal-header\">\n      <h5 class=\"modal-title\">" + title + "</h5>\n      <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n    </div>\n  ");
+    var modalHtml = ("\n    <div class=\"modal\" id=\"" + modalId + "\" tabIndex=\"-1\" role=\"dialog\">\n      <form class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n        <div class=\"modal-content\">\n          " + (headerHtml || '') + "\n          <div class=\"modal-body\">\n            " + body + "\n          </div>\n          " + (footerHtml || '') + "\n        </div>\n      </form>\n    </div>\n  ");
     var runTrackedAction = function (e) {
         e.preventDefault();
         var action = $(e.currentTarget).data('action');
@@ -255,9 +252,10 @@ Leanplum.on('showMessage', function (args) {
             return;
         context.runTrackedActionNamed(action);
     };
-    $(modal).hide().appendTo('body')
+    var modal = $(modalHtml)
         .on('shown.bs.modal', function () { return context.track(); })
-        .on('hidden.bs.modal', function () { return $("#" + modalId).remove(); })
-        .find('button').on('click', runTrackedAction).end()
-        .modal({ show: true });
+        .on('hidden.bs.modal', function () { return $("#" + modalId).remove(); });
+    modal.hide().appendTo('body');
+    modal.find('button').on('click', runTrackedAction);
+    modal.modal({ show: true });
 });
