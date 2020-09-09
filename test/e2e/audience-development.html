@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Newsletter signup</title>
+
+  <!-- demo styles -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <style> form { padding: 0 1em; } </style>
+</head>
+<body>
+
+  <form action="">
+    <div class="form-group">
+      <label for="email">Email address</label>
+      <input type="email" class="form-control" id="email" aria-describedby="emailHelp" required>
+      <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+      Submit
+    </button>
+  </form>
+
+  <script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // if served on the same domain, you can call Leanplum APIs directly on the surrounding page
+      // if served on a different domain, use postMessage to communicate with the surrounding page
+
+      // set user attributes based on form input
+      window.parent.Leanplum.setUserAttributes({ email: $("#email").val() });
+
+      // close web interstitial
+      window.parent.$('.modal').modal('hide');
+    });
+  </script>
+</body>
+</html>
