@@ -30,7 +30,7 @@
       // if served on a different domain, use postMessage to communicate with the surrounding page
 
       // set user attributes based on form input
-      var email = document.querySelector("#email").val();
+      var email = document.querySelector("#email").value;
       window.parent.Leanplum.setUserAttributes({ email: email });
 
       // close web interstitial
