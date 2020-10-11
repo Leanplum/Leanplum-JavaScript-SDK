@@ -288,7 +288,6 @@ export default class Messages {
           iframe.style.height = `${message['HTML Height']}px`
           iframe.style.width = width
           iframe.style.left = `calc((100% - ${width}) / 2)`
-          iframe.style.zIndex = '100000';
 
           const anchorProp = message['HTML Align'].toLowerCase()
           const altProp = anchorProp === 'top' ? 'bottom' : 'top'
@@ -350,6 +349,7 @@ export default class Messages {
       'width: 100%',
       'height: 100%',
       'visibility: hidden',
+      'z-index: 100000',
     ].join(';')
     document.body.appendChild(iframe)
 
