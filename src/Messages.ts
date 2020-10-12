@@ -349,6 +349,7 @@ export default class Messages {
       'width: 100%',
       'height: 100%',
       'visibility: hidden',
+      'z-index: 100000',
     ].join(';')
     document.body.appendChild(iframe)
 
