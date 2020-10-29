@@ -78,6 +78,13 @@ ___TEMPLATE_PARAMETERS___
             "type": "NON_EMPTY"
           }
         ]
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "enableRichInAppMessages",
+        "checkboxText": "Enable Rich In-App Messages",
+        "simpleValueType": true,
+        "help": "If enabled, rich in-app messages will be delivered to web users that match the trigger conditions of your campaigns."
       }
     ]
   },
@@ -288,6 +295,12 @@ var queue = [
   { "name": "setAppIdForProductionMode", "args": [data.applicationKey, data.productionKey] },
   { "name": "useSessionLength", "args": [2*60*60] }
 ];
+
+if (data.enableRichInAppMessages) {
+  queue.push(
+    { "name": "enableRichInAppMessages", "args": [true] }
+  );
+}
 
 if (data.method !== "load") {
   // start a session
@@ -631,6 +644,25 @@ scenarios:
     assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
       { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
       { "name": "useSessionLength", "args": [2*60*60] }
+    ]);
+
+- name: Can enable rich in-app message rendering
+  code: |-
+    mock('injectScript', function(url, onSuccess, onFailure) {
+        onSuccess();
+    });
+
+    runCode({
+      applicationKey: "app_foo",
+      productionKey: "prod_bar",
+      method: "load",
+      enableRichInAppMessages: true
+    });
+
+    assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
+      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
+      { "name": "useSessionLength", "args": [2*60*60] },
+      { "name": "enableRichInAppMessages", "args": [ true ] }
     ]);
 
 
