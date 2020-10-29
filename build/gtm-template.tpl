@@ -13,8 +13,8 @@ ___INFO___
   "id": "cvt_temp_public_id",
   "version": 1,
   "securityGroups": [],
-  "displayName": "Leanplum Web SDK",
-  "description": "Leanplum SDK for tracking and variable A/B testing",
+  "displayName": "Leanplum",
+  "description": "Leanplum Customer Engagement platform for collecting data, messaging and A/B testing across web and mobile.",
   "categories": [
     "MARKETING",
     "EXPERIMENTATION",
