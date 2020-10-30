@@ -76,10 +76,9 @@ export default class LeanplumInternal {
     this._browserDetector = new BrowserDetector(wnd)
     this._events.on('navigationChange', (url) => {
       let prevented = false
-
       this._events.emit('openUrl', {
         preventDefault: () => prevented = true,
-        url
+        url,
       })
 
       if (!prevented) {
