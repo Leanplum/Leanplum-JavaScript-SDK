@@ -919,6 +919,34 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
+
+    it('loads session occurrences on start', () => {
+      const now = Date.now()
+
+      events.emit('messagesReceived', { "123": {
+        ...MESSAGE_WITH_EVENT_TRIGGER,
+        whenLimits: {
+          verb: "AND",
+          children: [ { subject: "times", verb: "limitUser", noun: 1 } ],
+        },
+      } })
+
+      jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
+        (key) => {
+          return JSON.stringify({
+            session: { '123': 1 },
+            triggers: { '123': [ now ] },
+            occurrences: { '123': [ now ] },
+          })
+        }
+      )
+
+      events.emit('start')
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+    })
   })
 
   describe('message preview', () => {
