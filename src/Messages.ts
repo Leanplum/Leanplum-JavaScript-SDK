@@ -136,6 +136,7 @@ export default class Messages {
     events.on('messagesReceived', this.onMessagesReceived.bind(this))
 
     events.on('start', () => {
+      this.occurrenceTracker.load()
       this.occurrenceTracker.clearSession()
       this.onTrigger({ trigger: 'start' })
     })
