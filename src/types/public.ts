@@ -44,7 +44,7 @@ export type StatusHandler = (success: boolean) => void
 
 export type UserAttributes = any
 
-export type EventType = 'start' | 'resume' | 'track' | 'setUserAttribute' | 'advanceState' | 'showMessage'
+export type EventType = 'start' | 'resume' | 'track' | 'setUserAttribute' | 'advanceState' | 'showMessage' | 'openUrl'
 
 export interface WebPushOptions {
   serviceWorkerUrl?: string;

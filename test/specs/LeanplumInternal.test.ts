@@ -816,6 +816,25 @@ describe(LeanplumInternal, () => {
       expect(handler).toHaveBeenCalledTimes(1)
       expect(handler.mock.calls[0][0]).toHaveProperty('actionDefinitions', actionDefinitions)
     })
+
+    it('allows handling of Open URL actions in user code', () => {
+      windowMock.location = { assign: jest.fn() } as any
+      const handler = jest.fn((e) => e.preventDefault())
+      lp.on('openUrl', handler)
+
+      mockNextResponse({ response: [{ success: true }] })
+      lp.onInboxAction('123', {
+        __name__: 'Open URL',
+        URL: 'https://example.com',
+      })
+
+      expect(windowMock.location.assign).toHaveBeenCalledTimes(0)
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith({
+        url: 'https://example.com',
+        preventDefault: expect.any(Function)
+      })
+    })
   })
 
   describe('Misc', () => {

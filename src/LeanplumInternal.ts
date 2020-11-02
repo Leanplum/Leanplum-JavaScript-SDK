@@ -74,7 +74,17 @@ export default class LeanplumInternal {
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
-    this._events.on('navigationChange', (url) => this.wnd.location.assign(url))
+    this._events.on('navigationChange', (url) => {
+      let prevented = false
+      this._events.emit('openUrl', {
+        preventDefault: () => prevented = true,
+        url,
+      })
+
+      if (!prevented) {
+        this.wnd.location.assign(url)
+      }
+    })
   }
 
   setApiPath(apiPath: string): void {
