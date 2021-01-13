@@ -1054,7 +1054,8 @@ describe(Messages, () => {
     })
 
     it("renders an iframe with the template content, resolving vars", async () => {
-      Document.prototype.write = jest.fn(() => {})
+      const iframe = document.createElement('iframe')
+      Document.prototype.createElement = jest.fn(() => iframe)
 
       jest.spyOn(Network.prototype, 'ajax').mockImplementationOnce(
         (method, type, data, success) => success('<body>##Vars##</body>')
@@ -1069,7 +1070,7 @@ describe(Messages, () => {
 
       await (new Promise(resolve => setImmediate(resolve)));
       const messageVars = JSON.stringify({ messageId: "12345", ...vars })
-      expect(Document.prototype.write).toHaveBeenCalledWith(
+      expect(iframe.srcdoc).toEqual(
         `<body><script>window.messageId='12345'</script>${messageVars}</body>`
       )
     })

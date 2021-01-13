@@ -361,10 +361,14 @@ export default class Messages {
     const content = template
       .replace('##Vars##', vars)
       .replace('<body>', `<body><script>window.messageId='${messageId}'</script>`)
-    const doc = iframe.contentWindow.document
-    doc.open()
-    doc.write(content)
-    doc.close()
+    if ('srcdoc' in iframe) {
+      iframe.srcdoc = content
+    } else {
+      const doc = iframe.contentWindow.document
+      doc.open()
+      doc.write(content)
+      doc.close()
+    }
   }
 
   trackMessage(
