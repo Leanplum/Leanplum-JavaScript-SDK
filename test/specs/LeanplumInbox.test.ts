@@ -166,6 +166,25 @@ describe(LeanplumInbox, () => {
 
       expect(inbox.message('123##1')).toEqual(null)
     })
+
+    it('returns data ', () => {
+      mockMessages({
+        '123##1': createMessage({
+          vars: {
+            Title: 'Target',
+            Data: {
+              text: 'lorem',
+              num: 42
+            }
+          },
+        })
+      })
+
+      expect(inbox.message('123##1').data()).toEqual({
+        text: 'lorem',
+        num: 42
+      })
+    })
   })
 
   describe('read', () => {

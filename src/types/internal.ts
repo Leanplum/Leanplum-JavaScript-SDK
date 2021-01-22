@@ -30,6 +30,7 @@ export type MessageObject = {
     vars?: {
       Title: string;
       Subtitle: string;
+      Data?: Record<string, string | number>;
       Image: string;
       'Open action': Action;
     };
