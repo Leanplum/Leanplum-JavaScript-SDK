@@ -142,6 +142,7 @@ export class LeanplumInboxMessage implements InboxMessage {
       id,
       messageInfo.messageData?.vars?.Title,
       messageInfo.messageData?.vars?.Subtitle,
+      messageInfo.messageData?.vars?.Data,
       messageInfo.deliveryTimestamp,
       messageInfo.isRead,
       messageInfo.messageData?.vars?.Image,
@@ -153,6 +154,7 @@ export class LeanplumInboxMessage implements InboxMessage {
     private _id: string,
     private _title: string,
     private _subtitle: string,
+    private _data: Record<string, string | number>,
     private _timestamp: number,
     private _isRead: boolean,
     private _imageUrl: string,
@@ -167,6 +169,9 @@ export class LeanplumInboxMessage implements InboxMessage {
   }
   public subtitle(): string {
     return this._subtitle
+  }
+  public data(): Record<string, string | number> {
+    return this._data
   }
   public timestamp(): number {
     return this._timestamp
