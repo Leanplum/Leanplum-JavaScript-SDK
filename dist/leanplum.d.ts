@@ -126,6 +126,7 @@ export interface InboxMessage {
   id(): string;
   title(): string;
   subtitle(): string;
+  data(): Record<string, string | number>;
   timestamp(): number;
   isRead(): boolean;
   imageUrl(): string;
