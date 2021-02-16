@@ -426,6 +426,8 @@ export default class Messages {
     const processAction = (): void => {
       if (action.__name__ === 'Open URL') {
         this.events.emit('navigationChange', action.URL)
+      } else if (action.__name__ === 'Register For Push') {
+        this.events.emit('registerForPush')
       }
     }
     const messageId = this.messageIdFromAction(action)
