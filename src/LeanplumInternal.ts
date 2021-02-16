@@ -85,6 +85,7 @@ export default class LeanplumInternal {
         this.wnd.location.assign(url)
       }
     })
+    this._events.on('registerForPush', () => this.registerForWebPush())
   }
 
   setApiPath(apiPath: string): void {

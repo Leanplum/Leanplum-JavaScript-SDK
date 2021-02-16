@@ -37,7 +37,12 @@ export interface OpenURLAction {
   URL: string;
 }
 
-export type Action = ChainMessage | OpenURLAction
+export interface RegisterForPushAction {
+  __name__: 'Register For Push';
+  parentCampaignId?: number;
+}
+
+export type Action = ChainMessage | OpenURLAction | RegisterForPushAction
 
 export type SimpleHandler = () => void
 

@@ -835,6 +835,18 @@ describe(LeanplumInternal, () => {
         preventDefault: expect.any(Function)
       })
     })
+
+    it('calls registerForPush when registerForPush event is triggered', () => {
+      mockNextResponse({ response: [{ success: true }] })
+
+      jest.spyOn(lp, 'registerForWebPush').mockResolvedValueOnce(undefined);
+
+      lp.onInboxAction('123', {
+        __name__: 'Register For Push'
+      })
+
+      expect(lp.registerForWebPush).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('Misc', () => {
