@@ -415,6 +415,8 @@ export default class Messages {
       const message = messages[chainedMessageId]
       if (message.action === 'Open URL') {
         this.trackMessage(chainedMessageId, { event: 'View' }, () => this.onAction(message.vars))
+      } else if (message.action === 'Register For Push') {
+        this.events.emit('registerForPush')
       } else {
         this.showMessage(chainedMessageId, message)
       }
