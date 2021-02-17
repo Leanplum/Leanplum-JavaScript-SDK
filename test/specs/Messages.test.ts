@@ -93,6 +93,44 @@ describe(Messages, () => {
       expect(secondMessage).toHaveProperty('Title', 'Confirm again')
     })
 
+    it('triggers showMessage for chained message', () => {
+      const registerForPush = jest.fn()
+      events.on('registerForPush', registerForPush)
+
+      events.emit('messagesReceived', {
+        "123": {
+          action: "Confirm",
+          whenTriggers: TRIGGER_ON_START,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Confirm",
+            "Accept action": {
+              "Chained message": "234",
+              __name__:"Chain to Existing Message"
+            }
+          },
+        },
+        "234": {
+          action: "Register For Push",
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Register For Push"
+          }
+        }
+      })
+
+      events.emit('start')
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+
+      // trigger accept action
+      showMessage.mock.calls[0][0].context.runActionNamed('Accept action')
+      events.off('registerForPush', registerForPush)
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+      expect(registerForPush).toHaveBeenCalledTimes(1)
+    })
+
     it('triggers chained message action', () => {
       events.emit('messagesReceived', {
         "123": {
