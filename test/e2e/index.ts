@@ -8,6 +8,7 @@ $('[data-action=setup]')
         const appId = $('#appId').val() as string
         const accessKey = $('#accessKey').val() as string
         const apiPath = $('#apiPath').val() as string
+        const useSocketHost = s => Leanplum.setSocketHost(`${s}.leanplum.com`)
 
         if (appId && accessKey) {
             if (isProdKey(accessKey)) {
@@ -21,6 +22,12 @@ $('[data-action=setup]')
 
         if (apiPath) {
             Leanplum.setApiPath(apiPath)
+
+            if (/api-qa/.test(apiPath)) {
+                useSocketHost('dev-qa')
+            } else if (/api-staging/.test(apiPath)) {
+                useSocketHost('dev-staging')
+            }
         }
     })
 
