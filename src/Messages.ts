@@ -410,7 +410,7 @@ export default class Messages {
     }
 
     const messages = this._messageCache
-    if (action && action.__name__ === 'Chain to Existing Message') {
+    if (action.__name__ === 'Chain to Existing Message') {
       const chainedMessageId = action['Chained message']
       const message = messages[chainedMessageId]
       if (message.action === 'Open URL') {
@@ -430,6 +430,12 @@ export default class Messages {
         this.events.emit('navigationChange', action.URL)
       } else if (action.__name__ === 'Register For Push') {
         this.events.emit('registerForPush')
+      } else if ('__name__' in action) {
+        this.showMessage('', {
+          messageId: '',
+          action: action as any,
+          vars: action as any
+        })
       }
     }
     const messageId = this.messageIdFromAction(action)
