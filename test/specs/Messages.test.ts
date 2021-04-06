@@ -193,6 +193,7 @@ describe(Messages, () => {
       const secondMessage = showMessage.mock.calls[1][0].message
       expect(secondMessage).toHaveProperty('__name__', 'Confirm')
       expect(secondMessage).toHaveProperty('Title', 'Confirm again')
+      expect(secondMessage).toHaveProperty('messageId', '123')
     })
 
 

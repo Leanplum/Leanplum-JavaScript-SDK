@@ -248,10 +248,10 @@ export default class Messages {
         this.occurrenceTracker.recordOccurrence(id)
         this.trackMessage(id, { event, value, info, params })
       },
-      runActionNamed: (actionName: string): void => this.onAction(vars[actionName]),
+      runActionNamed: (actionName: string): void => this.onAction(vars[actionName], id),
       runTrackedActionNamed: (actionName: string): void => {
         const event = actionName.replace(/ action$/, '')
-        this.trackMessage(id, { event }, () => this.onAction(vars[actionName]))
+        this.trackMessage(id, { event }, () => this.onAction(vars[actionName], id))
       },
     }
 
@@ -404,7 +404,7 @@ export default class Messages {
     })
   }
 
-  onAction(action: Action): void {
+  onAction(action: Action, parentMessageId: string = ''): void {
     if (!action) {
       return
     }
@@ -414,10 +414,11 @@ export default class Messages {
       const chainedMessageId = action['Chained message']
       const message = messages[chainedMessageId]
       if (message.action === 'Open URL') {
-        this.trackMessage(chainedMessageId, { event: 'View' }, () => this.onAction(message.vars))
+        this.trackMessage(chainedMessageId, { event: 'View' }, () => this.onAction(message.vars, chainedMessageId))
       } else if (message.action === 'Register For Push') {
         this.events.emit('registerForPush')
       } else {
+        // embedded chained message
         this.showMessage(chainedMessageId, message)
       }
 
@@ -426,14 +427,15 @@ export default class Messages {
 
     // handle app function
     const processAction = (): void => {
+      const name = action.__name__;
       if (action.__name__ === 'Open URL') {
         this.events.emit('navigationChange', action.URL)
       } else if (action.__name__ === 'Register For Push') {
         this.events.emit('registerForPush')
-      } else if ('__name__' in action) {
-        this.showMessage('', {
-          messageId: '',
-          action: action as any,
+      } else if (name) {
+        this.showMessage(parentMessageId, {
+          messageId: parentMessageId,
+          action: name,
           vars: action as any
         })
       }
