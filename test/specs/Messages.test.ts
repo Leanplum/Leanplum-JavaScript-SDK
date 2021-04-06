@@ -166,6 +166,37 @@ describe(Messages, () => {
       expect(navigationChange).toHaveBeenCalledWith("https://example.com/success")
     })
 
+    it('triggers showMessage for embedded chained message', () => {
+      events.emit('messagesReceived', {
+        "123": {
+          action: "Confirm",
+          whenTriggers: TRIGGER_ON_START,
+          parentCampaignId: 456,
+          vars: {
+            __name__: "Confirm",
+            "Accept action": {
+              __name__: "Confirm",
+              Title: "Confirm again",
+            }
+          },
+        }
+      })
+
+      events.emit('start')
+
+      expect(showMessage).toHaveBeenCalledTimes(1)
+
+      // trigger accept action
+      showMessage.mock.calls[0][0].context.runActionNamed('Accept action')
+
+      expect(showMessage).toHaveBeenCalledTimes(2)
+      const secondMessage = showMessage.mock.calls[1][0].message
+      expect(secondMessage).toHaveProperty('__name__', 'Confirm')
+      expect(secondMessage).toHaveProperty('Title', 'Confirm again')
+      expect(secondMessage).toHaveProperty('messageId', '123')
+    })
+
+
     it('tracks actions', () => {
       events.emit('messagesReceived', {
         "123": {
