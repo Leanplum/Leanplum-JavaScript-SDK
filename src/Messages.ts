@@ -404,7 +404,7 @@ export default class Messages {
     })
   }
 
-  onAction(action: Action, parentMessageId: string = ''): void {
+  onAction(action: Action, parentMessageId = ''): void {
     if (!action) {
       return
     }
@@ -427,7 +427,7 @@ export default class Messages {
 
     // handle app function
     const processAction = (): void => {
-      const name = action.__name__;
+      const name = action.__name__
       if (action.__name__ === 'Open URL') {
         this.events.emit('navigationChange', action.URL)
       } else if (action.__name__ === 'Register For Push') {
@@ -436,7 +436,7 @@ export default class Messages {
         this.showMessage(parentMessageId, {
           messageId: parentMessageId,
           action: name,
-          vars: action as any
+          vars: action as any, // eslint-disable-line
         })
       }
     }
