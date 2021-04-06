@@ -5,6 +5,7 @@ $('[data-action=setup]')
     var appId = $('#appId').val();
     var accessKey = $('#accessKey').val();
     var apiPath = $('#apiPath').val();
+    var useSocketHost = function (s) { return Leanplum.setSocketHost(s + ".leanplum.com"); };
     if (appId && accessKey) {
         if (isProdKey(accessKey)) {
             Leanplum.setAppIdForProductionMode(appId, accessKey);
@@ -16,6 +17,12 @@ $('[data-action=setup]')
     }
     if (apiPath) {
         Leanplum.setApiPath(apiPath);
+        if (/api-qa/.test(apiPath)) {
+            useSocketHost('dev-qa');
+        }
+        else if (/api-staging/.test(apiPath)) {
+            useSocketHost('dev-staging');
+        }
     }
 });
 var scope = null;
