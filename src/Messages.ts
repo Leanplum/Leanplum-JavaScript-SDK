@@ -418,7 +418,6 @@ export default class Messages {
       } else if (message.action === 'Register For Push') {
         this.events.emit('registerForPush')
       } else {
-        // embedded chained message
         this.showMessage(chainedMessageId, message)
       }
 
@@ -433,6 +432,7 @@ export default class Messages {
       } else if (action.__name__ === 'Register For Push') {
         this.events.emit('registerForPush')
       } else if (name) {
+        // embedded chained message
         this.showMessage(parentMessageId, {
           messageId: parentMessageId,
           action: name,
