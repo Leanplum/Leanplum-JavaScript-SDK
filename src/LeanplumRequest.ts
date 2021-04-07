@@ -23,7 +23,6 @@ import Network from './Network'
 export default class LeanplumRequest {
   private cooldownTimeout = null
   private lastRequestTime = undefined
-  private network = new Network()
   private userIdValue: string | undefined = undefined
 
   public apiPath = 'https://api.leanplum.com/api'
@@ -33,6 +32,10 @@ export default class LeanplumRequest {
   public clientKey: string
   public deviceId: string
   public versionName: string
+
+  constructor(
+    private network = new Network()
+  ) { }
 
   public get userId(): string | undefined {
     return this.userIdValue ?? this.loadLocal<string>(Constants.DEFAULT_KEYS.USER_ID) ?? this.deviceId
