@@ -56,55 +56,59 @@ describe(LeanplumRequest, () => {
     })
   })
 
-  it('resolves file urls', () => {
-    const filename = 'image.png'
-    const version = Constants.SDK_VERSION
+  describe('file URL resolution', () => {
+    it('resolves file urls', () => {
+      const filename = 'image.png'
+      const version = Constants.SDK_VERSION
 
-    const url = request.getFileUrl(filename)
+      const url = request.getFileUrl(filename)
 
-    expect(url).toEqual(`https://api.leanplum.com/api?appId=${APP_ID}&client=js&clientKey=${SECRET}&sdkVersion=${version}&action=downloadFile&filename=${filename}`)
+      expect(url).toEqual(`https://api.leanplum.com/api?appId=${APP_ID}&client=js&clientKey=${SECRET}&sdkVersion=${version}&action=downloadFile&filename=${filename}`)
+    })
+
+    it('returns empty string for empty filenames', () => {
+      expect(request.getFileUrl('')).toEqual('')
+    })
   })
 
-  it('returns empty string for empty filenames', () => {
-    expect(request.getFileUrl('')).toEqual('')
-  })
+  describe('batching', () => {
+    it('batches requests when batchCooldown is set', () => {
+      request.batchEnabled = true
+      request.batchCooldown = 4
 
-  it('batches requests when batchCooldown is set', () => {
-    request.batchEnabled = true
-    request.batchCooldown = 4
+      request.request('track', null, { queued: true });
+      expect(network.ajax).toHaveBeenCalledTimes(1)
 
-    request.request('track', null, { queued: true });
-    expect(network.ajax).toHaveBeenCalledTimes(1)
+      request.request('track', null, { queued: true });
+      request.request('track', null, { queued: true });
+      request.request('track', null, { queued: true });
+      expect(network.ajax).toHaveBeenCalledTimes(1)
 
-    request.request('track', null, { queued: true });
-    request.request('track', null, { queued: true });
-    request.request('track', null, { queued: true });
-    expect(network.ajax).toHaveBeenCalledTimes(1)
+      jest.advanceTimersByTime(4000)
+      expect(network.ajax).toHaveBeenCalledTimes(2)
+    })
 
-    jest.advanceTimersByTime(4000)
-    expect(network.ajax).toHaveBeenCalledTimes(2)
-  })
+    it('does not batch requests in development mode', () => {
+      request.batchEnabled = true
+      request.batchCooldown = 4
 
-  it('does not batch requests in development mode', () => {
-    request.batchEnabled = true
-    request.batchCooldown = 4
+      request.request('track', null, { queued: true, devMode: true });
+      expect(network.ajax).toHaveBeenCalledTimes(1)
 
-    request.request('track', null, { queued: true, devMode: true });
-    expect(network.ajax).toHaveBeenCalledTimes(1)
+      request.request('track', null, { queued: true, devMode: true });
+      expect(network.ajax).toHaveBeenCalledTimes(2)
+    })
 
-    request.request('track', null, { queued: true, devMode: true });
-    expect(network.ajax).toHaveBeenCalledTimes(2)
-  })
+    it('can send requests immediately, if necessary', () => {
+      request.batchEnabled = true
+      request.batchCooldown = 4
 
-  it('can send requests immediately, if necessary', () => {
-    request.batchEnabled = true
-    request.batchCooldown = 4
+      request.request('track', null, { queued: true });
+      expect(network.ajax).toHaveBeenCalledTimes(1)
 
-    request.request('track', null, { queued: true });
-    expect(network.ajax).toHaveBeenCalledTimes(1)
-
-    request.request('track', null, { queued: true });
-    request.request('track', null, { queued: true, sendNow: true });
-    expect(network.ajax).toHaveBeenCalledTimes(2)
+      request.request('track', null, { queued: true });
+      request.request('track', null, { queued: true, sendNow: true });
+      expect(network.ajax).toHaveBeenCalledTimes(2)
+    })
   })
 })
