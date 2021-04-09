@@ -134,5 +134,25 @@ describe(LeanplumRequest, () => {
         expect.anything()
       )
     })
+
+    it('immediately sends requests with body', () => {
+      // special handling, used for sending variables
+      request.request('track', args(1), { queued: true })
+      expect(network.ajax).toHaveBeenCalledTimes(1)
+
+      const requestArgs = args(2).body('{"name":"value"}')
+      request.request('sendVars', requestArgs, { queued: true })
+      expect(network.ajax).toHaveBeenCalledTimes(2)
+    })
+
+    it('refuses to send requests withoout appId or clientKey', () => {
+      const error = jest.fn()
+      delete request.appId
+      jest.spyOn(console, 'error').mockImplementationOnce(() => {})
+
+      request.request('track', null, { error })
+
+      expect(error).toHaveBeenCalledTimes(1)
+    })
   })
 })
