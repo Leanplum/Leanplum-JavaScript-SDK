@@ -4,6 +4,7 @@ import LeanplumRequest from '../../src/LeanplumRequest'
 import LocalStorageManager from '../../src/LocalStorageManager'
 import Constants from '../../src/Constants'
 import Network from '../../src/Network'
+import ArgsBuilder from  '../../src/ArgsBuilder'
 
 describe(LeanplumRequest, () => {
   let request: LeanplumRequest
@@ -12,12 +13,16 @@ describe(LeanplumRequest, () => {
   const APP_ID = 'app_123'
   const SECRET = 'prod_234'
 
-  beforeEach(() => {
-    network = new Network();
-    jest.spyOn(network, 'ajax')
+  function requestInstance(network: Network) {
     request = new LeanplumRequest(network)
     request.appId = APP_ID
     request.clientKey = SECRET
+  }
+
+  beforeEach(() => {
+    network = new Network();
+    jest.spyOn(network, 'ajax')
+    requestInstance(network)
     jest.useFakeTimers()
   })
 
@@ -72,10 +77,14 @@ describe(LeanplumRequest, () => {
   })
 
   describe('batching', () => {
-    it('batches requests when batchCooldown is set', () => {
+    beforeEach(() => {
       request.batchEnabled = true
       request.batchCooldown = 4
+    })
 
+    const args = (id: number) => new ArgsBuilder().add('id', id)
+
+    it('batches requests when batchCooldown is set', () => {
       request.request('track', null, { queued: true });
       expect(network.ajax).toHaveBeenCalledTimes(1)
 
@@ -89,9 +98,6 @@ describe(LeanplumRequest, () => {
     })
 
     it('does not batch requests in development mode', () => {
-      request.batchEnabled = true
-      request.batchCooldown = 4
-
       request.request('track', null, { queued: true, devMode: true });
       expect(network.ajax).toHaveBeenCalledTimes(1)
 
@@ -100,15 +106,33 @@ describe(LeanplumRequest, () => {
     })
 
     it('can send requests immediately, if necessary', () => {
-      request.batchEnabled = true
-      request.batchCooldown = 4
-
       request.request('track', null, { queued: true });
       expect(network.ajax).toHaveBeenCalledTimes(1)
 
       request.request('track', null, { queued: true });
       request.request('track', null, { queued: true, sendNow: true });
       expect(network.ajax).toHaveBeenCalledTimes(2)
+    })
+
+    it('persists requests between reloads', () => {
+      request.request('track', args(1), { queued: true })
+      expect(network.ajax).toHaveBeenCalledTimes(1)
+
+      request.request('track', args(2), { queued: true })
+      jest.clearAllTimers()
+      expect(network.ajax).toHaveBeenCalledTimes(1)
+
+      requestInstance(network)
+      request.request('track', args(3), { queued: true })
+      expect(network.ajax).toHaveBeenCalledTimes(2)
+      expect(network.ajax).toHaveBeenCalledWith(
+        'POST',
+        expect.stringContaining('api'),
+        expect.stringMatching(/"id":2.*"id":3/),
+        undefined,
+        undefined,
+        expect.anything()
+      )
     })
   })
 })
