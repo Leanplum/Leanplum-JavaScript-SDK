@@ -64,10 +64,9 @@ export default class ArgsBuilder {
 
   /**
    * Cache the given body.
-   * @param  {String} [body] A given body.
-   * @return {ArgsBuilder|String} Returns ArgsBuilder if body given, else the
-   *                              body.
    */
+  body(): string;
+  body(body: string): ArgsBuilder;
   body(body?: string): ArgsBuilder | string {
     if (body) {
       this._body = body
