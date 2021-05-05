@@ -258,7 +258,7 @@ export default class LeanplumInternal {
     this._sessionLength = seconds
   }
 
-  start(userId: string, callback: StatusHandler): void;
+  start(userId: string, callback?: StatusHandler): void;
   start(userAttributes?: UserAttributes, callback?: StatusHandler): void;
   start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void;
   start(userId?: string, userAttributes?: UserAttributes, callback?: StatusHandler): void {
