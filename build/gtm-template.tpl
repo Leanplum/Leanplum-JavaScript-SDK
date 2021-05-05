@@ -65,19 +65,15 @@ ___TEMPLATE_PARAMETERS___
       {
         "type": "TEXT",
         "name": "productionKey",
-        "displayName": "Production Key",
+        "displayName": "Client secret",
         "simpleValueType": true,
         "valueValidators": [
           {
-            "type": "REGEX",
-            "args": [
-              "^prod_.*"
-            ]
-          },
-          {
             "type": "NON_EMPTY"
           }
-        ]
+        ],
+        "valueHint": "prod_abcdefgh...",
+        "help": "Never use a non-production key on live websites."
       },
       {
         "type": "CHECKBOX",
@@ -85,6 +81,21 @@ ___TEMPLATE_PARAMETERS___
         "checkboxText": "Enable Rich In-App Messages",
         "simpleValueType": true,
         "help": "If enabled, rich in-app messages will be delivered to web users that match the trigger conditions of your campaigns."
+      },
+      {
+        "type": "GROUP",
+        "name": "webPush",
+        "displayName": "Web Push options",
+        "groupStyle": "NO_ZIPPY",
+        "subParams": [
+          {
+            "type": "TEXT",
+            "name": "webPushServiceWorkerUrl",
+            "displayName": "Service Worker URL",
+            "simpleValueType": true,
+            "help": "Specify the location of the service worker file on the web server. This allows you to send messages that use the \u0027Register for Push\u0027 app function."
+          }
+        ]
       }
     ]
   },
@@ -105,6 +116,10 @@ ___TEMPLATE_PARAMETERS___
             "displayValue": "Only load SDK"
           },
           {
+            "value": "loadAndStart",
+            "displayValue": "Load and start session"
+          },
+          {
             "value": "track",
             "displayValue": "Track Event"
           },
@@ -119,6 +134,20 @@ ___TEMPLATE_PARAMETERS___
         ],
         "simpleValueType": true,
         "subParams": []
+      },
+      {
+        "type": "TEXT",
+        "name": "userId",
+        "displayName": "User ID",
+        "simpleValueType": true,
+        "help": "Leave blank to use previously-stored ID.\nFor new users, a new ID is generated at the start of their first session.",
+        "enablingConditions": [
+          {
+            "paramName": "method",
+            "paramValue": "load",
+            "type": "NOT_EQUALS"
+          }
+        ]
       },
       {
         "type": "GROUP",
@@ -291,8 +320,10 @@ const makeNumber = require('makeNumber');
 const LP_URL = 'https://cdn.jsdelivr.net/npm/leanplum-sdk@{LP_SDK_VERSION}/dist/leanplum.min.js';
 
 // command queue
+var setKey = data.productionKey.indexOf("dev_") === 0 ?
+    "setAppIdForDevelopmentMode" : "setAppIdForProductionMode";
 var queue = [
-  { "name": "setAppIdForProductionMode", "args": [data.applicationKey, data.productionKey] },
+  { "name": setKey, "args": [data.applicationKey, data.productionKey] },
   { "name": "useSessionLength", "args": [2*60*60] }
 ];
 
@@ -302,10 +333,19 @@ if (data.enableRichInAppMessages) {
   );
 }
 
+if (data.webPushServiceWorkerUrl) {
+  queue.push(
+    { "name": "setWebPushOptions", "args": [{
+      serviceWorkerUrl: data.webPushServiceWorkerUrl
+    }] }
+  );
+}
+
 if (data.method !== "load") {
   // start a session
+  var args = data.userId ? [data.userId] : [];
   queue.push(
-    { "name": "start", "args": [] }
+    { "name": "start", "args": args }
   );
 }
 
@@ -497,7 +537,7 @@ ___WEB_PERMISSIONS___
 ___TESTS___
 
 scenarios:
-- name: Injects the Leanplum SDK script
+- name: Injects script
   code: |-
     runCode({
       applicationKey: "app_foo",
@@ -645,7 +685,6 @@ scenarios:
       { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
       { "name": "useSessionLength", "args": [2*60*60] }
     ]);
-
 - name: Can enable rich in-app message rendering
   code: |-
     mock('injectScript', function(url, onSuccess, onFailure) {
@@ -663,6 +702,77 @@ scenarios:
       { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
       { "name": "useSessionLength", "args": [2*60*60] },
       { "name": "enableRichInAppMessages", "args": [ true ] }
+    ]);
+- name: Can use development key
+  code: |-
+    mock('injectScript', function(url, onSuccess, onFailure) {
+        onSuccess();
+    });
+
+    runCode({
+      applicationKey: "app_foo",
+      productionKey: "dev_bar",
+      method: "load"
+    });
+
+    assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
+      { "name": "setAppIdForDevelopmentMode", "args": ["app_foo", "dev_bar"] },
+      { "name": "useSessionLength", "args": [2*60*60] }
+    ]);
+- name: Can track sessions
+  code: |-
+    mock('injectScript', function(url, onSuccess, onFailure) {
+        onSuccess();
+    });
+
+    runCode({
+      applicationKey: "app_foo",
+      productionKey: "prod_bar",
+      method: "loadAndStart"
+    });
+
+    assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
+      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
+      { "name": "useSessionLength", "args": [2*60*60] },
+      { "name": "start", "args": [] }
+    ]);
+- name: Can use custom user ID
+  code: |-
+    mock('injectScript', function(url, onSuccess, onFailure) {
+        onSuccess();
+    });
+
+    runCode({
+      applicationKey: "app_foo",
+      productionKey: "prod_bar",
+      method: "loadAndStart",
+      userId: "from-data-layer"
+    });
+
+    assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
+      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
+      { "name": "useSessionLength", "args": [2*60*60] },
+      { "name": "start", "args": ["from-data-layer"] }
+    ]);
+- name: Can set Web Push options
+  code: |-
+    mock('injectScript', function(url, onSuccess, onFailure) {
+        onSuccess();
+    });
+
+    runCode({
+      applicationKey: "app_foo",
+      productionKey: "prod_bar",
+      method: "loadAndStart",
+      webPushServiceWorkerUrl: "/foo/sw.min.js",
+      userId: "from-data-layer"
+    });
+
+    assertApi('callInWindow').wasCalledWith("Leanplum.applyQueue", [
+      { "name": "setAppIdForProductionMode", "args": ["app_foo", "prod_bar"] },
+      { "name": "useSessionLength", "args": [2*60*60] },
+      { "name": "setWebPushOptions", "args": [{ serviceWorkerUrl: "/foo/sw.min.js" }] },
+      { "name": "start", "args": ["from-data-layer"] }
     ]);
 
 
