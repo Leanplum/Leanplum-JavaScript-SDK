@@ -481,6 +481,16 @@ describe(LeanplumInternal, () => {
         expect(pushManagerMock.subscribeUser).toHaveBeenCalledTimes(0)
       })
 
+      it('uses default worker url when passed no options', async () => {
+        pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
+        pushManagerMock.register.mockImplementationOnce(async(_url, _scope, callback) => callback(true))
+
+        const result = await lp.registerForWebPush()
+
+        expect(result).toBe(true)
+        expect(pushManagerMock.register).toHaveBeenCalledTimes(1)
+      })
+
       it('returns `true` and subscribes user when not subscribed', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
         pushManagerMock.register.mockImplementationOnce(async(url, scope, callback) => callback(false))

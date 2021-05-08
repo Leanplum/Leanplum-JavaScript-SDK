@@ -567,7 +567,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
         return this._pushManager.subscribeUser()
       }
 
-      const options = this._webPushOptions
+      const options = this._webPushOptions || {}
       const workerUrl = serviceWorkerUrl || options.serviceWorkerUrl
       const scope = options && options.scope ? { scope: options.scope } : null
 
