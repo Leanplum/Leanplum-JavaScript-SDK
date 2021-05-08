@@ -37,8 +37,8 @@ export default class Leanplum {
     Leanplum._lp.setApiPath(apiPath)
   }
 
-  static setEmail(email: string): void {
-    Leanplum._lp.setEmail(email)
+  static setEmail(): void {
+    // deprecated
   }
 
   /**
