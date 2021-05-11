@@ -65,7 +65,6 @@ export default class LeanplumInternal {
     this.getFileUrl.bind(this),
   )
 
-  private _email: string
   private _deviceName: string
   private _deviceModel: string
   private _systemName: string
@@ -74,7 +73,7 @@ export default class LeanplumInternal {
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
-    this._events.on('navigationChange', (url) => {
+    this._events.on('navigationChange', (url: string) => {
       let prevented = false
       this._events.emit('openUrl', {
         preventDefault: () => prevented = true,
@@ -93,10 +92,6 @@ export default class LeanplumInternal {
       return
     }
     this._lpRequest.apiPath = apiPath
-  }
-
-  setEmail(email: string): void {
-    this._email = email
   }
 
   /**
@@ -234,7 +229,7 @@ export default class LeanplumInternal {
     this.createRequest(Constants.METHODS.GET_VARS, args, {
       queued: false,
       sendNow: true,
-      response: (response) => {
+      response: (response: Array<Object>) => {
         const getVarsResponse = this._lpRequest.getLastResponse(response)
         const isSuccess = this._lpRequest.isResponseSuccess(getVarsResponse)
         if (isSuccess) {
@@ -310,7 +305,7 @@ export default class LeanplumInternal {
     this.createRequest(Constants.METHODS.START, args, {
       queued: true,
       sendNow: true,
-      response: (response) => {
+      response: (response: Array<Object>) => {
         this._internalState.hasStarted = true
         const startResponse = this._lpRequest.getLastResponse(response)
         const isSuccess = this._lpRequest.isResponseSuccess(startResponse)
@@ -565,14 +560,14 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    */
   registerForWebPush(serviceWorkerUrl?: string): Promise<boolean> {
     if (this._pushManager.isWebPushSupported()) {
-      const subscribe = (isSubscribed): Promise<boolean> => {
+      const subscribe = (isSubscribed: boolean): Promise<boolean> => {
         if (isSubscribed) {
           return Promise.resolve(true)
         }
         return this._pushManager.subscribeUser()
       }
 
-      const options = this._webPushOptions
+      const options = this._webPushOptions || {}
       const workerUrl = serviceWorkerUrl || options.serviceWorkerUrl
       const scope = options && options.scope ? { scope: options.scope } : null
 
