@@ -17,7 +17,7 @@
 export default class Leanplum {
     static VERSION: string;
     static setApiPath(apiPath: string): void;
-    static setEmail(email: string): void;
+    static setEmail(): void;
     /**
       * Sets the network timeout.
       * @param {number} seconds The timeout in seconds.
