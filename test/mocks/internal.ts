@@ -29,6 +29,7 @@ export const varCacheMock: Partial<jest.Mocked<VarCache>> = {
   setVariables: jest.fn(),
   getVariantDebugInfo: jest.fn(),
   setVariantDebugInfo: jest.fn(),
+  sendActions: jest.fn(),
   addVariablesChangedHandler: jest.fn(),
   removeVariablesChangedHandler: jest.fn(),
   clearUserContent: jest.fn(),
