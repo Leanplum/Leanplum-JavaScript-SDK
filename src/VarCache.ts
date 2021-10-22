@@ -22,7 +22,8 @@ import { ActionParameter, MessageTemplateOptions } from './types/public'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-function lowerKinds(o: any): any {
+// transforms the server response to the format expected by setVars
+function toSetVarsFormat(o: any): any {
   if (!o) return o
 
   return Object.keys(o).reduce((acc, action) => {
@@ -67,7 +68,7 @@ export default class VarCache {
     this.variants = variants
     this.actionDefinitions = {
       ...this.actionDefinitions,
-      ...lowerKinds(actionDefinitions),
+      ...toSetVarsFormat(actionDefinitions),
     }
 
     this.hasReceivedDiffs = true
@@ -224,7 +225,7 @@ function argumentKinds(args: Array<ActionParameter>, prefix = ''): Record<string
 
 function optionsToDefinitions(options: MessageTemplateOptions): Record<string, any> {
   const definitions = {
-    kind: 3,
+    kind: options.kind || 3,
     options: null,
     values: argumentTree(options.args),
     kinds: argumentKinds(options.args),

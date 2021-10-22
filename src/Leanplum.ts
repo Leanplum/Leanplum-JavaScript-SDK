@@ -267,8 +267,8 @@ export default class Leanplum {
     Leanplum._lp.clearUserContent()
   }
 
-  static registerTemplate(options: MessageTemplateOptions): void {
-    Leanplum._lp.registerTemplate(options)
+  static defineAction(options: MessageTemplateOptions): void {
+    Leanplum._lp.defineAction(options)
   }
 
   static applyQueue(queue: Array<{ name: string; args: Array<any> }>): void {

@@ -75,6 +75,11 @@ export enum ActionParameterType {
     Unknown = ''
 };
 
+export enum MessageKind {
+  Action = 2,
+  Template = 3
+};
+
 export type ActionParameter = {
   name: string;
   type: ActionParameterType;
@@ -82,5 +87,6 @@ export type ActionParameter = {
 }
 export type MessageTemplateOptions = {
   name: string;
+  kind?: MessageKind;
   args: Array<ActionParameter>;
 }

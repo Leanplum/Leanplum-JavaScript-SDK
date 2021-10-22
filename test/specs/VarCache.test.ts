@@ -1,7 +1,7 @@
 import Constants from '../../src/Constants'
 import LocalStorageManager from '../../src/LocalStorageManager'
 import VarCache from '../../src/VarCache'
-import { ActionParameterType } from '../../src/types/public'
+import { ActionParameterType, MessageKind } from '../../src/types/public'
 
 const DEFAULT_ACTIONS = {
   "Alert": {
@@ -304,6 +304,7 @@ describe(VarCache, () => {
       )
       cache.registerActionDefinition({
         name: 'Custom Template',
+        kind: MessageKind.Template,
         args: [
           {
             name: 'Message',

@@ -29,6 +29,7 @@ import {
   Action,
   EventType,
   Inbox,
+  MessageKind,
   MessageTemplateOptions,
   SimpleHandler,
   StatusHandler,
@@ -206,8 +207,11 @@ export default class LeanplumInternal {
     )
   }
 
-  registerTemplate(options: MessageTemplateOptions): void {
-    this._varCache.registerActionDefinition(options)
+  defineAction(options: MessageTemplateOptions): void {
+    this._varCache.registerActionDefinition({
+      kind: MessageKind.Template,
+      ...options
+    })
   }
 
   // TODO(breaking change): replace with events and remove stateful handlers
