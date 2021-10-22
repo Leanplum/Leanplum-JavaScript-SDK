@@ -12,7 +12,8 @@ import LocalStorageManager from './LocalStorageManager'
 type MessageId = string
 type Timestamp = number
 type MessageHash = { [key: string]: Message }
-type ActionContext = {
+// TODO: validation
+export type ActionContext = {
   // matches the ActionContext API in Android/iOS
   // https://docs.leanplum.com/reference#section-android-custom-templates
   track: (event?: string, value?: number, info?: string, params?: Object) => void;
@@ -20,6 +21,7 @@ type ActionContext = {
   runTrackedActionNamed: (actionName: string) => void;
 }
 type TriggerContext =
+  // TODO: 'install' trigger for first session
   { trigger: 'start' } |
   { trigger: 'resume' } |
   { trigger: 'userAttribute'; attributes: UserAttributes } |
@@ -123,7 +125,6 @@ const verbToInterval = (verb: string): number => {
 }
 
 export default class Messages {
-  private _files: { [key: string]: string } = {}
   private _messageCache: MessageHash = {}
   private occurrenceTracker = new OccurrenceTracker()
 

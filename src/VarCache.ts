@@ -18,11 +18,35 @@ import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
 import { CreateRequestFunction } from './types/internal'
+import { ActionArgs, MessageTemplateOptions } from './types/public'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+function lowerKinds(o: any): any {
+  if (!o) return o
+
+  return Object.keys(o).reduce((acc, action) => {
+    acc[action] = { ...o[action] }
+
+    const kinds = o[action].kinds
+    if (kinds) {
+      acc[action].kinds = Object.keys(kinds)
+        .reduce((k, kx) => {
+          const kind = kinds[kx].toLowerCase()
+          k[kx] = kind
+          if (kind === 'action') {
+            acc[action].values[kx] = ''
+          }
+          return k
+        }, {})
+    }
+
+    return acc
+  }, {})
+}
+
 export default class VarCache {
-  private actionMetadata: Record<string, any> = {}
+  private actionDefinitions: Record<string, any> = {}
   private hasReceivedDiffs = false
   private merged = undefined
   private variables: Record<string, any> = null
@@ -38,10 +62,14 @@ export default class VarCache {
     private createRequest: CreateRequestFunction
   ) {}
 
-  public applyDiffs(diffs, variants, actionMetadata): void {
+  public applyDiffs(diffs, variants, actionDefinitions): void {
     this.diffs = diffs
     this.variants = variants
-    this.actionMetadata = actionMetadata
+    this.actionDefinitions = {
+      ...this.actionDefinitions,
+      ...lowerKinds(actionDefinitions),
+    }
+
     this.hasReceivedDiffs = true
     this.merged = mergeHelper(this.variables, diffs)
     this.saveDiffs()
@@ -55,7 +83,7 @@ export default class VarCache {
       this.applyDiffs(
         JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.VARIABLES) || null),
         JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.VARIANTS) || null),
-        JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.ACTION_METADATA) || null)
+        JSON.parse(this.loadLocal(Constants.DEFAULT_KEYS.ACTION_DEFINITIONS) || null)
       )
       this.token = this.loadLocal(Constants.DEFAULT_KEYS.TOKEN)
       this.variantDebugInfo = this.loadLocal(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO)
@@ -67,7 +95,7 @@ export default class VarCache {
   public saveDiffs(): void {
     this.saveLocal(Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify(this.diffs || {}))
     this.saveLocal(Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(this.variants || []))
-    this.saveLocal(Constants.DEFAULT_KEYS.ACTION_METADATA, JSON.stringify(this.actionMetadata || {}))
+    this.saveLocal(Constants.DEFAULT_KEYS.ACTION_DEFINITIONS, JSON.stringify(this.actionDefinitions || {}))
     this.saveLocal(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO, JSON.stringify(this.variantDebugInfo || {}))
     this.saveLocal(Constants.DEFAULT_KEYS.TOKEN, this.token)
   }
@@ -118,8 +146,25 @@ export default class VarCache {
     this.variantDebugInfo = value
   }
 
+  public sendActions(): boolean {
+    if (!Object.keys(this.actionDefinitions).length) {
+      return false
+    }
+
+    this.setVars({
+      [Constants.PARAMS.ACTION_DEFINITIONS]: this.actionDefinitions,
+    })
+
+    return true
+  }
+
   public sendVariables(): void {
-    const body = { [Constants.PARAMS.VARIABLES]: this.variables }
+    this.setVars({
+      [Constants.PARAMS.VARIABLES]: this.variables,
+    })
+  }
+
+  private setVars(body: Record<string, any>): void {
     const args = new ArgsBuilder().body(JSON.stringify(body)) as ArgsBuilder
     this.createRequest(Constants.METHODS.SET_VARS, args, {
       sendNow: true,
@@ -134,6 +179,10 @@ export default class VarCache {
     this.merged = undefined
   }
 
+  public registerActionDefinition(options: MessageTemplateOptions): void {
+    this.actionDefinitions[options.name] = optionsToDefinitions(options)
+  }
+
   private loadLocal<T>(key: string): T {
     return LocalStorageManager.getFromLocalStorage(key)
   }
@@ -141,6 +190,47 @@ export default class VarCache {
   private saveLocal<T>(key: string, value: T): void {
     LocalStorageManager.saveToLocalStorage(key, value)
   }
+}
+
+function argumentTree(args: Array<ActionArgs>): Record<string, any> {
+  return args.reduce((acc, x) => {
+    if (x.value instanceof Array) {
+      acc[x.name] = argumentTree(x.value)
+    } else if (x.type === 'action') {
+      acc[x.name] = ''
+    } else {
+      // TODO: allow specifying colors as strings
+      acc[x.name] = x.value
+    }
+    return acc
+  }, {})
+}
+
+function argumentKinds(args: Array<ActionArgs>, prefix = ''): Record<string, any> {
+  return args.reduce((acc, x) => {
+    const propName = `${prefix}${x.name}`
+    if (x.value instanceof Array) {
+      acc = {
+        [propName]: 'group',
+        ...argumentKinds(x.value, `${propName}.`),
+      }
+    } else {
+      acc[propName] = x.type.toLowerCase()
+    }
+
+    return acc
+  }, {})
+}
+
+function optionsToDefinitions(options: MessageTemplateOptions): Record<string, any> {
+  const definitions = {
+    kind: 3,
+    options: null,
+    values: argumentTree(options.args),
+    kinds: argumentKinds(options.args),
+  }
+
+  return definitions
 }
 
 function mergeHelper(vars, diff): boolean | number | string | Record<string, any> {

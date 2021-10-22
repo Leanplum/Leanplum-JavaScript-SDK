@@ -19,6 +19,7 @@ import LeanplumInternal from './LeanplumInternal'
 import {
   EventType,
   Inbox,
+  MessageTemplateOptions,
   SimpleHandler,
   StatusHandler,
   WebPushOptions,
@@ -264,6 +265,10 @@ export default class Leanplum {
    */
   static clearUserContent(): void {
     Leanplum._lp.clearUserContent()
+  }
+
+  static registerTemplate(options: MessageTemplateOptions): void {
+    Leanplum._lp.registerTemplate(options)
   }
 
   static applyQueue(queue: Array<{ name: string; args: Array<any> }>): void {

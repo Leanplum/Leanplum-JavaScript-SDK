@@ -2,6 +2,39 @@ import Constants from '../../src/Constants'
 import LocalStorageManager from '../../src/LocalStorageManager'
 import VarCache from '../../src/VarCache'
 
+const DEFAULT_ACTIONS = {
+  "DefaultAction": {
+    "kind": 3,
+    "values": {
+      "Message": {
+        "Color": 4278190080,
+        "Text": "Tap OK to receive important notifications from our app."
+      },
+      "Background image": "",
+      "Layout": {
+        "Height": 250,
+        "Width": 300
+      },
+      "Cancel action": {
+        "__name__": ""
+      },
+      "Background color": 4294967295,
+    },
+    "options": null,
+    "kinds": {
+      "Message": "GROUP",
+      "Message.Color": "COLOR",
+      "Cancel action": "ACTION",
+      "Background image": "FILE",
+      "Layout": "GROUP",
+      "Message.Text": "TEXT",
+      "Background color": "COLOR",
+      "Layout.Height": "NUMBER",
+      "Layout.Width": "NUMBER"
+    }
+  }
+};
+
 describe(VarCache, () => {
   let cache: VarCache
   const createRequestSpy: jest.Mock<() => void> = jest.fn()
@@ -70,7 +103,7 @@ describe(VarCache, () => {
       expect(spy).toHaveBeenCalledTimes(5)
       expect(spy).toHaveBeenCalledWith(Constants.DEFAULT_KEYS.VARIABLES)
       expect(spy).toHaveBeenCalledWith(Constants.DEFAULT_KEYS.VARIANTS)
-      expect(spy).toHaveBeenCalledWith(Constants.DEFAULT_KEYS.ACTION_METADATA)
+      expect(spy).toHaveBeenCalledWith(Constants.DEFAULT_KEYS.ACTION_DEFINITIONS)
       expect(spy).toHaveBeenCalledWith(Constants.DEFAULT_KEYS.TOKEN)
       expect(spy).toHaveBeenCalledWith(Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO)
     })
@@ -89,7 +122,7 @@ describe(VarCache, () => {
 
     it('saves data to local storage', () => {
       cache.setVariables({ foo: 1 })
-      cache.applyDiffs({ bar: 2 }, ['one', 'two'], { meta: 'data' })
+      cache.applyDiffs({ bar: 2 }, ['one', 'two'], { meta: {} })
       cache.setVariantDebugInfo({ test: true })
       cache.token = 't0k3n'
 
@@ -100,7 +133,7 @@ describe(VarCache, () => {
       expect(spy).toHaveBeenCalledTimes(5)
       expect(spy).toHaveBeenNthCalledWith(1, Constants.DEFAULT_KEYS.VARIABLES, JSON.stringify({ bar: 2 }))
       expect(spy).toHaveBeenNthCalledWith(2, Constants.DEFAULT_KEYS.VARIANTS, JSON.stringify(['one', 'two']))
-      expect(spy).toHaveBeenNthCalledWith(3, Constants.DEFAULT_KEYS.ACTION_METADATA, JSON.stringify({ meta: 'data' }))
+      expect(spy).toHaveBeenNthCalledWith(3, Constants.DEFAULT_KEYS.ACTION_DEFINITIONS, JSON.stringify({ meta: {} }))
       expect(spy).toHaveBeenNthCalledWith(4, Constants.DEFAULT_KEYS.VARIANT_DEBUG_INFO, JSON.stringify({ test: true }))
       expect(spy).toHaveBeenNthCalledWith(5, Constants.DEFAULT_KEYS.TOKEN, 't0k3n')
     })
@@ -227,6 +260,10 @@ describe(VarCache, () => {
   })
 
   describe('sendVariables', () => {
+    afterEach(() => {
+      jest.clearAllMocks()
+    })
+
     it('clears user content', () => {
       const vars = { foo: 'bar' }
       const data = { [Constants.PARAMS.VARIABLES]: vars }
@@ -237,6 +274,87 @@ describe(VarCache, () => {
       expect(createRequestSpy).toHaveBeenCalledTimes(1)
       expect(createRequestSpy.mock.calls[0][0]).toEqual(Constants.METHODS.SET_VARS)
       expect(createRequestSpy.mock.calls[0][1].body()).toEqual(JSON.stringify(data))
+      expect(createRequestSpy.mock.calls[0][2].sendNow).toEqual(true)
+    })
+
+    it('sends custom action definitions', () => {
+      const CUSTOM_TEMPLATE = {
+        "kind": 3,
+        "options": null,
+        "values": {
+          "Message": {
+            "Color": 4278190080,
+            "Text": "Example message"
+          },
+          "Dismiss action": ''
+        },
+        "kinds": {
+          "Message": "group",
+          "Message.Color": "color",
+          "Message.Text": "string",
+          "Dismiss action": "action",
+        }
+      };
+
+      cache.applyDiffs(
+        {},
+        {},
+        DEFAULT_ACTIONS
+      )
+      cache.registerActionDefinition({
+        name: 'Custom Template',
+        args: [
+          {
+            name: 'Message',
+            type: 'group',
+            value: [
+              { name: 'Color', type: 'color', value: 4278190080 },
+              { name: 'Text', type: 'string', value: 'Example message' },
+            ]
+          },
+          { name: 'Dismiss action', type: 'action', value: '' },
+        ]
+      });
+
+      cache.sendActions()
+
+      expect(createRequestSpy).toHaveBeenCalledTimes(1)
+      expect(createRequestSpy.mock.calls[0][0]).toEqual(Constants.METHODS.SET_VARS)
+      expect(createRequestSpy.mock.calls[0][1].body()).toEqual(JSON.stringify({
+        [Constants.PARAMS.ACTION_DEFINITIONS]: {
+          ...{
+            "DefaultAction": {
+              "kind": 3,
+              "values": {
+                "Message": {
+                  "Color": 4278190080,
+                  "Text": "Tap OK to receive important notifications from our app."
+                },
+                "Background image": "",
+                "Layout": {
+                  "Height": 250,
+                  "Width": 300
+                },
+                "Cancel action": "",
+                "Background color": 4294967295,
+              },
+              "options": null,
+              "kinds": {
+                "Message": "group",
+                "Message.Color": "color",
+                "Cancel action": "action",
+                "Background image": "file",
+                "Layout": "group",
+                "Message.Text": "text",
+                "Background color": "color",
+                "Layout.Height": "number",
+                "Layout.Width": "number"
+              }
+            }
+          },
+          'Custom Template': CUSTOM_TEMPLATE
+        }
+      }))
       expect(createRequestSpy.mock.calls[0][2].sendNow).toEqual(true)
     })
   })

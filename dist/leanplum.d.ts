@@ -100,6 +100,7 @@ export default class Leanplum {
       * inconsistent state or user experience.
       */
     static clearUserContent(): void;
+    static registerTemplate(options: MessageTemplateOptions): void;
     static applyQueue(queue: Array<{
         name: string;
         args: Array<any>;
@@ -156,4 +157,15 @@ export interface WebPushOptions {
   serviceWorkerUrl?: string;
   scope?: string;
 }
+type ActionArgType = string;
+export type ActionArgs = {
+  name: string;
+  type: ActionArgType;
+  value: string | boolean | number | Array<ActionArgs> | Record<string, ActionArgs>;
+};
+export type MessageTemplateOptions = {
+  name: string;
+  args: Array<ActionArgs>;
+};
+export {};
 

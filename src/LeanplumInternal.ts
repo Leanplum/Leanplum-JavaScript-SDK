@@ -29,6 +29,7 @@ import {
   Action,
   EventType,
   Inbox,
+  MessageTemplateOptions,
   SimpleHandler,
   StatusHandler,
   WebPushOptions,
@@ -205,6 +206,10 @@ export default class LeanplumInternal {
     )
   }
 
+  registerTemplate(options: MessageTemplateOptions): void {
+    this._varCache.registerActionDefinition(options)
+  }
+
   // TODO(breaking change): replace with events and remove stateful handlers
   addStartResponseHandler(handler: StatusHandler): void {
     this._internalState.addStartResponseHandler(handler)
@@ -241,7 +246,7 @@ export default class LeanplumInternal {
           this._varCache.applyDiffs(
             getVarsResponse[Constants.KEYS.VARS],
             getVarsResponse[Constants.KEYS.VARIANTS],
-            getVarsResponse[Constants.KEYS.ACTION_METADATA])
+            getVarsResponse[Constants.KEYS.ACTION_DEFINITIONS])
           this._varCache.setVariantDebugInfo(getVarsResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
 
           this._events.emit('messagesReceived', getVarsResponse[Constants.KEYS.MESSAGES])
@@ -342,7 +347,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
           this._varCache.applyDiffs(
             startResponse[Constants.KEYS.VARS],
             startResponse[Constants.KEYS.VARIANTS],
-            startResponse[Constants.KEYS.ACTION_METADATA])
+            startResponse[Constants.KEYS.ACTION_DEFINITIONS])
           this._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
           this._varCache.token = startResponse[Constants.KEYS.TOKEN]
         } else {
