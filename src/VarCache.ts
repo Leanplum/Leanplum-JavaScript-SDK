@@ -18,7 +18,7 @@ import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
 import { CreateRequestFunction } from './types/internal'
-import { ActionArgs, MessageTemplateOptions } from './types/public'
+import { ActionParameter, MessageTemplateOptions } from './types/public'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -192,7 +192,7 @@ export default class VarCache {
   }
 }
 
-function argumentTree(args: Array<ActionArgs>): Record<string, any> {
+function argumentTree(args: Array<ActionParameter>): Record<string, any> {
   return args.reduce((acc, x) => {
     if (x.value instanceof Array) {
       acc[x.name] = argumentTree(x.value)
@@ -206,7 +206,7 @@ function argumentTree(args: Array<ActionArgs>): Record<string, any> {
   }, {})
 }
 
-function argumentKinds(args: Array<ActionArgs>, prefix = ''): Record<string, any> {
+function argumentKinds(args: Array<ActionParameter>, prefix = ''): Record<string, any> {
   return args.reduce((acc, x) => {
     const propName = `${prefix}${x.name}`
     if (x.value instanceof Array) {

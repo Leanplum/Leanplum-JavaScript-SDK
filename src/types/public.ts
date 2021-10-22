@@ -57,14 +57,30 @@ export interface WebPushOptions {
   scope?: string;
 }
 
-type ActionArgType = string;
+export enum ActionParameterType {
+    Int = 'int',
+    Integer = 'integer',
+    Color = 'color',
+    Float = 'float',
+    Decimal = 'decimal',
+    Number = 'number',
+    Boolean = 'bool',
+    String = 'string',
+    Text = 'text',
+    HTML = 'html',
+    File = 'file',
+    List = 'list',
+    Group = 'group',
+    Action = 'action',
+    Unknown = ''
+};
 
-export type ActionArgs = {
+export type ActionParameter = {
   name: string;
-  type: ActionArgType;
-  value: string | boolean | number | Array<ActionArgs> | Record<string, ActionArgs>;
+  type: ActionParameterType;
+  value: string | boolean | number | Array<ActionParameter> | Record<string, ActionParameter>;
 }
 export type MessageTemplateOptions = {
   name: string;
-  args: Array<ActionArgs>;
+  args: Array<ActionParameter>;
 }

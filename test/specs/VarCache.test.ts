@@ -1,9 +1,10 @@
 import Constants from '../../src/Constants'
 import LocalStorageManager from '../../src/LocalStorageManager'
 import VarCache from '../../src/VarCache'
+import { ActionParameterType } from '../../src/types/public'
 
 const DEFAULT_ACTIONS = {
-  "DefaultAction": {
+  "Alert": {
     "kind": 3,
     "values": {
       "Message": {
@@ -306,13 +307,13 @@ describe(VarCache, () => {
         args: [
           {
             name: 'Message',
-            type: 'group',
+            type: ActionParameterType.Group,
             value: [
-              { name: 'Color', type: 'color', value: 4278190080 },
-              { name: 'Text', type: 'string', value: 'Example message' },
+              { name: 'Color', type: ActionParameterType.Color, value: 4278190080 },
+              { name: 'Text', type: ActionParameterType.String, value: 'Example message' },
             ]
           },
-          { name: 'Dismiss action', type: 'action', value: '' },
+          { name: 'Dismiss action', type: ActionParameterType.Action, value: '' },
         ]
       });
 
@@ -323,7 +324,7 @@ describe(VarCache, () => {
       expect(createRequestSpy.mock.calls[0][1].body()).toEqual(JSON.stringify({
         [Constants.PARAMS.ACTION_DEFINITIONS]: {
           ...{
-            "DefaultAction": {
+            "Alert": {
               "kind": 3,
               "values": {
                 "Message": {
