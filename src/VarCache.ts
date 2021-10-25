@@ -19,10 +19,13 @@ import Constants from './Constants'
 import LocalStorageManager from './LocalStorageManager'
 import { CreateRequestFunction } from './types/internal'
 import { ActionParameter, MessageTemplateOptions } from './types/public'
+import ValueTransforms from './ValueTransforms'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // transforms the server response to the format expected by setVars
+// - lowercase kinds
+// - actions as empty strings
 function toSetVarsFormat(o: any): any {
   if (!o) return o
 
@@ -199,8 +202,9 @@ function argumentTree(args: Array<ActionParameter>): Record<string, any> {
       acc[x.name] = argumentTree(x.value)
     } else if (x.type === 'action') {
       acc[x.name] = ''
+    } else if (x.type === 'color') {
+      acc[x.name] = ValueTransforms.encodeColor(x.value as string)
     } else {
-      // TODO: allow specifying colors as strings
       acc[x.name] = x.value
     }
     return acc

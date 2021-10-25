@@ -6,6 +6,7 @@ import EventEmitter from './EventEmitter'
 import Network from './Network'
 import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
+import ValueTransforms from './ValueTransforms'
 
 /* eslint-disable @typescript-eslint/ban-types */
 
@@ -453,14 +454,6 @@ export default class Messages {
     return this._messageCache || {}
   }
 
-  private colorToHex(color: number): string {
-    const b = color & 0xff; color >>= 8
-    const g = color & 0xff; color >>= 8
-    const r = color & 0xff; color >>= 8
-    const a = (color & 0xff) / 255
-    return `rgba(${r},${g},${b},${a})`
-  }
-
   private addDefaults(vars: MessageVariables): MessageVariables {
     const kinds = this.getMessages().actionDefinitions || {}
     const defaults = kinds[vars.__name__]
@@ -506,7 +499,7 @@ export default class Messages {
         const name = key.replace(filePrefix, '')
         vars[name + ' URL'] = this.getFileUrl(vars[key])
       } else if (colorSuffix.test(key)) {
-        vars[key] = this.colorToHex(vars[key])
+        vars[key] = ValueTransforms.decodeColor(vars[key])
       } else if (typeof vars[key] === 'object') {
         vars[key] = this.resolveFields(vars[key])
       }
