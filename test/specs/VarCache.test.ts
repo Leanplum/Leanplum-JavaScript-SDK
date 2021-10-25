@@ -12,10 +12,6 @@ const DEFAULT_ACTIONS = {
         "Text": "Tap OK to receive important notifications from our app."
       },
       "Background image": "",
-      "Layout": {
-        "Height": 250,
-        "Width": 300
-      },
       "Cancel action": {
         "__name__": ""
       },
@@ -27,11 +23,8 @@ const DEFAULT_ACTIONS = {
       "Message.Color": "COLOR",
       "Cancel action": "ACTION",
       "Background image": "FILE",
-      "Layout": "GROUP",
       "Message.Text": "TEXT",
       "Background color": "COLOR",
-      "Layout.Height": "NUMBER",
-      "Layout.Width": "NUMBER"
     }
   }
 };
@@ -333,10 +326,6 @@ describe(VarCache, () => {
                   "Text": "Tap OK to receive important notifications from our app."
                 },
                 "Background image": "",
-                "Layout": {
-                  "Height": 250,
-                  "Width": 300
-                },
                 "Cancel action": "",
                 "Background color": 4294967295,
               },
@@ -346,11 +335,8 @@ describe(VarCache, () => {
                 "Message.Color": "color",
                 "Cancel action": "action",
                 "Background image": "file",
-                "Layout": "group",
                 "Message.Text": "text",
                 "Background color": "color",
-                "Layout.Height": "number",
-                "Layout.Width": "number"
               }
             }
           },
