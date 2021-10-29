@@ -275,7 +275,7 @@ export default class LeanplumInternal {
       userAttributes = {}
     }
 
-    if (this.hasActiveSession()) {
+    if (this.hasActiveSession() && !this._internalState.devMode) {
       return this.startFromCache(userId, userAttributes, callback)
     }
 
