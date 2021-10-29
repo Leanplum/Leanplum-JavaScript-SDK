@@ -153,6 +153,10 @@ export default class LeanplumRequest {
       return ''
     }
 
+    if (/^https?:/.test(filename)) {
+      return filename
+    }
+
     const args = new ArgsBuilder()
         .attachApiKeys(this.appId, this.clientKey)
         .add(Constants.PARAMS.SDK_VERSION, Constants.SDK_VERSION)
