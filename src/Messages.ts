@@ -13,7 +13,6 @@ import ValueTransforms from './ValueTransforms'
 type MessageId = string
 type Timestamp = number
 type MessageHash = { [key: string]: Message }
-// TODO: validation
 export type ActionContext = {
   // matches the ActionContext API in Android/iOS
   // https://docs.leanplum.com/reference#section-android-custom-templates
@@ -202,10 +201,10 @@ export default class Messages {
     this.handleMessage({
       isPreview: true,
 
-      message: {
+      message: this.addDefaults({
         messageId: message.messageId,
         ...vars,
-      },
+      }),
 
       context,
     })
@@ -455,26 +454,35 @@ export default class Messages {
   }
 
   private addDefaults(vars: MessageVariables): MessageVariables {
-    const kinds = this.getMessages().actionDefinitions || {}
-    const defaults = kinds[vars.__name__]
+    const definitions = this.getMessages().actionDefinitions || {}
+    const definition = definitions[vars.__name__]
+    const kinds = definition?.kinds
 
-    if (!defaults) {
+    if (!definition) {
       return vars
     }
 
-    function useDefaults(obj: MessageVariables, defaultValues: MessageVariables): MessageVariables {
+    const useDefaults = (
+      obj: MessageVariables,
+      defaultValues: MessageVariables,
+      path = ''
+    ): MessageVariables => {
       for (const key of Object.keys(defaultValues)) {
         const value = defaultValues[key]
         if (typeof value === 'object') {
-          obj[key] = useDefaults(obj[key] || {}, value)
+          obj[key] = useDefaults(obj[key] || {}, value, `${path}${key}.`)
         } else if (typeof obj[key] === 'undefined') {
           obj[key] = value
+        }
+
+        if (kinds[`${path}${key}`] === 'FILE') {
+          obj[key] = this.getFileUrl(obj[key])
         }
       }
       return obj
     }
 
-    return useDefaults({ ...vars }, defaults.values)
+    return useDefaults({ ...vars }, definition.values)
   }
 
   private resolveFiles(vars: MessageVariables): MessageVariables {
