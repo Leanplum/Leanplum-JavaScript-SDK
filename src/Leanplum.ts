@@ -65,6 +65,10 @@ export default class Leanplum {
     Leanplum._lp.setDeviceId(deviceId)
   }
 
+  static setLocale(locale: string): void {
+    Leanplum._lp.setLocale(locale)
+  }
+
   static setAppVersion(versionName: string): void {
     Leanplum._lp.setAppVersion(versionName)
   }

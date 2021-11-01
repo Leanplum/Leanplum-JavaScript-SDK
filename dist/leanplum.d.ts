@@ -27,6 +27,7 @@ export default class Leanplum {
     static setAppIdForProductionMode(appId: string, accessKey: string): void;
     static setSocketHost(host: string): void;
     static setDeviceId(deviceId: string): void;
+    static setLocale(locale: string): void;
     static setAppVersion(versionName: string): void;
     static setDeviceName(deviceName: string): void;
     static setDeviceModel(deviceModel: string): void;

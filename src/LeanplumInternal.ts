@@ -67,6 +67,7 @@ export default class LeanplumInternal {
 
   private _deviceName: string
   private _deviceModel: string
+  private _locale: string
   private _systemName: string
   private _systemVersion: string
   private _sessionLength: number
@@ -121,6 +122,10 @@ export default class LeanplumInternal {
 
   setDeviceId(deviceId: string): void {
     this._lpRequest.deviceId = deviceId
+  }
+
+  setLocale(locale: string): void {
+    this._locale = locale;
   }
 
   setAppVersion(versionName: string): void {
@@ -294,7 +299,7 @@ export default class LeanplumInternal {
       .add(Constants.PARAMS.SYSTEM_VERSION, (this._systemVersion || '').toString())
       .add(Constants.PARAMS.BROWSER_NAME, this._browserDetector.browser)
       .add(Constants.PARAMS.BROWSER_VERSION, this._browserDetector.version.toString())
-      .add(Constants.PARAMS.LOCALE, Constants.VALUES.DETECT)
+      .add(Constants.PARAMS.LOCALE, this._locale || Constants.VALUES.DETECT)
       .add(Constants.PARAMS.DEVICE_NAME, this._deviceName ||
           `${this._browserDetector.browser} ${this._browserDetector.version}`)
       .add(Constants.PARAMS.DEVICE_MODEL, this._deviceModel || 'Web Browser')
