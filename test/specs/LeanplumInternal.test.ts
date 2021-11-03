@@ -228,6 +228,23 @@ describe(LeanplumInternal, () => {
 
         expect(lpRequestMock.request).toHaveBeenCalledTimes(3)
       })
+
+      it('always start new session in dev mode', () => {
+        lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
+
+        let currentTime = 0
+        jest.spyOn(Date, 'now').mockImplementation(() => currentTime)
+        lp.useSessionLength(2)
+
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        currentTime = 500
+        mockNextResponse({ response: [{ success: true }] })
+        lp.start()
+
+        expect(lpRequestMock.request).toHaveBeenCalledTimes(2)
+      })
     })
   })
 
