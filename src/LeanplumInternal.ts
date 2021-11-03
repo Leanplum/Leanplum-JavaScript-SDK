@@ -125,7 +125,7 @@ export default class LeanplumInternal {
   }
 
   setLocale(locale: string): void {
-    this._locale = locale;
+    this._locale = locale
   }
 
   setAppVersion(versionName: string): void {
