@@ -64,6 +64,35 @@ describe(LeanplumInternal, () => {
       expect(newsfeedMessages).toEqual(['123##1', '234##1'])
     })
 
+    it('sends detect locale by default', () => {
+      mockNextResponse({
+        response: [{
+          success: true,
+        }],
+      })
+      lp.start()
+
+      const [method, args] = lpRequestMock.request.mock.calls[0]
+      const { locale } = args.buildDict()
+      expect(method).toBe('start')
+      expect(locale).toEqual('(detect)')
+    })
+
+    it('sends defined locale', () => {
+      mockNextResponse({
+        response: [{
+          success: true,
+        }],
+      })
+      lp.setLocale('it_CH')
+      lp.start()
+
+      const [method, args] = lpRequestMock.request.mock.calls[0]
+      const { locale } = args.buildDict()
+      expect(method).toBe('start')
+      expect(locale).toEqual('it_CH')
+    })
+
     it('synchronizes message inbox, if requested by API', () => {
       mockNextResponse({
         response: [{
