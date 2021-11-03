@@ -57,6 +57,22 @@ describe(LeanplumInbox, () => {
       expect(handler).toHaveBeenCalledTimes(0)
       expect(inbox.messageIds()).toEqual([])
     })
+
+    it('works when reponse is called with null', () => {
+      const handler = jest.fn()
+
+      inbox.onChanged(handler)
+
+      createRequestSpy.mockImplementationOnce(
+        (method, args, options) => {
+          options.response(null)
+        }
+      )
+      inbox.downloadMessages()
+
+      expect(handler).toHaveBeenCalledTimes(0)
+      expect(inbox.messageIds()).toEqual([])
+    })
   })
 
   describe('allMessages', () => {
