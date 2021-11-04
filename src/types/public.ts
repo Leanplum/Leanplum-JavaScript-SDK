@@ -90,3 +90,17 @@ export type MessageTemplateOptions = {
   kind?: MessageKind;
   args: Array<ActionParameter>;
 }
+export type ActionContext = {
+  // matches the ActionContext API in Android/iOS
+  // https://docs.leanplum.com/reference#section-android-custom-templates
+  track: (event?: string, value?: number, info?: string, params?: Record<string, any>) => void;
+  runActionNamed: (actionName: string) => void;
+  runTrackedActionNamed: (actionName: string) => void;
+}
+export type RenderOptions = {
+  isPreview?: boolean;
+  context: ActionContext;
+  message: MessageVariables;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MessageVariables = any

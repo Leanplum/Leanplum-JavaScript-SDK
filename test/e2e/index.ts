@@ -1,6 +1,7 @@
 declare const Leanplum: typeof import('../../dist/leanplum').default
+import { RenderOptions } from '../../dist/leanplum'
 
-const isProdKey = (accessKey): boolean => /^prod_/.test(accessKey)
+const isProdKey = (accessKey: string): boolean => /^prod_/.test(accessKey)
 
 $('[data-action=setup]')
     .submit((e) => {
@@ -8,7 +9,7 @@ $('[data-action=setup]')
         const appId = $('#appId').val() as string
         const accessKey = $('#accessKey').val() as string
         const apiPath = $('#apiPath').val() as string
-        const useSocketHost = s => Leanplum.setSocketHost(`${s}.leanplum.com`)
+        const useSocketHost = (s: string) => Leanplum.setSocketHost(`${s}.leanplum.com`)
 
         if (appId && accessKey) {
             if (isProdKey(accessKey)) {
@@ -78,7 +79,7 @@ $('[data-action=track]')
         const paramKey = $('#eventParamKey').val() as string
         const paramValue = $('#eventParamValue').val()
 
-        let params
+        let params: Record<string, any>
         if (paramKey && paramValue) {
             params = {}
             params[paramKey] = paramValue
@@ -252,7 +253,7 @@ function renderAppInbox(): void {
 
 // register handler for in-app messages
 Leanplum.enableRichInAppMessages(true)
-Leanplum.on('showMessage', (args) => {
+Leanplum.on('showMessage', (args: RenderOptions) => {
   const { message, context } = args
   let title, body
   const buttons = []

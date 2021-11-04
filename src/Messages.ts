@@ -1,4 +1,4 @@
-import { Action, UserAttributes } from './types/public'
+import { Action, UserAttributes, ActionContext, RenderOptions } from './types/public'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 import { CreateRequestFunction, Message, MessageVariables } from './types/internal'
@@ -13,13 +13,6 @@ import ValueTransforms from './ValueTransforms'
 type MessageId = string
 type Timestamp = number
 type MessageHash = { [key: string]: Message }
-export type ActionContext = {
-  // matches the ActionContext API in Android/iOS
-  // https://docs.leanplum.com/reference#section-android-custom-templates
-  track: (event?: string, value?: number, info?: string, params?: Object) => void;
-  runActionNamed: (actionName: string) => void;
-  runTrackedActionNamed: (actionName: string) => void;
-}
 type TriggerContext =
   // TODO: 'install' trigger for first session
   { trigger: 'start' } |
@@ -35,11 +28,6 @@ type FilterConfig = {
     noun: string | number;
     objects?: Array<string | number>;
   }>;
-}
-type RenderOptions = {
-  isPreview?: boolean;
-  context: ActionContext;
-  message: MessageVariables;
 }
 type TrackOptions = {
   event?: string;
