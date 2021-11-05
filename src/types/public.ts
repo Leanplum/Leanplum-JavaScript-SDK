@@ -58,7 +58,6 @@ export interface WebPushOptions {
 }
 
 export enum ActionParameterType {
-    Int = 'int',
     Integer = 'integer',
     Color = 'color',
     Float = 'float',
