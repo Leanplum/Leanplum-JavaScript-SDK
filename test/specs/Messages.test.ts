@@ -93,7 +93,7 @@ describe(Messages, () => {
       expect(secondMessage).toHaveProperty('Title', 'Confirm again')
     })
 
-    it('triggers showMessage for chained message', () => {
+    it('triggers chained registerForPush', () => {
       const registerForPush = jest.fn()
       events.on('registerForPush', registerForPush)
 
@@ -1072,6 +1072,48 @@ describe(Messages, () => {
       expect(message).toHaveProperty('Red Color', 'rgba(255,0,0,1)')
       expect(message).toHaveProperty('Green Color', 'rgba(0,255,0,1)')
       expect(message).toHaveProperty('White Color', 'rgba(255,255,255,1)')
+    })
+
+    it('resolves file URLs', () => {
+      const fileUrl = 'https://api.leanplum.com/api?appId'
+
+      getFileUrl.mockReturnValue(fileUrl)
+
+      const actionDefinitions = {
+        Confirm: {
+          "kind": 3,
+          "kinds": {
+            "Image": "FILE",
+            "Button": "GROUP",
+            "Button.Image": "FILE"
+          },
+          "values": {
+            "Image": "",
+            "Button": {
+              "Image": ""
+            }
+          }
+        }
+      }
+      events.emit('messagesReceived', {
+        actionDefinitions
+      })
+
+      events.emit('previewRequest', {
+        messageId: 123,
+        action: {
+          __name__: 'Confirm',
+          Image: 'example.png',
+          Button: {
+            Image: 'button.png',
+          }
+        }
+      })
+
+      const message = showMessage.mock.calls[0][0].message
+      expect(message).toHaveProperty('Image')
+      expect(message.Image).toContain('https://api.leanplum.com/api?appId')
+      expect(message.Button.Image).toContain('https://api.leanplum.com/api?appId')
     })
   })
 

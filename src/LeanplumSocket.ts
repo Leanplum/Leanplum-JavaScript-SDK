@@ -107,9 +107,9 @@ export default class LeanplumSocket {
           const getVarsResponse = this.getLastResponse(response)
           const values = getVarsResponse[Constants.KEYS.VARS]
           const variants = getVarsResponse[Constants.KEYS.VARIANTS]
-          const actionMetadata = getVarsResponse[Constants.KEYS.ACTION_METADATA]
+          const actionDefinitions = getVarsResponse[Constants.KEYS.ACTION_DEFINITIONS]
           if (!isEqual(values, this.cache.diffs)) {
-            this.cache.applyDiffs(values, variants, actionMetadata)
+            this.cache.applyDiffs(values, variants, actionDefinitions)
           }
         },
       })
@@ -119,9 +119,9 @@ export default class LeanplumSocket {
         'updated': true,
       })
     } else if (event === 'getActions') {
-      // Unsupported in JavaScript SDK.
+      const updated = this.cache.sendActions()
       this.socketClient.send('getContentResponse', {
-        'updated': false,
+        updated,
       })
     } else if (event === 'registerDevice') {
       const message = args[0] as RegisterMessage

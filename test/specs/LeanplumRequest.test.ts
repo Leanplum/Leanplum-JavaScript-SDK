@@ -74,6 +74,14 @@ describe(LeanplumRequest, () => {
     it('returns empty string for empty filenames', () => {
       expect(request.getFileUrl('')).toEqual('')
     })
+
+    it('does not change existing URLs', () => {
+      const srcUrl = 'https://example.com/image.png'
+
+      const url = request.getFileUrl(srcUrl)
+
+      expect(url).toEqual(srcUrl)
+    })
   })
 
   describe('batching', () => {

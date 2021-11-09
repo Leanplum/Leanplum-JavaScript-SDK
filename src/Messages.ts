@@ -1,4 +1,4 @@
-import { Action, UserAttributes } from './types/public'
+import { Action, UserAttributes, ActionContext, RenderOptions } from './types/public'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 import { CreateRequestFunction, Message, MessageVariables } from './types/internal'
@@ -6,20 +6,15 @@ import EventEmitter from './EventEmitter'
 import Network from './Network'
 import isEqual from 'lodash.isequal'
 import LocalStorageManager from './LocalStorageManager'
+import ValueTransforms from './ValueTransforms'
 
 /* eslint-disable @typescript-eslint/ban-types */
 
 type MessageId = string
 type Timestamp = number
 type MessageHash = { [key: string]: Message }
-type ActionContext = {
-  // matches the ActionContext API in Android/iOS
-  // https://docs.leanplum.com/reference#section-android-custom-templates
-  track: (event?: string, value?: number, info?: string, params?: Object) => void;
-  runActionNamed: (actionName: string) => void;
-  runTrackedActionNamed: (actionName: string) => void;
-}
 type TriggerContext =
+  // TODO: 'install' trigger for first session
   { trigger: 'start' } |
   { trigger: 'resume' } |
   { trigger: 'userAttribute'; attributes: UserAttributes } |
@@ -33,11 +28,6 @@ type FilterConfig = {
     noun: string | number;
     objects?: Array<string | number>;
   }>;
-}
-type RenderOptions = {
-  isPreview?: boolean;
-  context: ActionContext;
-  message: MessageVariables;
 }
 type TrackOptions = {
   event?: string;
@@ -123,7 +113,6 @@ const verbToInterval = (verb: string): number => {
 }
 
 export default class Messages {
-  private _files: { [key: string]: string } = {}
   private _messageCache: MessageHash = {}
   private occurrenceTracker = new OccurrenceTracker()
 
@@ -200,10 +189,10 @@ export default class Messages {
     this.handleMessage({
       isPreview: true,
 
-      message: {
+      message: this.addDefaults({
         messageId: message.messageId,
         ...vars,
-      },
+      }),
 
       context,
     })
@@ -452,35 +441,36 @@ export default class Messages {
     return this._messageCache || {}
   }
 
-  private colorToHex(color: number): string {
-    const b = color & 0xff; color >>= 8
-    const g = color & 0xff; color >>= 8
-    const r = color & 0xff; color >>= 8
-    const a = (color & 0xff) / 255
-    return `rgba(${r},${g},${b},${a})`
-  }
-
   private addDefaults(vars: MessageVariables): MessageVariables {
-    const kinds = this.getMessages().actionDefinitions || {}
-    const defaults = kinds[vars.__name__]
+    const definitions = this.getMessages().actionDefinitions || {}
+    const definition = definitions[vars.__name__]
+    const kinds = definition?.kinds
 
-    if (!defaults) {
+    if (!definition) {
       return vars
     }
 
-    function useDefaults(obj: MessageVariables, defaultValues: MessageVariables): MessageVariables {
+    const useDefaults = (
+      obj: MessageVariables,
+      defaultValues: MessageVariables,
+      path = ''
+    ): MessageVariables => {
       for (const key of Object.keys(defaultValues)) {
         const value = defaultValues[key]
         if (typeof value === 'object') {
-          obj[key] = useDefaults(obj[key] || {}, value)
+          obj[key] = useDefaults(obj[key] || {}, value, `${path}${key}.`)
         } else if (typeof obj[key] === 'undefined') {
           obj[key] = value
+        }
+
+        if (kinds[`${path}${key}`] === 'FILE') {
+          obj[key] = this.getFileUrl(obj[key])
         }
       }
       return obj
     }
 
-    return useDefaults({ ...vars }, defaults.values)
+    return useDefaults({ ...vars }, definition.values)
   }
 
   private resolveFiles(vars: MessageVariables): MessageVariables {
@@ -505,7 +495,7 @@ export default class Messages {
         const name = key.replace(filePrefix, '')
         vars[name + ' URL'] = this.getFileUrl(vars[key])
       } else if (colorSuffix.test(key)) {
-        vars[key] = this.colorToHex(vars[key])
+        vars[key] = ValueTransforms.decodeColor(vars[key])
       } else if (typeof vars[key] === 'object') {
         vars[key] = this.resolveFields(vars[key])
       }

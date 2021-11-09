@@ -3,6 +3,7 @@ import EventEmitter from '../../src/EventEmitter'
 import VarCache from '../../src/VarCache'
 import { varCacheMock } from '../mocks/internal'
 
+jest.mock('../../src/SocketIoClient');
 jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
 
 describe(LeanplumSocket, () => {
@@ -13,6 +14,8 @@ describe(LeanplumSocket, () => {
     varCache = new VarCache(createRequest)
     events = new EventEmitter()
     socket = new LeanplumSocket(varCache, createRequest, (r) => r.response[0], events)
+    socket.connect()
+    jest.spyOn(socket.socketClient, 'send')
   })
 
   const MESSAGE = {
@@ -56,5 +59,15 @@ describe(LeanplumSocket, () => {
     })
 
     expect(varCacheMock.applyDiffs).toHaveBeenCalledTimes(1)
+  })
+
+  it('sends a setVars request on "getActions" messages', () => {
+    varCacheMock.sendActions.mockReturnValue(true)
+
+    socket.onMessageReceived('getActions', [])
+
+    expect(varCacheMock.sendActions).toHaveBeenCalledTimes(1)
+    expect(socket.socketClient.send).toHaveBeenCalledTimes(1);
+    expect(socket.socketClient.send).toHaveBeenCalledWith('getContentResponse', { updated: true });
   })
 })

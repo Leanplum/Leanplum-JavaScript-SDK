@@ -56,3 +56,50 @@ export interface WebPushOptions {
   serviceWorkerUrl?: string;
   scope?: string;
 }
+
+export enum ActionParameterType {
+    Integer = 'integer',
+    Color = 'color',
+    Float = 'float',
+    Decimal = 'decimal',
+    Number = 'number',
+    Boolean = 'bool',
+    String = 'string',
+    Text = 'text',
+    HTML = 'html',
+    File = 'file',
+    List = 'list',
+    Group = 'group',
+    Action = 'action',
+    Unknown = ''
+};
+
+export enum MessageKind {
+  Action = 2,
+  Template = 3
+};
+
+export type ActionParameter = {
+  name: string;
+  type: ActionParameterType;
+  value: string | boolean | number | Array<ActionParameter> | Record<string, ActionParameter>;
+}
+export type MessageTemplateOptions = {
+  name: string;
+  kind?: MessageKind;
+  args: Array<ActionParameter>;
+}
+export type ActionContext = {
+  // matches the ActionContext API in Android/iOS
+  // https://docs.leanplum.com/reference#section-android-custom-templates
+  track: (event?: string, value?: number, info?: string, params?: Record<string, any>) => void;
+  runActionNamed: (actionName: string) => void;
+  runTrackedActionNamed: (actionName: string) => void;
+}
+export type RenderOptions = {
+  isPreview?: boolean;
+  context: ActionContext;
+  message: MessageVariables;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MessageVariables = any
