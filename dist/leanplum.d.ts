@@ -158,7 +158,6 @@ export interface WebPushOptions {
   scope?: string;
 }
 export enum ActionParameterType {
-  Int = "int",
   Integer = "integer",
   Color = "color",
   Float = "float",
@@ -188,4 +187,15 @@ export type MessageTemplateOptions = {
   kind?: MessageKind;
   args: Array<ActionParameter>;
 };
+export type ActionContext = {
+  track: (event?: string, value?: number, info?: string, params?: Record<string, any>) => void;
+  runActionNamed: (actionName: string) => void;
+  runTrackedActionNamed: (actionName: string) => void;
+};
+export type RenderOptions = {
+  isPreview?: boolean;
+  context: ActionContext;
+  message: MessageVariables;
+};
+export type MessageVariables = any;
 
