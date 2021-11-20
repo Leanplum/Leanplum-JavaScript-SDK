@@ -16,44 +16,65 @@
  *
  */
 
-let localStorageEnabled
-const alternateLocalStorage = {}
+const storageEnabled = {
+  local: true,
+  session: true,
+}
+const alternateStorage = {
+  local: {},
+  session: {},
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Value = any
+type StorageType = 'local' | 'session'
 
 export default class LocalStorageManager {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static getFromLocalStorage(key): any {
-    if (localStorageEnabled === false) {
-      return alternateLocalStorage[key]
+  static getFromLocalStorage(key: string, type: StorageType = 'local'): Value {
+    if (!storageEnabled[type]) {
+      return alternateStorage[type][key]
     }
 
-    return localStorage[key]
+    if (type === 'local') {
+      return localStorage[key]
+    } else {
+      return sessionStorage.getItem(key)
+    }
   }
 
-  static saveToLocalStorage(key, value): void {
-    if (localStorageEnabled === false) {
-      alternateLocalStorage[key] = value
+  static saveToLocalStorage(key: string, value: Value, type: StorageType = 'local'): void {
+    if (!storageEnabled[type]) {
+      alternateStorage[type][key] = value
       return
     }
 
     try {
-      localStorage[key] = value
+      if (type === 'local') {
+        localStorage[key] = value
+      } else {
+        sessionStorage.setItem(key, value)
+      }
     } catch (e) {
-      localStorageEnabled = false
-      alternateLocalStorage[key] = value
+      storageEnabled[type] = false
+      alternateStorage[type][key] = value
     }
   }
 
-  static removeFromLocalStorage(key): void {
-    if (localStorageEnabled === false) {
-      delete alternateLocalStorage[key]
+  static removeFromLocalStorage(key: string, type: StorageType = 'local'): void {
+    if (!storageEnabled[type]) {
+      delete alternateStorage[type][key]
       return
     }
 
     try {
-      localStorage.removeItem(key)
+      if (type === 'local') {
+        localStorage.removeItem(key)
+      } else {
+        sessionStorage.removeItem(key)
+      }
     } catch (e) {
-      localStorageEnabled = false
-      delete alternateLocalStorage[key]
+      storageEnabled[type] = false
+      delete alternateStorage[type][key]
     }
   }
 }
