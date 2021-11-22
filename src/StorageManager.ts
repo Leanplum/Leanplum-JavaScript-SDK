@@ -29,8 +29,8 @@ const alternateStorage = {
 type Value = any
 type StorageType = 'local' | 'session'
 
-export default class LocalStorageManager {
-  static getFromLocalStorage(key: string, type: StorageType = 'local'): Value {
+export default class StorageManager {
+  static get(key: string, type: StorageType = 'local'): Value {
     if (!storageEnabled[type]) {
       return alternateStorage[type][key]
     }
@@ -42,7 +42,7 @@ export default class LocalStorageManager {
     }
   }
 
-  static saveToLocalStorage(key: string, value: Value, type: StorageType = 'local'): void {
+  static save(key: string, value: Value, type: StorageType = 'local'): void {
     if (!storageEnabled[type]) {
       alternateStorage[type][key] = value
       return
@@ -60,7 +60,7 @@ export default class LocalStorageManager {
     }
   }
 
-  static removeFromLocalStorage(key: string, type: StorageType = 'local'): void {
+  static remove(key: string, type: StorageType = 'local'): void {
     if (!storageEnabled[type]) {
       delete alternateStorage[type][key]
       return

@@ -14,7 +14,6 @@
  *  limitations under the License.
  */
 
-import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { startResponse } from '../data/responses'
 import { windowMock } from '../mocks/external'

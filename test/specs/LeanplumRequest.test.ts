@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import LeanplumRequest from '../../src/LeanplumRequest'
-import LocalStorageManager from '../../src/LocalStorageManager'
+import StorageManager from '../../src/StorageManager'
 import Constants from '../../src/Constants'
 import Network from '../../src/Network'
 import ArgsBuilder from  '../../src/ArgsBuilder'
@@ -32,7 +32,7 @@ describe(LeanplumRequest, () => {
 
   describe('userId resolution', () => {
     beforeEach(() => {
-      lsGetSpy = jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockReturnValue(undefined)
+      lsGetSpy = jest.spyOn(StorageManager, 'get').mockReturnValue(undefined)
     })
 
     afterEach(() => {

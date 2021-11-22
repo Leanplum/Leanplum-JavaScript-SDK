@@ -5,7 +5,7 @@ import { CreateRequestFunction, Message, MessageVariables } from './types/intern
 import EventEmitter from './EventEmitter'
 import Network from './Network'
 import isEqual from 'lodash.isequal'
-import LocalStorageManager from './LocalStorageManager'
+import StorageManager from './StorageManager'
 import ValueTransforms from './ValueTransforms'
 
 /* eslint-disable @typescript-eslint/ban-types */
@@ -76,7 +76,7 @@ class OccurrenceTracker {
   }
 
   load(): void {
-    const cache = LocalStorageManager.getFromLocalStorage(Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES)
+    const cache = StorageManager.get(Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES)
     if (cache) {
       const json = JSON.parse(cache)
       this.session = json.session
@@ -87,7 +87,7 @@ class OccurrenceTracker {
 
   save(): void {
     const key = Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES
-    LocalStorageManager.saveToLocalStorage(key, JSON.stringify({
+    StorageManager.save(key, JSON.stringify({
       session: this.session,
       triggers: this.triggers,
       occurrences: this.occurrences,
@@ -131,7 +131,7 @@ export default class Messages {
     })
     events.on('resume', () => {
       const key = Constants.DEFAULT_KEYS.MESSAGE_CACHE
-      const cache = LocalStorageManager.getFromLocalStorage(key)
+      const cache = StorageManager.get(key)
       this._messageCache = cache ? JSON.parse(cache) : this._messageCache
 
       this.occurrenceTracker.load()
@@ -201,7 +201,7 @@ export default class Messages {
   onMessagesReceived(receivedMessages): void {
     const messages = receivedMessages || {}
     this._messageCache = messages
-    LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.MESSAGE_CACHE, JSON.stringify(messages))
+    StorageManager.save(Constants.DEFAULT_KEYS.MESSAGE_CACHE, JSON.stringify(messages))
   }
 
   shouldShowMessage(id: string, message, context: TriggerContext): boolean {

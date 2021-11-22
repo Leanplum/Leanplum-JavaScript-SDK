@@ -21,7 +21,7 @@ import InternalState from './InternalState'
 import LeanplumInbox from './LeanplumInbox'
 import LeanplumRequest from './LeanplumRequest'
 import LeanplumSocket from './LeanplumSocket'
-import LocalStorageManager from './LocalStorageManager'
+import StorageManager from './StorageManager'
 import PushManager from './PushManager'
 import Messages from './Messages'
 import EventEmitter from './EventEmitter'
@@ -406,7 +406,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
       sendNow: true,
       queued: true,
       response: () => {
-        LocalStorageManager.removeFromLocalStorage(SESSION_KEY)
+        StorageManager.remove(SESSION_KEY)
       },
     })
   }
@@ -473,7 +473,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
     if (userId) {
       this._lpRequest.userId = userId
-      LocalStorageManager.saveToLocalStorage(Constants.DEFAULT_KEYS.USER_ID, this._lpRequest.userId)
+      StorageManager.save(Constants.DEFAULT_KEYS.USER_ID, this._lpRequest.userId)
     }
   }
 
@@ -635,7 +635,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
     }
 
     const currentTime = Date.now()
-    const lastActive = parseInt(LocalStorageManager.getFromLocalStorage(SESSION_KEY))
+    const lastActive = parseInt(StorageManager.get(SESSION_KEY))
 
     if (isNaN(lastActive)) {
       return false
@@ -649,6 +649,6 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   }
 
   private updateSession(): void {
-    LocalStorageManager.saveToLocalStorage(SESSION_KEY, String(Date.now()))
+    StorageManager.save(SESSION_KEY, String(Date.now()))
   }
 }

@@ -1,6 +1,6 @@
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import LocalStorageManager from './LocalStorageManager'
+import StorageManager from './StorageManager'
 import { CreateRequestFunction, MessageObject } from './types/internal'
 import { Action, Inbox, InboxMessage } from './types/public'
 
@@ -86,7 +86,7 @@ export default class LeanplumInbox implements Inbox {
   }
 
   private save(): void {
-    LocalStorageManager.saveToLocalStorage(
+    StorageManager.save(
       Constants.DEFAULT_KEYS.INBOX_MESSAGES,
       JSON.stringify(this.messageMap),
       'session'
@@ -94,7 +94,7 @@ export default class LeanplumInbox implements Inbox {
   }
 
   private load(): void {
-    const state = LocalStorageManager.getFromLocalStorage(
+    const state = StorageManager.get(
       Constants.DEFAULT_KEYS.INBOX_MESSAGES,
       'session'
     )

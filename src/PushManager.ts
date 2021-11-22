@@ -17,7 +17,7 @@
 
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import LocalStorageManager from './LocalStorageManager'
+import StorageManager from './StorageManager'
 import { CreateRequestFunction } from './types/internal'
 
 const APPLICATION_SERVER_PUBLIC_KEY =
@@ -193,12 +193,12 @@ export default class PushManager {
     if (subscription) {
       const preparedSubscription = this.prepareSubscription(subscription)
       const preparedSubscriptionString = JSON.stringify(preparedSubscription)
-      const existingSubscriptionString = LocalStorageManager.getFromLocalStorage(
+      const existingSubscriptionString = StorageManager.get(
         Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION
       ) as string
 
       if (existingSubscriptionString !== preparedSubscriptionString) {
-        LocalStorageManager.saveToLocalStorage(
+        StorageManager.save(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
           preparedSubscriptionString
         )
