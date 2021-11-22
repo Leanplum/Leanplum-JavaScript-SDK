@@ -17,7 +17,7 @@
 
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import LocalStorageManager from './LocalStorageManager'
+import StorageManager from './StorageManager'
 import Network from './Network'
 
 export default class LeanplumRequest {
@@ -214,15 +214,15 @@ export default class LeanplumRequest {
   }
 
   private loadLocal<T>(key: string): T {
-    return LocalStorageManager.getFromLocalStorage(key)
+    return StorageManager.get(key)
   }
 
   private saveLocal<T>(key: string, value: T): void {
-    LocalStorageManager.saveToLocalStorage(key, value)
+    StorageManager.save(key, value)
   }
 
   private removeLocal(key: string): void {
-    LocalStorageManager.removeFromLocalStorage(key)
+    StorageManager.remove(key)
   }
 }
 

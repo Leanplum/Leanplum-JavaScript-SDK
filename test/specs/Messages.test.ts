@@ -1,6 +1,6 @@
 import EventEmitter from '../../src/EventEmitter'
 import Messages from '../../src/Messages'
-import LocalStorageManager from '../../src/LocalStorageManager'
+import StorageManager from '../../src/StorageManager'
 import Network from '../../src/Network'
 
 describe(Messages, () => {
@@ -15,7 +15,7 @@ describe(Messages, () => {
     localStorage.clear()
     Network.prototype.ajax = jest.fn()
     events = new EventEmitter()
-    createRequest = jest.fn().mockImplementation((m, e, options) => options?.response())
+    createRequest = jest.fn().mockImplementation((_, __, options) => options?.response())
     getFileUrl = jest.fn()
     messages = new Messages(events, createRequest, getFileUrl)
 
@@ -872,9 +872,7 @@ describe(Messages, () => {
 
   describe('persistence', () => {
     it('persists message cache', () => {
-      const now = Date.now()
-
-      jest.spyOn(LocalStorageManager, 'saveToLocalStorage').mockImplementation(() => {})
+      jest.spyOn(StorageManager, 'save').mockImplementation(() => {})
       const message = {
         ...MESSAGE_WITH_EVENT_TRIGGER,
         whenLimits: {
@@ -884,12 +882,12 @@ describe(Messages, () => {
       }
       events.emit('messagesReceived', { "123": message })
 
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum_message_cache', JSON.stringify({ '123': message }))
+      expect(StorageManager.save).toHaveBeenCalled()
+      expect(StorageManager.save).toHaveBeenCalledWith('__leanplum_message_cache', JSON.stringify({ '123': message }))
     })
 
     it('loads messages from localStorage', () => {
-      jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
+      jest.spyOn(StorageManager, 'get').mockImplementation(
         (key) => {
           if (key === '__leanplum_message_cache') {
             return JSON.stringify({
@@ -915,7 +913,7 @@ describe(Messages, () => {
     it('persists message occurrences', () => {
       const now = Date.now()
 
-      jest.spyOn(LocalStorageManager, 'saveToLocalStorage').mockImplementation(() => {})
+      jest.spyOn(StorageManager, 'save').mockImplementation(() => {})
       events.emit('messagesReceived', { "123": {
         ...MESSAGE_WITH_EVENT_TRIGGER,
         whenLimits: {
@@ -927,8 +925,8 @@ describe(Messages, () => {
       events.emit('track', { eventName: 'Add to cart' })
       showMessage.mock.calls[0][0].context.track()
 
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum_message_occurrences', JSON.stringify({
+      expect(StorageManager.save).toHaveBeenCalled()
+      expect(StorageManager.save).toHaveBeenCalledWith('__leanplum_message_occurrences', JSON.stringify({
         session: { '123': 1 },
         triggers: { '123': [ now ] },
         occurrences: { '123': [ now ] },
@@ -938,7 +936,7 @@ describe(Messages, () => {
     it('persists trigger occurrences, even if message limits are enforced', () => {
       const now = Date.now()
 
-      jest.spyOn(LocalStorageManager, 'saveToLocalStorage').mockImplementation(() => {})
+      jest.spyOn(StorageManager, 'save').mockImplementation(() => {})
       events.emit('messagesReceived', { "123": {
         ...MESSAGE_WITH_EVENT_TRIGGER,
         whenLimits: {
@@ -949,8 +947,8 @@ describe(Messages, () => {
 
       events.emit('track', { eventName: 'Add to cart' })
 
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalled()
-      expect(LocalStorageManager.saveToLocalStorage).toHaveBeenCalledWith('__leanplum_message_occurrences', JSON.stringify({
+      expect(StorageManager.save).toHaveBeenCalled()
+      expect(StorageManager.save).toHaveBeenCalledWith('__leanplum_message_occurrences', JSON.stringify({
         session: {},
         triggers: { '123': [ now ] },
         occurrences: {},
@@ -960,7 +958,7 @@ describe(Messages, () => {
     it('loads message occurrences from localStorage', () => {
       const now = Date.now()
 
-      jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
+      jest.spyOn(StorageManager, 'get').mockImplementation(
         (key) => {
           if (key === '__leanplum_message_cache') {
             return JSON.stringify({
@@ -1000,8 +998,8 @@ describe(Messages, () => {
         },
       } })
 
-      jest.spyOn(LocalStorageManager, 'getFromLocalStorage').mockImplementation(
-        (key) => {
+      jest.spyOn(StorageManager, 'get').mockImplementation(
+        () => {
           return JSON.stringify({
             session: { '123': 1 },
             triggers: { '123': [ now ] },
@@ -1169,7 +1167,7 @@ describe(Messages, () => {
       Document.prototype.createElement = jest.fn(() => iframe)
 
       jest.spyOn(Network.prototype, 'ajax').mockImplementationOnce(
-        (method, type, data, success) => success('<body>##Vars##</body>')
+        (_, __, ___, success) => success('<body>##Vars##</body>')
       )
       const vars = { __name__: "HTML", Template: TEMPLATE_FILENAME }
       events.emit('messagesReceived', { "12345": {

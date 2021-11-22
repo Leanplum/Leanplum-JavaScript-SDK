@@ -16,7 +16,7 @@
 
 import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
-import LocalStorageManager from './LocalStorageManager'
+import StorageManager from './StorageManager'
 import { CreateRequestFunction } from './types/internal'
 import { ActionParameter, MessageTemplateOptions } from './types/public'
 import ValueTransforms from './ValueTransforms'
@@ -188,11 +188,11 @@ export default class VarCache {
   }
 
   private loadLocal<T>(key: string): T {
-    return LocalStorageManager.getFromLocalStorage(key)
+    return StorageManager.get(key)
   }
 
   private saveLocal<T>(key: string, value: T): void {
-    LocalStorageManager.saveToLocalStorage(key, value)
+    StorageManager.save(key, value)
   }
 }
 

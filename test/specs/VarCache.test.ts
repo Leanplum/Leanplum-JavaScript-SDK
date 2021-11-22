@@ -1,5 +1,5 @@
 import Constants from '../../src/Constants'
-import LocalStorageManager from '../../src/LocalStorageManager'
+import StorageManager from '../../src/StorageManager'
 import VarCache from '../../src/VarCache'
 import { ActionParameterType, MessageKind } from '../../src/types/public'
 
@@ -81,10 +81,10 @@ describe(VarCache, () => {
   })
 
   describe('loadDiffs', () => {
-    let spy: jest.Mocked<LocalStorageManager>
+    let spy: jest.Mocked<StorageManager>
 
     beforeEach(() => {
-      spy = jest.spyOn(LocalStorageManager, 'getFromLocalStorage')
+      spy = jest.spyOn(StorageManager, 'get')
     })
 
     afterEach(() => {
@@ -104,10 +104,10 @@ describe(VarCache, () => {
   })
 
   describe('saveDiffs', () => {
-    let spy: jest.Mocked<LocalStorageManager>
+    let spy: jest.Mocked<StorageManager>
 
     beforeEach(() => {
-      spy = jest.spyOn(LocalStorageManager, 'saveToLocalStorage')
+      spy = jest.spyOn(StorageManager, 'save')
     })
 
     afterEach(() => {

@@ -41,7 +41,7 @@ describe(LeanplumInbox, () => {
       inbox.onChanged(handler)
 
       createRequestSpy.mockImplementationOnce(
-        (method, args, options) => {
+        (_, __, options) => {
           options.response({
             response: [{
               success:true,
@@ -64,7 +64,7 @@ describe(LeanplumInbox, () => {
       inbox.onChanged(handler)
 
       createRequestSpy.mockImplementationOnce(
-        (method, args, options) => {
+        (_, __, options) => {
           options.response(null)
         }
       )
@@ -441,7 +441,7 @@ describe(LeanplumInbox, () => {
 
   function mockMessages(newsfeedMessages: any): void {
     createRequestSpy.mockImplementationOnce(
-      (method, args, options) => {
+      (_, __, options) => {
         options.response({
           response: [ { newsfeedMessages } ],
         })
