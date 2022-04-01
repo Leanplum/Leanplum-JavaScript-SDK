@@ -26,6 +26,7 @@ jobs:
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
+    environment: master
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -40,6 +41,7 @@ jobs:
   deploy:
     needs: publish-npm
     runs-on: ubuntu-latest
+    environment: master
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
