@@ -4,8 +4,10 @@
 name: Build & publish on NPM
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - master
+      - develop
 
 jobs:
   build:
@@ -29,5 +31,22 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org/
       - run: npx semantic-release
-        #env:
-          #NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+        env:
+          NPM_TOKEN: ${{secrets.npm_token}}
+          GH_TOKEN: ${{secrets.gh_token}}
+
+  deploy:
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: yarn e2e-build
+      - uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: dist/e2e
+        env:
+          GH_TOKEN: ${{secrets.gh_token}}
