@@ -265,7 +265,7 @@ Object.keys(testModes).forEach((mode) => {
         Leanplum.setUserAttributes('u1', userAttributes)
       })
 
-      it('setRequestBatching', (done) => {
+      xit('setRequestBatching', (done) => {
         Leanplum.setRequestBatching(true, 0.1)
         let count = 0
         interceptRequest((request) => {
