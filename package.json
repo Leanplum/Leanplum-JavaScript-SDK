@@ -13,6 +13,7 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@semantic-release/exec": "^6.0.3",
     "@types/bootstrap": "^4.5.0",
     "@types/jest": "^25.2.1",
     "@types/jquery": "^3.3.38",
@@ -70,9 +71,13 @@
   "release": {
     "repositoryUrl": "git+https://github.com/Leanplum/Leanplum-JavaScript-SDK.git",
     "tagFormat": "${version}",
-    "branches": [ 
+    "branches": [
       "master",
-      { "name": "develop", "channel": "beta", "prerelease": true }
+      {
+        "name": "develop",
+        "channel": "beta",
+        "prerelease": true
+      }
     ],
     "plugins": [
       "@semantic-release/commit-analyzer",
@@ -80,7 +85,9 @@
       "@semantic-release/npm",
       [
         "@semantic-release/exec",
-        { "prepareCmd": "./bump_version.sh ${lastRelease.version} ${nextRelease.version}" }
+        {
+          "prepareCmd": "./bump_version.sh ${lastRelease.version} ${nextRelease.version}"
+        }
       ]
     ]
   },
