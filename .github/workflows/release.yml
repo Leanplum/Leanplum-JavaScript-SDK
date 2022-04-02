@@ -23,6 +23,7 @@ jobs:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   deploy-rondo:
+    name: Deploy Rondo Web app
     needs: publish-npm
     runs-on: ubuntu-latest
     environment: master
