@@ -73,6 +73,15 @@
     "branches": [ 
       "master",
       { "name": "develop", "channel": "beta", "prerelease": true }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      [
+        "@semantic-release/exec",
+        { "prepareCmd": "./bump_version.sh ${lastRelease.version} ${nextRelease.version}" }
+      ]
     ]
   },
   "homepage": "https://github.com/Leanplum/Leanplum-JavaScript-SDK#readme"
