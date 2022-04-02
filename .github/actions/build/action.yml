@@ -8,9 +8,13 @@ runs:
         node-version: 'lts/*'
     - name: Install dependencies
       run: yarn install
+      shell: bash
     - name: Lint
       run: yarn lint
+      shell: bash
     - name: Test
       run: yarn test
+      shell: bash
     - name: Build Sample App
       run: yarn e2e-build
+      shell: bash
