@@ -35,7 +35,7 @@ export default {
     REGISTER_DEVICE: 'registerDevice',
   },
 
-  SDK_VERSION: '1.9.0',
+  SDK_VERSION: '1.9.1-develop.2',
 
   CLIENT: 'js',
 
