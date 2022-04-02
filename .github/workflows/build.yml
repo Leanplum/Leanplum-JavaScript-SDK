@@ -1,0 +1,16 @@
+name: Build
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+    - name: Install dependencies
+      run: yarn install
+    - name: Lint
+      run: yarn lint
+    - name: Test
+      run: yarn test
+    - name: Build Sample App
+      run: yarn e2e-build

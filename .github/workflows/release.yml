@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  publish-npm:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: master
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        uses: ./.github/actions/build
+      - name: Release
+        run: npx semantic-release
+        env:
+          NPM_TOKEN: ${{secrets.npm_token}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  deploy-rondo:
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    environment: master
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        uses: ./.github/actions/build
+      - name: Publish e2e page (Rondo Web)
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: dist/e2e
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
