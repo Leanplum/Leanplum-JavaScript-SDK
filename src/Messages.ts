@@ -525,7 +525,7 @@ export default class Messages {
       return false
     }
 
-    const ignoreCaseEquals = (a, b): boolean =>
+    const ignoreCaseEquals = (a: number | string, b = ''): boolean =>
       a.toString().localeCompare(b.toString(), undefined, { sensitivity: 'accent' }) === 0
 
     const matchesTriggers = (contextNoun: string, params, trigger): boolean => {
