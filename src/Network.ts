@@ -71,7 +71,7 @@ export default class Network {
         handled = true
 
         let response
-        let ranCallback = false
+        let parseError = false
         if (plainText) {
           response = xhr.responseText
         } else {
@@ -83,11 +83,11 @@ export default class Network {
                 error(null, xhr)
               }
             }, 0)
-            ranCallback = true
+            parseError = true
           }
         }
 
-        if (!ranCallback) {
+        if (!parseError) {
           if (xhr.status >= 200 && xhr.status < 300) {
             setTimeout(() => {
               if (success) {
@@ -133,7 +133,7 @@ export default class Network {
     const xdr = new XDomainRequest()
     xdr.onload = () => {
       let response
-      let ranCallback = false
+      let parseError = false
       if (plainText) {
         response = xdr.responseText
       } else {
@@ -145,10 +145,10 @@ export default class Network {
               error(null, xdr)
             }
           }, 0)
-          ranCallback = true
+          parseError = true
         }
       }
-      if (!ranCallback) {
+      if (!parseError) {
         setTimeout(() => {
           if (success) {
             success(response, xdr)
