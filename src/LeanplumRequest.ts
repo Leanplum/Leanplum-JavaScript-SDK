@@ -19,6 +19,7 @@ import ArgsBuilder from './ArgsBuilder'
 import Constants from './Constants'
 import StorageManager from './StorageManager'
 import Network from './Network'
+import EventEmitter from './EventEmitter'
 
 export default class LeanplumRequest {
   private cooldownTimeout = null
@@ -34,6 +35,7 @@ export default class LeanplumRequest {
   public versionName: string
 
   constructor(
+    private events: EventEmitter,
     private network = new Network()
   ) { }
 
@@ -90,9 +92,8 @@ export default class LeanplumRequest {
     }
 
     if (params.body()) {
-      this.network.ajax(
-        'POST',
-        `${this.apiPath}?${argsBuilder.build()}`,
+      this.sendRequest(
+        `?${argsBuilder.build()}`,
         params.body(),
         success,
         error,
@@ -115,9 +116,8 @@ export default class LeanplumRequest {
             .add(Constants.PARAMS.ACTION, Constants.METHODS.MULTI)
             .add(Constants.PARAMS.TIME, (new Date().getTime() / 1000).toString().toString())
             .build()
-        this.network.ajax(
-          'POST',
-          `${this.apiPath}?${multiRequestArgs}`,
+        this.sendRequest(
+          `?${multiRequestArgs}`,
           requestData,
           success,
           error,
@@ -179,6 +179,12 @@ export default class LeanplumRequest {
     return (count > 0) ? response?.response?.[count - 1] : null
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getFirstResponse(response): any {
+    const count = response?.response?.length ?? 0
+    return (count > 0) ? response?.response?.[0] : null
+  }
+
   public isResponseSuccess(response): boolean {
     return Boolean(response?.success)
   }
@@ -189,6 +195,28 @@ export default class LeanplumRequest {
     this.saveLocal(itemKey, JSON.stringify(args))
     count++
     this.saveLocal(Constants.DEFAULT_KEYS.COUNT, count)
+  }
+
+  private sendRequest(query: string, data: string, success: Function, error: Function, queued: boolean): void {
+    this.network.ajax(
+      'POST',
+      `${this.apiPath}${query}`,
+      data,
+      (response) => {
+        const methodResponse = this.getFirstResponse(response)
+        if (!methodResponse.success && methodResponse.apiHost) {
+          const { apiHost, apiPath, devServerHost } = methodResponse
+          this.apiPath = `https://${apiHost}/${apiPath}`
+          this.sendRequest(query, data, success, error, queued)
+
+          this.events.emit('updateDevServerHost', devServerHost)
+        } else {
+          success(response)
+        }
+      },
+      error,
+      queued
+    )
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

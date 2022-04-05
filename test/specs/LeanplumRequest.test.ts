@@ -5,16 +5,20 @@ import StorageManager from '../../src/StorageManager'
 import Constants from '../../src/Constants'
 import Network from '../../src/Network'
 import ArgsBuilder from  '../../src/ArgsBuilder'
+import EventEmitter from  '../../src/EventEmitter'
 
 describe(LeanplumRequest, () => {
   let request: LeanplumRequest
   let lsGetSpy: jest.SpyInstance
   let network: Network
+  let events: EventEmitter
   const APP_ID = 'app_123'
   const SECRET = 'prod_234'
+  const args = (id: number) => new ArgsBuilder().add('id', id)
 
   function requestInstance(network: Network) {
-    request = new LeanplumRequest(network)
+    events = new EventEmitter()
+    request = new LeanplumRequest(events, network)
     request.appId = APP_ID
     request.clientKey = SECRET
   }
@@ -90,8 +94,6 @@ describe(LeanplumRequest, () => {
       request.batchCooldown = 4
     })
 
-    const args = (id: number) => new ArgsBuilder().add('id', id)
-
     it('batches requests when batchCooldown is set', () => {
       request.request('track', null, { queued: true });
       expect(network.ajax).toHaveBeenCalledTimes(1)
@@ -137,7 +139,7 @@ describe(LeanplumRequest, () => {
         'POST',
         expect.stringContaining('api'),
         expect.stringMatching(/"id":2.*"id":3/),
-        undefined,
+        expect.anything(),
         undefined,
         expect.anything()
       )
@@ -163,4 +165,123 @@ describe(LeanplumRequest, () => {
       expect(error).toHaveBeenCalledTimes(1)
     })
   })
+
+  describe('ad-hoc api configuration', () => {
+    beforeEach(() => {
+      request.batchEnabled = true
+      request.batchCooldown = 0
+    })
+
+    const mockResponses = (network: Network, responses: Array<any>) => {
+      responses.map(response =>
+        (network.ajax as jest.Mock).mockImplementationOnce(
+          (_method, _url, _data, success) => success(response))
+      )
+    }
+
+    it('retries request if it returns new configuration', () => {
+      mockResponses(network, [
+        {
+          "response": [
+            {
+              "success": false,
+              "apiHost": "api2.leanplum.com",
+              "apiPath": "new-api",
+              "devServerHost": "dev2.leanplum.com",
+              "error": {
+                "message": "..."
+              }
+            }
+          ]
+        },
+        {
+          "response": [
+            {
+              "success": true
+            }
+          ]
+        }
+      ])
+      const success = jest.fn();
+      const error = jest.fn();
+
+      request.request('track', args(1), { success, error, sendNow: true })
+
+      expect(network.ajax).toHaveBeenCalledTimes(2)
+      const calls = (network.ajax as jest.Mock).mock.calls;
+      expect(calls[0][1]).toMatch('https://api.leanplum.com/api')
+      expect(calls[1][1]).toMatch('https://api2.leanplum.com/new-api')
+      expect(success).toHaveBeenCalledTimes(1)
+      expect(error).toHaveBeenCalledTimes(0)
+    })
+
+    it('retries multiple requests', () => {
+      mockResponses(network, [
+        {
+          "response": [
+            {
+              "success": false,
+              "apiHost": "api2.leanplum.com",
+              "apiPath": "new-api",
+              "devServerHost": "dev2.leanplum.com",
+              "error": {
+                "message": "..."
+              }
+            }
+          ]
+        },
+        {
+          "response": [
+            {
+              "success": true
+            }
+          ]
+        }
+      ])
+      const success = jest.fn();
+      const error = jest.fn();
+
+      request.request('track', args(1), { success, error, queued: true })
+      request.request('track', args(2), { success, error, queued: true, sendNow: true })
+
+      expect(network.ajax).toHaveBeenCalledTimes(2)
+      const calls = (network.ajax as jest.Mock).mock.calls;
+      expect(calls[0][1]).toMatch(/^https:\/\/api.leanplum.com\/api\?/)
+      expect(calls[1][1]).toMatch(/^https:\/\/api2.leanplum.com\/new-api\?/)
+      expect(calls[0][2]).toEqual(calls[1][2]);
+      expect(success).toHaveBeenCalledTimes(1)
+      expect(error).toHaveBeenCalledTimes(0)
+    })
+
+    it('notifies devserver to reestablish connection', () => {
+      mockResponses(network, [
+        {
+          "response": [
+            {
+              "success": false,
+              "apiHost": "api2.leanplum.com",
+              "apiPath": "new-api",
+              "devServerHost": "dev2.leanplum.com",
+              "error": {
+                "message": "..."
+              }
+            }
+          ]
+        }
+      ])
+
+      const update = jest.fn()
+
+      events.on('updateDevServerHost', update)
+
+      request.request('track', args(1), { sendNow: true })
+
+      expect(update).toHaveBeenCalledTimes(1)
+      expect(update).toHaveBeenCalledWith('dev2.leanplum.com')
+    })
+
+    it('persists api path', () => {
+      // TODO: reinit request
+    })
+  });
 })
