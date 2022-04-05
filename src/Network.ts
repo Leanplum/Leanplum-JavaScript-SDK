@@ -179,7 +179,7 @@ export default class Network {
 
   /**
    * Adds the request to the request queue.
-   * @param {Arguments} requestArguments The request arguments from the initial method call.
+   * @param requestArguments The request arguments from the initial method call.
    * @private
    */
   private enqueueRequest(requestArguments): void {
