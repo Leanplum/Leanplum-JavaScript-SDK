@@ -353,6 +353,10 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(0)
 
+      events.emit('track', { eventName: 'Purchase', params: { category: undefined } })
+
+      expect(showMessage).toHaveBeenCalledTimes(0);
+
       events.emit('track', { eventName: 'Purchase', params: { category: 'shoes' } })
 
       expect(showMessage).toHaveBeenCalledTimes(1)

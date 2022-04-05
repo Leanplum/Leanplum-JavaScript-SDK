@@ -225,7 +225,7 @@ function renderAppInbox(): void {
     inbox.allMessages().map(message => `
       <button type="button" class="list-group-item list-group-item-action" data-id="${message.id()}">
         <span class="unread-indicator bg-primary" ${message.isRead() ? 'hidden' : ''}></span>
-        <img width=64 class="rounded float-left mr-3" src="${message.imageUrl()}" />
+        ${message.imageUrl() ? '<img width=64 class="rounded float-left mr-3" src="' + message.imageUrl() + '" />' : ''}
         <div class="d-flex justify-content-between">
           <h5 class="mb-1">${message.title()}</h5>
           <small title="${new Date(message.timestamp()).toLocaleDateString()}">

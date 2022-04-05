@@ -13,6 +13,7 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@semantic-release/exec": "^6.0.3",
     "@types/bootstrap": "^4.5.0",
     "@types/jest": "^25.2.1",
     "@types/jquery": "^3.3.38",
@@ -45,7 +46,7 @@
   },
   "name": "leanplum-sdk",
   "description": "This is the JavaScript SDK for Leanplum, allowing developers to access and integrate the functionality of Leanplum with applications and devices through JavaScript and HTML5. Leanplum is an application development platform that provides mobile A/B testing, messaging functionality, personalization, and more features for applications. ## Installation Add leanplum.js to your project: ```javascript <script type=\"text/javascript\" src=\"leanplum.js\"></script> ``` ## Usage Initialize Leanplum.",
-  "version": "1.9.0",
+  "version": "1.9.1-develop.2",
   "main": "dist/leanplum.min.js",
   "types": "dist/leanplum.d.ts",
   "directories": {
@@ -70,9 +71,24 @@
   "release": {
     "repositoryUrl": "git+https://github.com/Leanplum/Leanplum-JavaScript-SDK.git",
     "tagFormat": "${version}",
-    "branches": [ 
+    "branches": [
       "master",
-      { "name": "develop", "channel": "beta", "prerelease": true }
+      {
+        "name": "develop",
+        "channel": "beta",
+        "prerelease": true
+      }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "./bump_version.sh ${lastRelease.version} ${nextRelease.version}"
+        }
+      ]
     ]
   },
   "homepage": "https://github.com/Leanplum/Leanplum-JavaScript-SDK#readme"

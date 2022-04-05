@@ -1,21 +1,16 @@
 #!/usr/bin/env bash
 #
-# LPM | Author: Ben Marten
-# Copyright (c) 2020 Leanplum Inc. All rights reserved.
+# Copyright (c) 2022 Leanplum Inc. All rights reserved.
 # Bumps the version in the constants file to a desired version.
 #
 
-#######################################
 # Replaces a string in a file.
-# Globals:
-#   None
-# Arguments:
-#   None
-# Returns:
-#   None
-#######################################
 replace() {
-  sed -i '' -e "s|$2|$3|g" "$1"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' -e "s|$2|$3|g" "$1"
+  else
+    sed -i -e "s|$2|$3|g" "$1"
+  fi
   cd "$(dirname "$1")" || echo "Change to directory containing the file failed."
   if ! git status --porcelain 2>/dev/null | grep "$(basename "$1")"; then
     echo "${RED}Error patching file: $1${NORMAL}" && exit 1
