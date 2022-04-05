@@ -218,7 +218,7 @@ export default class LeanplumRequest {
           this.saveLocal(Constants.DEFAULT_KEYS.HOST_CONFIG, JSON.stringify({
             apiHost,
             apiPath,
-            devServerHost
+            devServerHost,
           }))
           this.apiPath = `https://${apiHost}/${apiPath}`
           this.sendRequest(query, data, success, error, queued)
