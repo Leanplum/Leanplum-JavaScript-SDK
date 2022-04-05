@@ -31,6 +31,7 @@ describe(LeanplumRequest, () => {
   })
 
   afterEach(() => {
+    localStorage.clear()
     jest.useRealTimers()
   })
 
@@ -281,7 +282,37 @@ describe(LeanplumRequest, () => {
     })
 
     it('persists api path', () => {
-      // TODO: reinit request
+      mockResponses(network, [
+        {
+          "response": [
+            {
+              "success": false,
+              "apiHost": "api2.leanplum.com",
+              "apiPath": "new-api",
+              "devServerHost": "dev2.leanplum.com",
+              "error": {
+                "message": "..."
+              }
+            }
+          ]
+        },
+        {
+          "response": [
+            {
+              "success": true
+            }
+          ]
+        }
+      ])
+
+      request.request('track', args(1), { sendNow: true })
+
+      requestInstance(network)
+
+      request.request('track', args(2), { sendNow: true })
+
+      const calls = (network.ajax as jest.Mock).mock.calls;
+      expect(calls[2][1]).toMatch('https://api2.leanplum.com/new-api')
     })
   });
 })

@@ -21,6 +21,12 @@ import StorageManager from './StorageManager'
 import Network from './Network'
 import EventEmitter from './EventEmitter'
 
+interface HostConfig {
+  apiHost: string;
+  apiPath: string;
+  devServerHost: string;
+}
+
 export default class LeanplumRequest {
   private cooldownTimeout = null
   private lastRequestTime = undefined
@@ -37,7 +43,9 @@ export default class LeanplumRequest {
   constructor(
     private events: EventEmitter,
     private network = new Network()
-  ) { }
+  ) {
+    this.loadHostConfig()
+  }
 
   public get userId(): string | undefined {
     return this.userIdValue ?? this.loadLocal<string>(Constants.DEFAULT_KEYS.USER_ID) ?? this.deviceId
@@ -206,11 +214,17 @@ export default class LeanplumRequest {
         const methodResponse = this.getFirstResponse(response)
         if (!methodResponse.success && methodResponse.apiHost) {
           const { apiHost, apiPath, devServerHost } = methodResponse
+
+          this.saveLocal(Constants.DEFAULT_KEYS.HOST_CONFIG, JSON.stringify({
+            apiHost,
+            apiPath,
+            devServerHost
+          }))
           this.apiPath = `https://${apiHost}/${apiPath}`
           this.sendRequest(query, data, success, error, queued)
 
           this.events.emit('updateDevServerHost', devServerHost)
-        } else {
+        } else if (success) {
           success(response)
         }
       },
@@ -239,6 +253,15 @@ export default class LeanplumRequest {
     }
 
     return requestData
+  }
+
+  private loadHostConfig(): void {
+    const hostConfig = JSON.parse(this.loadLocal<string>(Constants.DEFAULT_KEYS.HOST_CONFIG) || 'null')
+    if (hostConfig) {
+      const { apiHost, apiPath, devServerHost } = hostConfig
+      this.apiPath = `https://${apiHost}/${apiPath}`
+      this.events.emit('updateDevServerHost', devServerHost)
+    }
   }
 
   private loadLocal<T>(key: string): T {
