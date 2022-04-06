@@ -18,7 +18,7 @@
 
 import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
-import { APP_ID, KEY_DEV } from '../data/constants'
+import { APP_ID, KEY_DEV, KEY_PROD } from '../data/constants'
 import { windowMock } from '../mocks/external'
 import { lpRequestMock, lpSocketMock, mockNextResponse, pushManagerMock, varCacheMock } from '../mocks/internal'
 
@@ -924,6 +924,7 @@ describe(LeanplumInternal, () => {
 
     describe('devserver host updates', () => {
       it('reconnects to new host on update', () => {
+        lp.setAppIdForDevelopmentMode(APP_ID, KEY_DEV)
         jest.spyOn(lp, 'setSocketHost');
 
         (lp as any)._events.emit('updateDevServerHost', 'dev2.leanplum.com')
@@ -931,6 +932,18 @@ describe(LeanplumInternal, () => {
         expect(lp.setSocketHost).toHaveBeenCalledTimes(1)
         expect(lp.setSocketHost).toHaveBeenCalledWith('dev2.leanplum.com')
         expect(lpSocketMock.connect).toHaveBeenCalledTimes(1)
+      })
+
+      it('does not connect to dev server in prod mode', () => {
+        lp.setAppIdForProductionMode(APP_ID, KEY_PROD)
+
+        jest.spyOn(lp, 'setSocketHost');
+
+        (lp as any)._events.emit('updateDevServerHost', 'dev2.leanplum.com')
+
+        expect(lp.setSocketHost).toHaveBeenCalledTimes(1)
+        expect(lp.setSocketHost).toHaveBeenCalledWith('dev2.leanplum.com')
+        expect(lpSocketMock.connect).toHaveBeenCalledTimes(0)
       })
     })
   })
