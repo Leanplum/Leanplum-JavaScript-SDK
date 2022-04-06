@@ -88,12 +88,8 @@ export default class LeanplumInternal {
       }
     })
     this._events.on('registerForPush', () => this.registerForWebPush())
-    this._events.on('updateDevServerHost', (host: string) => {
-      this.setSocketHost(host)
-      if (this._internalState.devMode) {
-        this.connectSocket()
-      }
-    })
+    this._events.on('updateDevServerHost',
+      (host: string) => this.setSocketHost(host))
   }
 
   setApiPath(apiPath: string): void {
