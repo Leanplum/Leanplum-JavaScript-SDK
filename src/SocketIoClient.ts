@@ -41,12 +41,12 @@ export default class SocketIoClient {
 
   /**
    * Connects to the given socketHost.
-   * @param  {string} socketHost The host to connect to.
+   * @param socketHost The host to connect to.
    */
-  public connect(socketHost): void {
+  public connect(socketHost: string): void {
     this.connecting = true
     this.network.ajax('POST', `https://${socketHost}/socket.io/1`, '',
-        (line) => {
+        (line: string) => {
           const parts = line.split(':')
           const session = parts[0]
           const heartbeat = parseInt(parts[1]) / 2 * 1000
@@ -99,12 +99,18 @@ export default class SocketIoClient {
     )
   }
 
+  public disconnect(): void {
+    this.socket.close()
+    this.connected = false
+    this.connecting = false
+  }
+
   /**
    * Sends given event with arguments to the server.
-   * @param  {string} name Name of the event.
-   * @param  {*} args Arguments to send.
+   * @param name Name of the event.
+   * @param args Arguments to send.
    */
-  public send(name, args): void {
+  public send(name: string, args): void {
     if (!this.connected) {
       console.log('Leanplum: Socket is not connected.')
       return
@@ -118,9 +124,9 @@ export default class SocketIoClient {
 
   /**
    * Sets the network timeout.
-   * @param {number} seconds The timeout in seconds.
+   * @param The timeout in seconds.
    */
-  public setNetworkTimeout(seconds): void {
+  public setNetworkTimeout(seconds: number): void {
     this.network.setNetworkTimeout(seconds)
   }
 }

@@ -11,6 +11,7 @@ export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
 
 export const lpSocketMock = {
   connect: jest.fn(),
+  setSocketHost: jest.fn(),
 }
 
 export const pushManagerMock: Partial<jest.Mocked<PushManager>> = {

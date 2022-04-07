@@ -51,7 +51,7 @@ export default class LeanplumInternal {
     this.createRequest.bind(this),
     this.onInboxAction.bind(this)
   )
-  private _lpRequest: LeanplumRequest = new LeanplumRequest()
+  private _lpRequest: LeanplumRequest = new LeanplumRequest(this._events)
   private _varCache: VarCache = new VarCache(this.createRequest.bind(this))
   private _lpSocket: LeanplumSocket = new LeanplumSocket(
     this._varCache,
@@ -88,6 +88,8 @@ export default class LeanplumInternal {
       }
     })
     this._events.on('registerForPush', () => this.registerForWebPush())
+    this._events.on('updateDevServerHost',
+      (host: string) => this.setSocketHost(host))
   }
 
   setApiPath(apiPath: string): void {

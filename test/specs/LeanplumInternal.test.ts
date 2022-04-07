@@ -43,7 +43,7 @@ describe(LeanplumInternal, () => {
     it('passes available message IDs to API', () => {
       const inbox = lp.inbox()
       lpRequestMock.request.mockImplementationOnce(
-        (method, args, options) => {
+        (_method, _args, options) => {
           options.response({
             success: true,
             response: [ { newsfeedMessages: {
@@ -919,6 +919,17 @@ describe(LeanplumInternal, () => {
         lp.clearUserContent()
 
         expect(varCacheMock.clearUserContent).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('devserver host updates', () => {
+      it('reconnects to new host on update', () => {
+        jest.spyOn(lp, 'setSocketHost');
+
+        (lp as any)._events.emit('updateDevServerHost', 'dev2.leanplum.com')
+
+        expect(lp.setSocketHost).toHaveBeenCalledTimes(1)
+        expect(lp.setSocketHost).toHaveBeenCalledWith('dev2.leanplum.com')
       })
     })
   })
