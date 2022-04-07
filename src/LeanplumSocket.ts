@@ -27,10 +27,16 @@ import EventEmitter from './EventEmitter'
 type RegisterMessage = { email: string }
 type DevServerMessage = RegisterMessage | Message
 
+type AuthInfo = {
+  appId: string;
+  deviceId: string;
+}
+
 export default class LeanplumSocket {
   private networkTimeoutSeconds = 10
   private socketClient: SocketIoClient | null = null
   private socketHost = 'dev.leanplum.com'
+  private auth: AuthInfo = null
 
   constructor(
     private cache: VarCache,
@@ -40,13 +46,13 @@ export default class LeanplumSocket {
     private events: EventEmitter,
   ) { }
 
-  public connect(
-    auth: { appId: string; deviceId: string }
-  ): void {
+  public connect(auth: AuthInfo): void {
     if (!WebSocket) {
       console.log('Your browser doesn\'t support WebSockets.')
       return
     }
+
+    this.auth = auth
 
     let authSent = false
     this.socketClient = new SocketIoClient()
@@ -64,7 +70,7 @@ export default class LeanplumSocket {
       }
     }
 
-    this.socketClient.onerror = (event) => {
+    this.socketClient.onerror = (event: string) => {
       console.log('Leanplum: Socket error', event)
     }
 
@@ -86,13 +92,18 @@ export default class LeanplumSocket {
 
   public setSocketHost(value: string): void {
     this.socketHost = value
+
+    if (this.socketClient.connected) {
+      this.socketClient.disconnect()
+      this.connect(this.auth)
+    }
   }
 
   /**
    * Sets the network timeout.
-   * @param {number} seconds The timeout in seconds.
+   * @param seconds The timeout in seconds.
    */
-  public setNetworkTimeout(seconds): void {
+  public setNetworkTimeout(seconds: number): void {
     this.networkTimeoutSeconds = seconds
     this.socketClient?.setNetworkTimeout(seconds)
   }
