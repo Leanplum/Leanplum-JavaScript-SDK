@@ -247,8 +247,8 @@ describe(LeanplumRequest, () => {
 
       expect(network.ajax).toHaveBeenCalledTimes(2)
       const calls = (network.ajax as jest.Mock).mock.calls;
-      expect(calls[0][1]).toMatch(/^https:\/\/api.leanplum.com\/api\?/)
-      expect(calls[1][1]).toMatch(/^https:\/\/api2.leanplum.com\/new-api\?/)
+      expect(calls[0][1]).toMatch(/^https:\/\/api\.leanplum\.com\/api\?/)
+      expect(calls[1][1]).toMatch(/^https:\/\/api2\.leanplum\.com\/new-api\?/)
       expect(calls[0][2]).toEqual(calls[1][2]);
       expect(success).toHaveBeenCalledTimes(1)
       expect(error).toHaveBeenCalledTimes(0)
