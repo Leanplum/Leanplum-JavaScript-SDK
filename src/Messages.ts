@@ -112,6 +112,14 @@ const verbToInterval = (verb: string): number => {
   }
 }
 
+const maybeJSON = (str: string): Object | undefined => {
+  try {
+    return JSON.parse(str)
+  } catch (e) {
+    return undefined
+  }
+}
+
 export default class Messages {
   private _messageCache: MessageHash = {}
   private occurrenceTracker = new OccurrenceTracker()
@@ -293,8 +301,8 @@ export default class Messages {
         context.track(
           params.event,
           parseFloat(params.value),
-          params.parameters,
-          params.info
+          params.info,
+          maybeJSON(params.parameters)
         )
         break
       case 'runAction':
