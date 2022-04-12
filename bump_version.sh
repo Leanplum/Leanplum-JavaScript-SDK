@@ -7,9 +7,9 @@
 # Replaces a string in a file.
 replace() {
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' -e "s|$2|$3|g" "$1"
+    sed -i '' -E "s|$2|$3|g" "$1"
   else
-    sed -i -e "s|$2|$3|g" "$1"
+    sed -i -r -e "s|$2|$3|g" "$1"
   fi
   cd "$(dirname "$1")" || echo "Change to directory containing the file failed."
   if ! git status --porcelain 2>/dev/null | grep "$(basename "$1")"; then
@@ -19,5 +19,5 @@ replace() {
   echo "Updated file: $1"
 }
 
-replace package.json "version\": \"$1\"" "version\": \"$2\""
-replace src/Constants.ts "SDK_VERSION: '$1'" "SDK_VERSION: '$2'"
+replace package.json "version\": \"[a-z0-9\.\-]+\"" "version\": \"$1\""
+replace src/Constants.ts "SDK_VERSION: '[a-z0-9\.\-]+'" "SDK_VERSION: '$1'"

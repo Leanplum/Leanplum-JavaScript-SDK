@@ -45,7 +45,7 @@
     "webpack-cli": "^3.3.11"
   },
   "name": "leanplum-sdk",
-  "description": "This is the JavaScript SDK for Leanplum, allowing developers to access and integrate the functionality of Leanplum with applications and devices through JavaScript and HTML5. Leanplum is an application development platform that provides mobile A/B testing, messaging functionality, personalization, and more features for applications. ## Installation Add leanplum.js to your project: ```javascript <script type=\"text/javascript\" src=\"leanplum.js\"></script> ``` ## Usage Initialize Leanplum.",
+  "description": "The JavaScript SDK for Leanplum allows developers to integrate the Leanplum platform with applications that use JavaScript and HTML5. Leanplum is an customer engagement platform that provides mobile A/B testing, messaging, and personalization features for websites and web applications.",
   "version": "1.9.1-develop.2",
   "main": "dist/leanplum.min.js",
   "types": "dist/leanplum.d.ts",
@@ -86,7 +86,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "./bump_version.sh ${lastRelease.version} ${nextRelease.version}"
+          "prepareCmd": "./bump_version.sh ${nextRelease.version}"
         }
       ]
     ]
