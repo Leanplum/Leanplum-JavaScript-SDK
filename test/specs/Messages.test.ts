@@ -1214,6 +1214,18 @@ describe(Messages, () => {
       expect(track).toHaveBeenCalledWith("Submit", NaN, undefined, undefined)
     })
 
+    it("calls context.track to track events with parameters", () => {
+      const renderedMessage = createMockMessageRender()
+      const jsonParams = {"input":5}
+      const parameters = encodeURIComponent(JSON.stringify(jsonParams))
+
+      // satisfaction survey
+      messages.processMessageEvent("123", `http://leanplum/track?event=Submit&value=0&parameters=${parameters}`)
+
+      const track = renderedMessage.metadata.context.track
+      expect(track).toHaveBeenCalledWith("Submit", 0, undefined, jsonParams)
+    })
+
     it("tracks impressions on loadFinished events", () => {
       const renderedMessage = createMockMessageRender()
 
