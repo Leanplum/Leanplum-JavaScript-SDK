@@ -340,6 +340,7 @@ export default class Messages {
     const vars = JSON.stringify(options.message)
     const iframe = document.createElement('iframe') as MessageFrame
     iframe.setAttribute('id', `lp-message-${messageId}`)
+    iframe.setAttribute('title', 'Popup')
     iframe.style.cssText = [
       'border-width: 0',
       'position: fixed',
