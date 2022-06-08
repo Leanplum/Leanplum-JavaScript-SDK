@@ -294,7 +294,7 @@ export default class Messages {
         } else {
           iframe.style.top = '0'
         }
-        iframe.contentWindow.focus();
+        iframe.contentWindow.focus()
 
         context.track()
         break
