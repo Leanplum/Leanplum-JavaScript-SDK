@@ -1189,11 +1189,12 @@ describe(Messages, () => {
     })
 
     it("shows the message on loadFinished events", () => {
-      const renderedMessage = createMockMessageRender()
+      const renderedMessage = createMockMessageRender() as any
 
       messages.processMessageEvent("123", "http://leanplum/loadFinished")
 
       expect(renderedMessage.style.visibility).toEqual("visible")
+      expect(renderedMessage.contentWindow.focus).toHaveBeenCalledTimes(1)
     })
 
     it("removes the message on close events", () => {
@@ -1250,7 +1251,10 @@ describe(Messages, () => {
       expect(renderedMessage.style.top).toEqual("")
     })
 
-    type RenderedMessage = HTMLElement & { metadata: any }
+    type RenderedMessage = HTMLElement & {
+      metadata: any,
+      contentWindow: Window
+    }
 
     function createMockMessageRender(message: any = {}): RenderedMessage {
       const renderedMessage = document.createElement('a') as unknown as RenderedMessage
@@ -1266,6 +1270,7 @@ describe(Messages, () => {
           runTrackedActionNamed: jest.fn()
         }
       }
+      jest.spyOn(renderedMessage.contentWindow, 'focus').mockImplementation(() => { /* noop */ })
       jest.spyOn(document, 'getElementById').mockReturnValue(renderedMessage)
 
       return renderedMessage
