@@ -341,6 +341,7 @@ export default class Messages {
     const iframe = document.createElement('iframe') as MessageFrame
     iframe.setAttribute('id', `lp-message-${messageId}`)
     iframe.setAttribute('title', 'Popup')
+    iframe.setAttribute('aria-modal', 'true')
     iframe.style.cssText = [
       'border-width: 0',
       'position: fixed',
@@ -351,7 +352,7 @@ export default class Messages {
       'visibility: hidden',
       'z-index: 100000',
     ].join(';')
-    document.body.appendChild(iframe)
+    document.body.insertBefore(iframe, document.body.firstChild)
 
     // pass message info
     iframe.metadata = options
