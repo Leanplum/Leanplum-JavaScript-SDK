@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "yarn run clean && cross-env NODE_ENV=production webpack",
+    "build": "yarn run clean && cross-env NODE_ENV=production webpack && yarn run e2e-build",
     "clean": "rimraf dist",
     "lint": "yarn eslint 'src/**/*.{ts,tsx}'",
     "start": "cross-env NODE_ENV=development webpack --watch",
@@ -91,7 +91,12 @@
       ],
       "@semantic-release/npm",
       "@semantic-release/github",
-      "@qiwi/semantic-release-gh-pages-plugin"
+      [
+        "@qiwi/semantic-release-gh-pages-plugin",
+        {
+          "src": "dist/e2e"
+        }
+      ]
     ]
   },
   "homepage": "https://github.com/Leanplum/Leanplum-JavaScript-SDK#readme"
