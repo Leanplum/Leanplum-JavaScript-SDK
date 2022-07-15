@@ -21,10 +21,3 @@ jobs:
         env:
           NPM_TOKEN: ${{secrets.npm_token}}
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Publish e2e page (Rondo Web)
-        uses: JamesIves/github-pages-deploy-action@v4.2.5
-        with:
-          branch: gh-pages
-          folder: dist/e2e
-        env:
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
