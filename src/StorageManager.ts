@@ -35,10 +35,15 @@ export default class StorageManager {
       return alternateStorage[type][key]
     }
 
-    if (type === 'local') {
-      return localStorage[key]
-    } else {
-      return sessionStorage.getItem(key)
+    try {
+      if (type === 'local') {
+        return localStorage[key]
+      } else {
+        return sessionStorage.getItem(key)
+      }
+    } catch (e) {
+      storageEnabled[type] = false
+      return alternateStorage[type][key]
     }
   }
 
