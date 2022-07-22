@@ -14,3 +14,6 @@ jobs:
       - name: Build
         run: yarn run build
         shell: bash
+      - name: Test
+        run: yarn test
+        shell: bash

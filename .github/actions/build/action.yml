@@ -13,6 +13,3 @@ runs:
     - name: Lint
       run: yarn lint
       shell: bash
-    - name: Test
-      run: yarn test
-      shell: bash
