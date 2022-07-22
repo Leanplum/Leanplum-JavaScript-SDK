@@ -85,7 +85,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "./bump_version.sh ${nextRelease.version}"
+          "prepareCmd": "./bump_version.sh ${nextRelease.version} && yarn run build"
         }
       ],
       "@semantic-release/npm",

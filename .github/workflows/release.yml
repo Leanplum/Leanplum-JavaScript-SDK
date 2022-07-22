@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Build
+      - name: Lint & Test
         uses: ./.github/actions/build
       - name: Release
         run: npx semantic-release

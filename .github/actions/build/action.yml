@@ -16,6 +16,3 @@ runs:
     - name: Test
       run: yarn test
       shell: bash
-    - name: Build Sample App
-      run: yarn e2e-build
-      shell: bash
