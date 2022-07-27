@@ -40,6 +40,11 @@ type MessageFrame = HTMLIFrameElement & {
   metadata: RenderOptions;
   contentWindow: Window & { messageId: string };
 }
+type OccurrenceTrackerState = {
+  session: { [key: string]: number };
+  triggers: { [key: string]: Array<Timestamp> };
+  occurrences: { [key: string]: Array<Timestamp> };
+}
 
 class OccurrenceTracker {
   recordOccurrence(id: MessageId): void {
@@ -78,10 +83,13 @@ class OccurrenceTracker {
   load(): void {
     const cache = StorageManager.get(Constants.DEFAULT_KEYS.MESSAGE_OCCURRENCES)
     if (cache) {
-      const json = JSON.parse(cache)
-      this.session = json.session
-      this.triggers = json.triggers
-      this.occurrences = json.occurrences
+      const json = maybeJSON(cache) as OccurrenceTrackerState
+
+      if (json) {
+        this.session = json.session
+        this.triggers = json.triggers
+        this.occurrences = json.occurrences
+      }
     }
   }
 
@@ -139,8 +147,8 @@ export default class Messages {
     })
     events.on('resume', () => {
       const key = Constants.DEFAULT_KEYS.MESSAGE_CACHE
-      const cache = StorageManager.get(key)
-      this._messageCache = cache ? JSON.parse(cache) : this._messageCache
+      const cache = maybeJSON(StorageManager.get(key)) as MessageHash
+      this._messageCache = cache || this._messageCache
 
       this.occurrenceTracker.load()
 

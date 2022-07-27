@@ -1018,6 +1018,19 @@ describe(Messages, () => {
 
       expect(showMessage).toHaveBeenCalledTimes(0)
     })
+
+    it('recovers from impropr JSON serialization', () => {
+      const now = Date.now()
+
+      jest.spyOn(StorageManager, 'get')
+        .mockImplementation(() => 'undefined')
+
+      events.emit('resume')
+
+      events.emit('track', { eventName: 'Add to cart' })
+
+      expect(showMessage).toHaveBeenCalledTimes(0)
+    })
   })
 
   describe('message preview', () => {
