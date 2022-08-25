@@ -53,12 +53,12 @@ export default class PushManager {
    * Whether or not the browser is subscribed to web push notifications.
    * @return {Promise} True if subscribed, else false.
    */
-  public async isWebPushSubscribed(): Promise<boolean> {
+  public async isWebPushSubscribed(clientUrl = ''): Promise<boolean> {
     if (!this.isWebPushSupported()) {
       return false
     }
 
-    const registration = await this.getServiceWorkerRegistration()
+    const registration = await this.getServiceWorkerRegistration(clientUrl)
 
     if (!registration) {
       return false
@@ -139,8 +139,8 @@ export default class PushManager {
    * Unsubscribe the user(browser) from push.
    * @return {Promise} Resolves if unsubscribed, otherwise rejects.
    */
-  public async unsubscribeUser(): Promise<void> {
-    const subscribed = await this.isWebPushSubscribed()
+  public async unsubscribeUser(clientUrl = ''): Promise<void> {
+    const subscribed = await this.isWebPushSubscribed(clientUrl)
 
     if (subscribed) {
       try {
@@ -161,9 +161,9 @@ export default class PushManager {
    * Retrieves the service worker registration object from browser.
    * @return {object} Returns the registration or null.
    */
-  private async getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration> {
+  private async getServiceWorkerRegistration(clientUrl = ''): Promise<ServiceWorkerRegistration> {
     if (!this.serviceWorkerRegistration) {
-      this.serviceWorkerRegistration = await this.serviceWorker.getRegistration()
+      this.serviceWorkerRegistration = await this.serviceWorker.getRegistration(clientUrl)
     }
 
     return this.serviceWorkerRegistration

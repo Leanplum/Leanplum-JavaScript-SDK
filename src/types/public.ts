@@ -55,6 +55,7 @@ export type EventType = 'start' | 'resume' | 'track' | 'setUserAttribute' | 'adv
 export interface WebPushOptions {
   serviceWorkerUrl?: string;
   scope?: string;
+  clientUrl?: string;
 }
 
 export enum ActionParameterType {

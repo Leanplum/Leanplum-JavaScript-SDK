@@ -563,6 +563,23 @@ describe(LeanplumInternal, () => {
         expect(registerCall[0]).toEqual(serviceWorkerUrl)
         expect(registerCall[1]).toEqual({ scope })
       })
+
+      it('can set client url for push regsitration', async() => {
+        pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
+
+        const clientUrl = '/products'
+
+        lp.setWebPushOptions({ clientUrl })
+
+        await lp.registerForWebPush()
+        await lp.unregisterFromWebPush()
+
+        const isSubscribed = pushManagerMock.isWebPushSubscribed.mock.calls
+        expect(isSubscribed.every(call => call[0] === clientUrl)).toBe(true);
+
+        const unsubscribeUser = pushManagerMock.unsubscribeUser.mock.calls
+        expect(unsubscribeUser.every(call => call[0] === clientUrl)).toBe(true);
+      })
     })
 
     describe('unregisterFromWebPush', () => {

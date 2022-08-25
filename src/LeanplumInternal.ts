@@ -560,7 +560,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise} Resolves if true, rejects if false.
    */
   isWebPushSubscribed(): Promise<boolean> {
-    return this._pushManager.isWebPushSubscribed()
+    const clientUrl = this._webPushOptions?.clientUrl || ''
+    return this._pushManager.isWebPushSubscribed(clientUrl)
   }
 
   setWebPushOptions(options: WebPushOptions): void {
@@ -598,7 +599,8 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
    * @return {Promise}            Resolves on success, otherwise rejects.
    */
   unregisterFromWebPush(): Promise<void> {
-    return this._pushManager.unsubscribeUser()
+    const clientUrl = this._webPushOptions?.clientUrl || ''
+    return this._pushManager.unsubscribeUser(clientUrl)
   }
 
   /**
