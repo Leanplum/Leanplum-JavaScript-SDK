@@ -96,7 +96,20 @@ describe(BrowserDetector, () => {
 
     expect(detector.OS).toEqual('iOS')
     expect(detector.browser).toEqual('Firefox')
-    expect(detector.version).toEqual(103)
+    expect(detector.version).toEqual(103.1)
+
+  })
+
+  it('reports Chrome on iPad', () => {
+    const detector = createDetector({
+      userAgent: 'Mozilla/5.0 (iPad; CPU OS 15_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/104.0.5112.99 Mobile/15E148 Safari/604.1',
+      platform: 'iPad',
+      vendor: 'Apple Computer, Inc.'
+    })
+
+    expect(detector.OS).toEqual('iOS')
+    expect(detector.browser).toEqual('Chrome')
+    expect(detector.version).toEqual(104)
 
   })
 

@@ -192,6 +192,11 @@ export default class BrowserDetector {
         identity: 'Mac OS',
       },
       {
+        string: wnd.navigator.platform,
+        subString: 'iPad',
+        identity: 'iOS',
+      },
+      {
         string: wnd.navigator.userAgent,
         subString: 'iPhone',
         identity: 'iOS',
