@@ -105,6 +105,18 @@ export default class BrowserDetector {
         versionSearch: 'OmniWeb/',
       },
       {
+        string: wnd.navigator.userAgent,
+        subString: 'CriOS',
+        identity: 'Chrome',
+        versionSearch: 'CriOS',
+      },
+      {
+        string: wnd.navigator.userAgent,
+        subString: 'FxiOS',
+        identity: 'Firefox',
+        versionSearch: 'FxiOS',
+      },
+      {
         string: wnd.navigator.vendor,
         subString: 'Apple',
         identity: 'Safari',

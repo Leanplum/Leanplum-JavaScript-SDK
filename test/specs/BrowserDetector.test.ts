@@ -63,6 +63,43 @@ describe(BrowserDetector, () => {
     expect(detector.version).toEqual(74)
   })
 
+  it('reports Safari on iOS', () => {
+    const detector = createDetector({
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.1 Mobile/15E148 Safari/604.1',
+      platform: 'iPhone',
+      vendor: 'Apple Computer, Inc.'
+    })
+
+    expect(detector.OS).toEqual('iOS')
+    expect(detector.browser).toEqual('Safari')
+    expect(detector.version).toEqual(15.6)
+  })
+
+  it('reports Chrome on iOS', () => {
+    const detector = createDetector({
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/104.0.5112.99 Mobile/15E148 Safari/604.1',
+      platform: 'iPhone',
+      vendor: 'Apple Computer, Inc.'
+    })
+
+    expect(detector.OS).toEqual('iOS')
+    expect(detector.browser).toEqual('Chrome')
+    expect(detector.version).toEqual(104)
+  })
+
+  it('reports Firefox on iOS', () => {
+    const detector = createDetector({
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/103.1  Mobile/15E148 Safari/605.1.15',
+      platform: 'iPhone',
+      vendor: 'Apple Computer, Inc.'
+    })
+
+    expect(detector.OS).toEqual('iOS')
+    expect(detector.browser).toEqual('Firefox')
+    expect(detector.version).toEqual(103)
+
+  })
+
   interface DetectorProps {
     userAgent?: string,
     platform?: string,
