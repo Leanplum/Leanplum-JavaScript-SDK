@@ -1,4 +1,7 @@
 var isProdKey = function (accessKey) { return /^prod_/.test(accessKey); };
+var d = Leanplum._lp._browserDetector;
+var browser = d.browser + " " + d.version + ", running on " + d.OS;
+$('#browserVersion').text(browser);
 $('[data-action=setup]')
     .submit(function (e) {
     e.preventDefault();
