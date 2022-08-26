@@ -3,6 +3,10 @@ import { RenderOptions } from '../../dist/leanplum'
 
 const isProdKey = (accessKey: string): boolean => /^prod_/.test(accessKey)
 
+const d = (Leanplum as any)._lp._browserDetector;
+const browser = `${d.browser} ${d.version}, running on ${d.OS}`;
+$('#browserVersion').text(browser);
+
 $('[data-action=setup]')
     .submit((e) => {
         e.preventDefault()
