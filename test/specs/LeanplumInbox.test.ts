@@ -437,6 +437,14 @@ describe(LeanplumInbox, () => {
 
       expect(inbox.allMessages().length).toEqual(1)
     })
+
+    it('does not expect messages in session', () => {
+      sessionStorage.setItem('__leanplum_inbox_messages', '')
+
+      inbox = new LeanplumInbox(createRequestSpy, onActionSpy)
+
+      expect(inbox.allMessages().length).toEqual(0)
+    })
   })
 
   function mockMessages(newsfeedMessages: any): void {

@@ -98,7 +98,11 @@ export default class LeanplumInbox implements Inbox {
       Constants.DEFAULT_KEYS.INBOX_MESSAGES,
       'session'
     )
-    this.messageMap = JSON.parse(state) || {}
+    try {
+      this.messageMap = JSON.parse(state) || {}
+    } catch (e) {
+      this.messageMap = {}
+    }
   }
 
   public count(): number {
