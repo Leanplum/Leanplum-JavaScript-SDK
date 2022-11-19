@@ -113,6 +113,7 @@ export default {
     SESSION: '__leanplum_session',
     MESSAGE_OCCURRENCES: '__leanplum_message_occurrences',
     MESSAGE_CACHE: '__leanplum_message_cache',
+    MIGRATION_STATE: '__leanplum_migration_state',
     PUSH_SUBSCRIPTION: '__leanplum_push_subscription',
   },
 
