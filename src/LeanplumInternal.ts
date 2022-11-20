@@ -284,6 +284,15 @@ export default class LeanplumInternal {
         this._migration.initCleverTap();
       } else if (state === MigrationState.CLEVERTAP) {
         this._migration.initCleverTap();
+
+        Object.values(Constants.DEFAULT_KEYS)
+          .filter(key => ![
+            Constants.DEFAULT_KEYS.USER_ID,
+            Constants.DEFAULT_KEYS.DEVICE_ID,
+            Constants.DEFAULT_KEYS.TOKEN
+          ].includes(key))
+          .forEach(key => StorageManager.remove(key))
+
         return;
       }
 

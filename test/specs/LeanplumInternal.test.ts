@@ -950,6 +950,26 @@ describe(LeanplumInternal, () => {
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(0)
     })
+
+    it('cleans up LP data in CT-only mode', () => {
+      const KEYS = Constants.DEFAULT_KEYS
+      const keys = Object.values(KEYS)
+
+      keys.forEach(key => localStorage[key] = 'aaa');
+
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.CLEVERTAP)
+      );
+
+      lp.start()
+
+      expect(localStorage[KEYS.COUNT]).toBeUndefined()
+      expect(localStorage[KEYS.MESSAGE_CACHE]).toBeUndefined()
+      expect(localStorage[KEYS.ACTION_DEFINITIONS]).toBeUndefined()
+      expect(localStorage[KEYS.USER_ID]).toBe('aaa')
+      expect(localStorage[KEYS.DEVICE_ID]).toBe('aaa')
+      expect(localStorage[KEYS.TOKEN]).toBe('aaa')
+    })
   })
 
   describe('Misc', () => {
