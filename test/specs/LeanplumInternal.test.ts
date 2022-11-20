@@ -16,16 +16,18 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { MigrationState } from '../../src/types/internal'
 import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { APP_ID, KEY_DEV } from '../data/constants'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, lpSocketMock, mockNextResponse, pushManagerMock, varCacheMock } from '../mocks/internal'
+import { lpRequestMock, lpSocketMock, mockNextResponse, pushManagerMock, varCacheMock, migrationMock } from '../mocks/internal'
 
 jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
 jest.mock('../../src/LeanplumSocket', () => jest.fn().mockImplementation(() => lpSocketMock))
 jest.mock('../../src/PushManager', () => jest.fn().mockImplementation(() => pushManagerMock))
 jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
+jest.mock('../../src/MigrationManager', () => jest.fn().mockImplementation(() => migrationMock))
 
 describe(LeanplumInternal, () => {
   let lp: LeanplumInternal
@@ -919,6 +921,34 @@ describe(LeanplumInternal, () => {
       })
 
       expect(lp.registerForWebPush).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('Migration state handling', () => {
+    it('initializes clevertap and calls start if migration state is lp+ct', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.DUPLICATE)
+      );
+
+      lp.start()
+
+      expect(migrationMock.initCleverTap).toHaveBeenCalledTimes(1)
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      const [method] = lpRequestMock.request.mock.calls[0]
+      expect(method).toBe('start')
+    })
+
+    it('initializes clevertap and does not call start if migration state is ct', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.CLEVERTAP)
+      );
+
+      lp.start()
+
+      expect(migrationMock.initCleverTap).toHaveBeenCalledTimes(1)
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(0)
     })
   })
 

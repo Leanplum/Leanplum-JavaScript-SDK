@@ -1,6 +1,8 @@
+import { MigrationState } from  '../../src/types/internal'
 import LeanplumRequest from '../../src/LeanplumRequest'
 import PushManager from '../../src/PushManager'
 import VarCache from '../../src/VarCache'
+import MigrationManager from '../../src/MigrationManager'
 
 export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
   getLastResponse: jest.fn().mockImplementation((data) => data.response[0]),
@@ -34,6 +36,13 @@ export const varCacheMock: Partial<jest.Mocked<VarCache>> = {
   addVariablesChangedHandler: jest.fn(),
   removeVariablesChangedHandler: jest.fn(),
   clearUserContent: jest.fn(),
+}
+
+export const migrationMock: Partial<jest.Mocked<MigrationManager>> = {
+  getState: jest.fn().mockImplementation(
+    (callback) => callback('lp')
+  ),
+  initCleverTap: jest.fn()
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

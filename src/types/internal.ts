@@ -36,3 +36,10 @@ export type MessageObject = {
     };
   };
 }
+export enum MigrationState {
+  UNKNOWN = 'unknown',
+  LEANPLUM = 'lp',
+  DUPLICATE = 'lp+ct',
+  CLEVERTAP = 'ct'
+}
+

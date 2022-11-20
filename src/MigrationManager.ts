@@ -1,13 +1,7 @@
-import { CreateRequestFunction } from './types/internal'
+import clevertap from 'clevertap-web-sdk'
+import { CreateRequestFunction, MigrationState } from './types/internal'
 import StorageManager from './StorageManager'
 import Constants from './Constants'
-
-export enum MigrationState {
-  UNKNOWN = 'unknown',
-  LEANPLUM = 'lp',
-  DUPLICATE = 'lp+ct',
-  CLEVERTAP = 'ct'
-}
 
 type MigrationStateResponse = {
   success: Boolean,
@@ -19,6 +13,9 @@ type ApiResponse<T> = {
   response: Array<T>
 }
 type MigrationStateApiResponse = ApiResponse<MigrationStateResponse>
+type MigrationStateLoadedCallback = (s: MigrationState) => any;
+
+const noop = () => {}
 
 const toMigrationState = (obj?: MigrationStateResponse): MigrationState => {
   switch (obj?.sdk) {
@@ -34,24 +31,42 @@ const toMigrationState = (obj?: MigrationStateResponse): MigrationState => {
 }
 
 export default class MigrationManager {
-  private state = {
-    state: MigrationState.UNKNOWN,
-    sha256: ''
-  }
+  private response: any = null
 
   constructor(private createRequest: CreateRequestFunction) {
-    const savedState = StorageManager.get(Constants.DEFAULT_KEYS.MIGRATION_STATE)
+    const savedResponse = StorageManager.get(Constants.DEFAULT_KEYS.MIGRATION_STATE)
 
-    if (savedState) {
-      this.state = JSON.parse(savedState)
+    if (savedResponse) {
+      this.response = JSON.parse(savedResponse)
     }
   }
 
-  public getState(): MigrationState {
-    return this.state.state
+  public getState(callback: MigrationStateLoadedCallback = noop) {
+    const response = this.response
+
+    if (response && response.sdk !== MigrationState.UNKNOWN) {
+      callback(response.sdk)
+      return;
+    }
+
+    this.getMigrationState(callback)
   }
 
-  fetchState() {
+  public verifyState(sha: string) {
+    if (this.response.sha256 !== sha) {
+      this.getMigrationState(noop)
+    }
+  }
+
+  public initCleverTap() {
+    const config = this.response?.ct;
+    if (!config) {
+      return
+    }
+    clevertap.init(config.accountId, config.regionCode)
+  }
+
+  private getMigrationState(callback: MigrationStateLoadedCallback) {
     this.createRequest('getMigrateState', null, {
       sendNow: true,
       response: (r: MigrationStateApiResponse) => {
@@ -59,15 +74,13 @@ export default class MigrationManager {
         const state = toMigrationState(response)
 
         if (state !== MigrationState.UNKNOWN) {
-          const sha256 = response?.sha256
+          StorageManager.save(Constants.DEFAULT_KEYS.MIGRATION_STATE, JSON.stringify(response))
 
-          StorageManager.save(Constants.DEFAULT_KEYS.MIGRATION_STATE, JSON.stringify({
-            state,
-            sha256
-          }))
+          this.response = response
         }
+
+        callback(state)
       }
     })
   }
-
 }

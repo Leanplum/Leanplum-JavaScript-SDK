@@ -15,7 +15,7 @@
  */
 
 import LeanplumInternal from '../../src/LeanplumInternal'
-import { startResponse } from '../data/responses'
+import { startResponse, migrationResponses } from '../data/responses'
 import { windowMock } from '../mocks/external'
 import { lpRequestMock, mockNextResponse, varCacheMock } from '../mocks/internal'
 
@@ -41,6 +41,7 @@ describe('Integration Tests', () => {
     }
 
     mockNextResponse(startResponse)
+    mockNextResponse(migrationResponses.LP)
 
     lp.setVariables(variables)
     lp.addVariablesChangedHandler(() => {
