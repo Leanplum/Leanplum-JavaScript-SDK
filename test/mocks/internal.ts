@@ -42,7 +42,8 @@ export const migrationMock: Partial<jest.Mocked<MigrationManager>> = {
   getState: jest.fn().mockImplementation(
     (callback) => callback('lp')
   ),
-  initCleverTap: jest.fn()
+  initCleverTap: jest.fn(),
+  duplicateRequest: jest.fn().mockReturnValue(false)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

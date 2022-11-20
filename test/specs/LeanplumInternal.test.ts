@@ -939,7 +939,7 @@ describe(LeanplumInternal, () => {
       expect(method).toBe('start')
     })
 
-    it('initializes clevertap and does not call start if migration state is ct', () => {
+    it('initializes clevertap if migration state is ct', () => {
       migrationMock.getState.mockImplementationOnce(
         (callback) => callback(MigrationState.CLEVERTAP)
       );
@@ -947,8 +947,6 @@ describe(LeanplumInternal, () => {
       lp.start()
 
       expect(migrationMock.initCleverTap).toHaveBeenCalledTimes(1)
-
-      expect(lpRequestMock.request).toHaveBeenCalledTimes(0)
     })
 
     it('cleans up LP data in CT-only mode', () => {
@@ -969,6 +967,17 @@ describe(LeanplumInternal, () => {
       expect(localStorage[KEYS.USER_ID]).toBe('aaa')
       expect(localStorage[KEYS.DEVICE_ID]).toBe('aaa')
       expect(localStorage[KEYS.TOKEN]).toBe('aaa')
+    })
+
+    it('suppresses requests in ct-only mode', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.CLEVERTAP)
+      );
+      migrationMock.duplicateRequest.mockReturnValueOnce(true)
+
+      lp.start()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(0)
     })
   })
 

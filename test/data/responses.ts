@@ -74,5 +74,31 @@ export const migrationResponses = {
         }
       }
     ]
+  },
+  // TODO: verify
+  CLEVERTAP: {
+    "response": [
+      {
+        "ct": {
+          "accountId": "675-R59-R56Z",
+          "regionCode": "eu1",
+          "attributeMappings": {
+            "name1": "ct-name1"
+          },
+          "token": "nope-nope"
+        },
+        "sha256": "7d81dc2ba80cbf55b1977a51d12c69d8696cf549926b7a71e95f0321879faf1a",
+        "success": true,
+        "profileUploadStartedTs": "2022-11-20T14:00:27.335Z",
+        "eventsUploadStartedTs": "2022-11-20T14:00:27.335Z",
+        "ctSdkTrafficStoppedTs": "2022-11-20T14:00:27.335Z",
+        "state": "SDK_TRAFFIC_STOPPED",
+        "sdk": "ct",
+        "api": {
+          "profile": "ct",
+          "events": "ct"
+        }
+      }
+    ]
   }
 }

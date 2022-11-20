@@ -2,6 +2,7 @@ import clevertap from 'clevertap-web-sdk'
 import { CreateRequestFunction, MigrationState } from './types/internal'
 import StorageManager from './StorageManager'
 import Constants from './Constants'
+import ArgsBuilder from './ArgsBuilder'
 
 type MigrationStateResponse = {
   success: Boolean,
@@ -66,6 +67,16 @@ export default class MigrationManager {
     clevertap.init(config.accountId, config.regionCode)
   }
 
+  public duplicateRequest(action: string, args: ArgsBuilder, options: any) {
+    const state = toMigrationState(this.response)
+
+    if (state === MigrationState.DUPLICATE) {
+      args.add(Constants.PARAMS.CT, true)
+    }
+
+    return state === MigrationState.CLEVERTAP
+  }
+
   private getMigrationState(callback: MigrationStateLoadedCallback) {
     this.createRequest('getMigrateState', null, {
       sendNow: true,
@@ -73,7 +84,7 @@ export default class MigrationManager {
         const response = r?.response?.[0]
         const state = toMigrationState(response)
 
-        if (state !== MigrationState.UNKNOWN) {
+        if (state && state !== MigrationState.UNKNOWN) {
           StorageManager.save(Constants.DEFAULT_KEYS.MIGRATION_STATE, JSON.stringify(response))
 
           this.response = response

@@ -292,8 +292,6 @@ export default class LeanplumInternal {
             Constants.DEFAULT_KEYS.TOKEN
           ].includes(key))
           .forEach(key => StorageManager.remove(key))
-
-        return;
       }
 
       this._lpRequest.userId = userId
@@ -625,10 +623,15 @@ export default class LeanplumInternal {
   }
 
   private createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
-    this._lpRequest.request(action, args, {
-      devMode: this._internalState.devMode,
-      ...options,
-    })
+
+    const suppress = this._migration.duplicateRequest(action, args, options)
+
+    if (!suppress) {
+      this._lpRequest.request(action, args, {
+        devMode: this._internalState.devMode,
+        ...options,
+      })
+    }
   }
 
   private connectSocket(): void {
