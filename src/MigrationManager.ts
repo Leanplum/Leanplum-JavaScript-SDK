@@ -74,6 +74,20 @@ export default class MigrationManager {
       args.add(Constants.PARAMS.CT, true)
     }
 
+    // if action == start
+    const argsDict = args?.buildDict()
+
+    if (argsDict) {
+      if (argsDict.params) {
+        clevertap.event.push(
+          argsDict.event,
+          JSON.parse(argsDict.params)
+        )
+      } else if (argsDict.event) {
+        clevertap.event.push(argsDict.event)
+      }
+    }
+
     return state === MigrationState.CLEVERTAP
   }
 

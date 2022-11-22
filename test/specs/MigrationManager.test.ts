@@ -1,3 +1,4 @@
+import clevertap from 'clevertap-web-sdk'
 import { MigrationState } from '../../src/types/internal'
 import MigrationManager from '../../src/MigrationManager'
 import StorageManager from '../../src/StorageManager'
@@ -123,6 +124,25 @@ describe(MigrationManager, () => {
       expect(suppress).toBe(true)
     })
 
+    it('sends request to clevertap if mode is duplicate', () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.event, 'push')
+
+      const args = new ArgsBuilder()
+        .add('event', 'View Product')
+        .add('params', JSON.stringify({ param1: 'value1' }))
+
+      manager.duplicateRequest('track', args, {})
+
+      expect(clevertap.event.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.event.push).toHaveBeenCalledWith(
+        'View Product',
+        { param1: "value1"  }
+      )
+    })
   })
 })
 
