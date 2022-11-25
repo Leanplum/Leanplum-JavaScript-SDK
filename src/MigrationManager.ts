@@ -75,17 +75,25 @@ export default class MigrationManager {
     }
 
     // if action == start
-    const argsDict = args?.buildDict()
+    const argsDict = args?.buildDict() || {}
+    const isEngagementEvent = argsDict[Constants.PARAMS.MESSAGE_ID];
 
-    if (argsDict) {
+    if (argsDict.event && !isEngagementEvent) {
+      const eventParams = {}
+
       if (argsDict.params) {
-        clevertap.event.push(
-          argsDict.event,
-          JSON.parse(argsDict.params)
-        )
-      } else if (argsDict.event) {
-        clevertap.event.push(argsDict.event)
+        Object.assign(eventParams, JSON.parse(argsDict.params))
       }
+
+      if (argsDict.value) {
+        Object.assign(eventParams, { value: argsDict.value })
+      }
+
+      if (argsDict.info) {
+        Object.assign(eventParams, { info: argsDict.info })
+      }
+
+      clevertap.event.push(argsDict.event, eventParams)
     }
 
     return state === MigrationState.CLEVERTAP

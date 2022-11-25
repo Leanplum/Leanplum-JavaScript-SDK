@@ -133,6 +133,8 @@ describe(MigrationManager, () => {
 
       const args = new ArgsBuilder()
         .add('event', 'View Product')
+        .add('value', 5.0)
+        .add('info', 'test')
         .add('params', JSON.stringify({ param1: 'value1' }))
 
       manager.duplicateRequest('track', args, {})
@@ -140,8 +142,29 @@ describe(MigrationManager, () => {
       expect(clevertap.event.push).toHaveBeenCalledTimes(1)
       expect(clevertap.event.push).toHaveBeenCalledWith(
         'View Product',
-        { param1: "value1"  }
+        {
+          param1: "value1",
+          value: 5.0,
+          info: "test"
+        }
       )
+    })
+
+    it('does not send engagement events', () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.event, 'push')
+
+      const args = new ArgsBuilder()
+        .add('event', 'View Product')
+        .add('messageId', '123')
+        .add('params', JSON.stringify({ param1: 'value1' }))
+
+      manager.duplicateRequest('track', args, {})
+
+      expect(clevertap.event.push).toHaveBeenCalledTimes(0)
     })
   })
 })
