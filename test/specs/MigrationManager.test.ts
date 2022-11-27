@@ -214,6 +214,33 @@ describe(MigrationManager, () => {
         }
       )
     })
+
+    it(`prefixes state changes with 'state_'`, () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.event, 'push')
+
+      const args = new ArgsBuilder()
+        .add('state', 'level')
+        .add('value', 10)
+        .add('params', JSON.stringify({
+          'location': 'castle'
+        }))
+
+
+      manager.duplicateRequest('advance', args, {})
+
+      expect(clevertap.event.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.event.push).toHaveBeenCalledWith(
+        'state_level',
+        {
+          value: 10,
+          location: 'castle'
+        }
+      )
+    })
   })
 })
 

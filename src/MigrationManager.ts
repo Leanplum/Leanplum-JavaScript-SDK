@@ -74,8 +74,20 @@ export default class MigrationManager {
       args.add(Constants.PARAMS.CT, true)
     }
 
-    // if action == start
     const argsDict = args?.buildDict() || {}
+
+    if (action === 'track') {
+      this.duplicateTrack(argsDict, options)
+    } else if (action === 'advance') {
+      argsDict.event = `state_${argsDict.state}`
+      this.duplicateTrack(argsDict, options)
+    }
+
+    return state === MigrationState.CLEVERTAP
+  }
+
+  private duplicateTrack(argsDict: any, options: any) {
+    // if action == start
     const isEngagementEvent = argsDict[Constants.PARAMS.MESSAGE_ID];
     const eventName = options.isPurchase ? 'Charged' : argsDict.event;
 
@@ -110,8 +122,6 @@ export default class MigrationManager {
 
       clevertap.event.push(eventName, eventParams)
     }
-
-    return state === MigrationState.CLEVERTAP
   }
 
   private getMigrationState(callback: MigrationStateLoadedCallback) {
