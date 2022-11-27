@@ -229,7 +229,6 @@ describe(MigrationManager, () => {
           'location': 'castle'
         }))
 
-
       manager.duplicateRequest('advance', args, {})
 
       expect(clevertap.event.push).toHaveBeenCalledTimes(1)
@@ -240,6 +239,73 @@ describe(MigrationManager, () => {
           location: 'castle'
         }
       )
+    })
+
+    it(`sends user attributes with profilePush`, () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.profile, 'push')
+
+      const args = new ArgsBuilder()
+        .add('userAttributes', JSON.stringify({
+          'age': 42,
+          'interests': ['jumping','running']
+        }))
+
+      manager.duplicateRequest('setUserAttributes', args, {})
+
+      expect(clevertap.profile.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.profile.push).toHaveBeenCalledWith({
+        age: 42,
+        interests: '[jumping,running]'
+      })
+    })
+
+    it(`uses attribute mapping from migration state`, () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.profile, 'push')
+
+      const args = new ArgsBuilder()
+        .add('userAttributes', JSON.stringify({
+          'name1': 'foo'
+        }))
+
+      manager.duplicateRequest('setUserAttributes', args, {})
+
+      expect(clevertap.profile.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.profile.push).toHaveBeenCalledWith({
+        'ct-name1': 'foo'
+      })
+    })
+
+    it(`sets user ids with onUserLogin`, () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.profile, 'push')
+      jest.spyOn(clevertap.onUserLogin, 'push')
+
+      const args = new ArgsBuilder()
+        .add('newUserId', 'jeff42')
+        .add('userAttributes', JSON.stringify({ name: 'Jeff' }))
+
+      manager.duplicateRequest('setUserAttributes', args, {})
+
+      expect(clevertap.profile.push).toHaveBeenCalledTimes(0)
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledWith({
+        Site: {
+          'Identity': 'jeff42',
+          'name': 'Jeff',
+          'tz': expect.any(String)
+        }
+      })
     })
   })
 })

@@ -76,17 +76,36 @@ export default class MigrationManager {
 
     const argsDict = args?.buildDict() || {}
 
-    if (action === 'track') {
-      this.duplicateTrack(argsDict, options)
-    } else if (action === 'advance') {
+    if (action === Constants.METHODS.TRACK) {
+      this.eventPush(argsDict, options)
+    } else if (action === Constants.METHODS.ADVANCE) {
       argsDict.event = `state_${argsDict.state}`
-      this.duplicateTrack(argsDict, options)
+      this.eventPush(argsDict, options)
+    } else if (action === Constants.METHODS.SET_USER_ATTRIBUTES) {
+      this.profilePush(argsDict)
     }
 
     return state === MigrationState.CLEVERTAP
   }
 
-  private duplicateTrack(argsDict: any, options: any) {
+  private profilePush(argsDict: any) {
+    const userId = argsDict[Constants.PARAMS.NEW_USER_ID]
+    const attrs =
+      this.mapAttributes(
+        this.convertArrays(
+          JSON.parse(argsDict.userAttributes)
+        )
+      )
+
+    if (userId) {
+      Object.assign(attrs, { Identity: userId })
+      clevertap.onUserLogin.push({ Site: attrs })
+    } else {
+      clevertap.profile.push(attrs)
+    }
+  }
+
+  private eventPush(argsDict: any, options: any) {
     // if action == start
     const isEngagementEvent = argsDict[Constants.PARAMS.MESSAGE_ID];
     const eventName = options.isPurchase ? 'Charged' : argsDict.event;
@@ -95,13 +114,9 @@ export default class MigrationManager {
       const eventParams = {}
 
       if (argsDict.params) {
-        const params = JSON.parse(argsDict.params)
-
-        Object.keys(params).forEach(key => {
-          if (Array.isArray(params[key])) {
-            params[key] = `[${params[key].join(',')}]`
-          }
-        })
+        const params = this.convertArrays(
+          JSON.parse(argsDict.params)
+        )
 
         Object.assign(eventParams, params)
       }
@@ -122,6 +137,33 @@ export default class MigrationManager {
 
       clevertap.event.push(eventName, eventParams)
     }
+  }
+
+  private convertArrays(obj: any): any {
+    return Object.keys(obj).reduce((acc, key) => {
+      if (Array.isArray(obj[key])) {
+        acc[key] = `[${obj[key].join(',')}]`
+      } else {
+        acc[key] = obj[key]
+      }
+
+      return acc
+    }, {})
+  }
+
+  private mapAttributes(obj: any): any {
+    const mapping = this.response.ct?.attributeMappings
+
+    if (!mapping) return obj
+
+    return Object.keys(obj).reduce((acc, key) => {
+      if (mapping[key]) {
+        acc[mapping[key]] = obj[key]
+      } else {
+        acc[key] = obj[key]
+      }
+      return acc
+    }, {})
   }
 
   private getMigrationState(callback: MigrationStateLoadedCallback) {
