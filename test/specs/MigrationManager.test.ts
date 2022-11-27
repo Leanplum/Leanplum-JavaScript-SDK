@@ -190,6 +190,30 @@ describe(MigrationManager, () => {
         }
       )
     })
+
+    it('tracks purchases as charged event', () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.event, 'push')
+
+      const args = new ArgsBuilder()
+        .add('event', 'Purchase')
+        .add('value', 8.0)
+        .add('currencyCode', 'PHP')
+
+      manager.duplicateRequest('track', args, { isPurchase: true })
+
+      expect(clevertap.event.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.event.push).toHaveBeenCalledWith(
+        'Charged',
+        {
+          value: 8.0,
+          currencyCode: 'PHP'
+        }
+      )
+    })
   })
 })
 

@@ -529,6 +529,7 @@ export default class LeanplumInternal {
 
     this.createRequest(Constants.METHODS.TRACK, args, {
       queued: true,
+      isPurchase: true
     })
   }
 

@@ -77,8 +77,9 @@ export default class MigrationManager {
     // if action == start
     const argsDict = args?.buildDict() || {}
     const isEngagementEvent = argsDict[Constants.PARAMS.MESSAGE_ID];
+    const eventName = options.isPurchase ? 'Charged' : argsDict.event;
 
-    if (argsDict.event && !isEngagementEvent) {
+    if (eventName && !isEngagementEvent) {
       const eventParams = {}
 
       if (argsDict.params) {
@@ -101,7 +102,13 @@ export default class MigrationManager {
         Object.assign(eventParams, { info: argsDict.info })
       }
 
-      clevertap.event.push(argsDict.event, eventParams)
+      if (options.isPurchase && argsDict.currencyCode) {
+        Object.assign(eventParams, {
+          currencyCode: argsDict.currencyCode
+        })
+      }
+
+      clevertap.event.push(eventName, eventParams)
     }
 
     return state === MigrationState.CLEVERTAP
