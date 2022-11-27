@@ -82,7 +82,15 @@ export default class MigrationManager {
       const eventParams = {}
 
       if (argsDict.params) {
-        Object.assign(eventParams, JSON.parse(argsDict.params))
+        const params = JSON.parse(argsDict.params)
+
+        Object.keys(params).forEach(key => {
+          if (Array.isArray(params[key])) {
+            params[key] = `[${params[key].join(',')}]`
+          }
+        })
+
+        Object.assign(eventParams, params)
       }
 
       if (argsDict.value) {

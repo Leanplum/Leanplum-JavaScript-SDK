@@ -166,6 +166,30 @@ describe(MigrationManager, () => {
 
       expect(clevertap.event.push).toHaveBeenCalledTimes(0)
     })
+
+    it('encodes array parameters', () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.event, 'push')
+
+      const args = new ArgsBuilder()
+        .add('event', 'Add to cart')
+        .add('params', JSON.stringify({
+          arr: [ 'item1', 'item2' ]
+        }))
+
+      manager.duplicateRequest('track', args, {})
+
+      expect(clevertap.event.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.event.push).toHaveBeenCalledWith(
+        'Add to cart',
+        {
+          arr: '[item1,item2]'
+        }
+      )
+    })
   })
 })
 
