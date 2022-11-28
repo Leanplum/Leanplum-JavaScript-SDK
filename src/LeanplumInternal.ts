@@ -281,15 +281,15 @@ export default class LeanplumInternal {
 
     this._migration.getState((state: MigrationState) => {
       if (state === MigrationState.DUPLICATE) {
-        this._migration.initCleverTap();
+        this._migration.initCleverTap()
       } else if (state === MigrationState.CLEVERTAP) {
-        this._migration.initCleverTap();
+        this._migration.initCleverTap()
 
         Object.values(Constants.DEFAULT_KEYS)
           .filter(key => ![
             Constants.DEFAULT_KEYS.USER_ID,
             Constants.DEFAULT_KEYS.DEVICE_ID,
-            Constants.DEFAULT_KEYS.TOKEN
+            Constants.DEFAULT_KEYS.TOKEN,
           ].includes(key))
           .forEach(key => StorageManager.remove(key))
       }
@@ -529,7 +529,7 @@ export default class LeanplumInternal {
 
     this.createRequest(Constants.METHODS.TRACK, args, {
       queued: true,
-      isPurchase: true
+      isPurchase: true,
     })
   }
 

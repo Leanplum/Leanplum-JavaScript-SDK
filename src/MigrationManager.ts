@@ -4,35 +4,49 @@ import StorageManager from './StorageManager'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 
+type Region = 'eu1' | 'in1' | 'sg1' | 'us1' | 'sk1';
+
+type Attributes = Record<string, string>;
+
+type RequestOptions = {
+  isPurchase?: boolean;
+}
+
 type MigrationStateResponse = {
-  success: Boolean,
-  sha256?: string,
-  state?: string,
-  sdk?: 'lp' | 'lp+ct' | 'ct'
+  success: boolean;
+  sha256?: string;
+  state?: string;
+  sdk?: 'lp' | 'lp+ct' | 'ct';
+  ct?: {
+    accountId: string;
+    regionCode: Region;
+    token: string;
+    attributeMappings?: { [key: string]: string };
+  };
 }
 type ApiResponse<T> = {
-  response: Array<T>
+  response: Array<T>;
 }
 type MigrationStateApiResponse = ApiResponse<MigrationStateResponse>
-type MigrationStateLoadedCallback = (s: MigrationState) => any;
+type MigrationStateLoadedCallback = (s: MigrationState) => void;
 
-const noop = () => {}
+const noop = (): void => { /* noop */ }
 
 const toMigrationState = (obj?: MigrationStateResponse): MigrationState => {
   switch (obj?.sdk) {
     case 'lp':
-      return MigrationState.LEANPLUM;
+      return MigrationState.LEANPLUM
     case 'lp+ct':
-      return MigrationState.DUPLICATE;
+      return MigrationState.DUPLICATE
     case 'ct':
-      return MigrationState.CLEVERTAP;
+      return MigrationState.CLEVERTAP
     default:
-      return MigrationState.UNKNOWN;
+      return MigrationState.UNKNOWN
   }
 }
 
 export default class MigrationManager {
-  private response: any = null
+  private response: MigrationStateResponse | null = null
 
   constructor(private createRequest: CreateRequestFunction) {
     const savedResponse = StorageManager.get(Constants.DEFAULT_KEYS.MIGRATION_STATE)
@@ -42,32 +56,33 @@ export default class MigrationManager {
     }
   }
 
-  public getState(callback: MigrationStateLoadedCallback = noop) {
+  public getState(callback: MigrationStateLoadedCallback = noop): void {
     const response = this.response
+    const state = toMigrationState(this.response)
 
-    if (response && response.sdk !== MigrationState.UNKNOWN) {
-      callback(response.sdk)
-      return;
+    if (response && state !== MigrationState.UNKNOWN) {
+      callback(state)
+      return
     }
 
     this.getMigrationState(callback)
   }
 
-  public verifyState(sha: string) {
+  public verifyState(sha: string): void {
     if (this.response.sha256 !== sha) {
       this.getMigrationState(noop)
     }
   }
 
-  public initCleverTap() {
-    const config = this.response?.ct;
+  public initCleverTap(): void {
+    const config = this.response?.ct
     if (!config) {
       return
     }
     clevertap.init(config.accountId, config.regionCode)
   }
 
-  public duplicateRequest(action: string, args: ArgsBuilder, options: any) {
+  public duplicateRequest(action: string, args: ArgsBuilder, options: RequestOptions): boolean {
     const state = toMigrationState(this.response)
 
     if (state === MigrationState.DUPLICATE) {
@@ -88,7 +103,7 @@ export default class MigrationManager {
     return state === MigrationState.CLEVERTAP
   }
 
-  private profilePush(argsDict: any) {
+  private profilePush(argsDict: Attributes): void {
     const userId = argsDict[Constants.PARAMS.NEW_USER_ID]
     const attrs =
       this.mapAttributes(
@@ -105,10 +120,10 @@ export default class MigrationManager {
     }
   }
 
-  private eventPush(argsDict: any, options: any) {
+  private eventPush(argsDict: Attributes, options: RequestOptions): void {
     // if action == start
-    const isEngagementEvent = argsDict[Constants.PARAMS.MESSAGE_ID];
-    const eventName = options.isPurchase ? 'Charged' : argsDict.event;
+    const isEngagementEvent = argsDict[Constants.PARAMS.MESSAGE_ID]
+    const eventName = options.isPurchase ? 'Charged' : argsDict.event
 
     if (eventName && !isEngagementEvent) {
       const eventParams = {}
@@ -131,7 +146,7 @@ export default class MigrationManager {
 
       if (options.isPurchase && argsDict.currencyCode) {
         Object.assign(eventParams, {
-          currencyCode: argsDict.currencyCode
+          currencyCode: argsDict.currencyCode,
         })
       }
 
@@ -139,10 +154,11 @@ export default class MigrationManager {
     }
   }
 
-  private convertArrays(obj: any): any {
+  private convertArrays(obj: Attributes): Attributes {
     return Object.keys(obj).reduce((acc, key) => {
       if (Array.isArray(obj[key])) {
-        acc[key] = `[${obj[key].join(',')}]`
+        const arr = obj[key] as never as Array<string>
+        acc[key] = `[${arr.join(',')}]`
       } else {
         acc[key] = obj[key]
       }
@@ -151,7 +167,7 @@ export default class MigrationManager {
     }, {})
   }
 
-  private mapAttributes(obj: any): any {
+  private mapAttributes(obj: Attributes): Attributes {
     const mapping = this.response.ct?.attributeMappings
 
     if (!mapping) return obj
@@ -166,7 +182,7 @@ export default class MigrationManager {
     }, {})
   }
 
-  private getMigrationState(callback: MigrationStateLoadedCallback) {
+  private getMigrationState(callback: MigrationStateLoadedCallback): void {
     this.createRequest('getMigrateState', null, {
       sendNow: true,
       response: (r: MigrationStateApiResponse) => {
@@ -180,7 +196,7 @@ export default class MigrationManager {
         }
 
         callback(state)
-      }
+      },
     })
   }
 }
