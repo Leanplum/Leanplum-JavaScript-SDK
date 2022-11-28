@@ -293,6 +293,29 @@ describe(MigrationManager, () => {
 
       const args = new ArgsBuilder()
         .add('newUserId', 'jeff42')
+
+      manager.duplicateRequest('setUserAttributes', args, {})
+
+      expect(clevertap.profile.push).toHaveBeenCalledTimes(0)
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledWith({
+        Site: {
+          'Identity': 'jeff42',
+          'tz': expect.any(String)
+        }
+      })
+    })
+
+    it(`sends user attributes along with login`, () => {
+      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
+
+      manager.getState();
+
+      jest.spyOn(clevertap.profile, 'push')
+      jest.spyOn(clevertap.onUserLogin, 'push')
+
+      const args = new ArgsBuilder()
+        .add('newUserId', 'jeff42')
         .add('userAttributes', JSON.stringify({ name: 'Jeff' }))
 
       manager.duplicateRequest('setUserAttributes', args, {})

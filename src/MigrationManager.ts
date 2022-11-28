@@ -108,7 +108,7 @@ export default class MigrationManager {
     const attrs =
       this.mapAttributes(
         this.convertArrays(
-          JSON.parse(argsDict.userAttributes)
+          JSON.parse(argsDict.userAttributes || '{}')
         )
       )
 
