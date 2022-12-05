@@ -91,13 +91,23 @@ export default class MigrationManager {
 
     const argsDict = args?.buildDict() || {}
 
-    if (action === Constants.METHODS.TRACK) {
-      this.eventPush(argsDict, options)
-    } else if (action === Constants.METHODS.ADVANCE) {
-      argsDict.event = `state_${argsDict.state}`
-      this.eventPush(argsDict, options)
-    } else if (action === Constants.METHODS.SET_USER_ATTRIBUTES) {
-      this.profilePush(argsDict)
+    switch (action) {
+      case Constants.METHODS.START:
+        // TODO: identify
+        break;
+
+      case Constants.METHODS.TRACK:
+        this.eventPush(argsDict, options)
+        break;
+
+      case Constants.METHODS.ADVANCE:
+        argsDict.event = `state_${argsDict.state}`
+        this.eventPush(argsDict, options)
+        break;
+
+      case Constants.METHODS.SET_USER_ATTRIBUTES:
+        this.profilePush(argsDict)
+        break;
     }
 
     return state === MigrationState.CLEVERTAP
@@ -121,7 +131,6 @@ export default class MigrationManager {
   }
 
   private eventPush(argsDict: Attributes, options: RequestOptions): void {
-    // if action == start
     const isEngagementEvent = argsDict[Constants.PARAMS.MESSAGE_ID]
     const eventName = options.isPurchase ? 'Charged' : argsDict.event
 

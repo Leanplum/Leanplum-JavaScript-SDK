@@ -212,6 +212,9 @@ export default class LeanplumRequest {
       data,
       (response) => {
         const methodResponse = this.getFirstResponse(response)
+
+        this.events.emit('migrateStateReceived', response.sha)
+
         if (!methodResponse.success && methodResponse.apiHost) {
           const { apiHost, apiPath, devServerHost } = methodResponse
 

@@ -79,6 +79,8 @@ export default class LeanplumInternal {
     this._events.on('registerForPush', () => this.registerForWebPush())
     this._events.on('updateDevServerHost',
       (host: string) => this.setSocketHost(host))
+    this._events.on('migrateStateReceived',
+      (sha: string) => this._migration.verifyState(sha))
   }
 
   setApiPath(apiPath: string): void {
