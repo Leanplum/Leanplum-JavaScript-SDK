@@ -47,9 +47,15 @@ const toMigrationState = (obj?: MigrationStateResponse): MigrationState => {
 
 export default class MigrationManager {
   private response: MigrationStateResponse | null = null
+  private identity: IdentityManager
 
   constructor(private createRequest: CreateRequestFunction) {
     const savedResponse = StorageManager.get(Constants.DEFAULT_KEYS.MIGRATION_STATE)
+
+    const deviceId = StorageManager.get(Constants.DEFAULT_KEYS.DEVICE_ID)
+    const userId = StorageManager.get(Constants.DEFAULT_KEYS.USER_ID) ?? deviceId
+
+    this.identity = new IdentityManager(userId, deviceId)
 
     if (savedResponse) {
       this.response = JSON.parse(savedResponse)
@@ -93,21 +99,25 @@ export default class MigrationManager {
 
     switch (action) {
       case Constants.METHODS.START:
-        // TODO: identify
-        break;
+        if (!this.identity.isAnonymous) {
+          clevertap.onUserLogin.push({
+            Site: this.identity.profile,
+          })
+        }
+        break
 
       case Constants.METHODS.TRACK:
         this.eventPush(argsDict, options)
-        break;
+        break
 
       case Constants.METHODS.ADVANCE:
         argsDict.event = `state_${argsDict.state}`
         this.eventPush(argsDict, options)
-        break;
+        break
 
       case Constants.METHODS.SET_USER_ATTRIBUTES:
         this.profilePush(argsDict)
-        break;
+        break
     }
 
     return state === MigrationState.CLEVERTAP
@@ -207,5 +217,61 @@ export default class MigrationManager {
         callback(state)
       },
     })
+  }
+}
+
+export enum IdentityState {
+  ANONYMOUS = 'anonymous',
+  IDENTIFIED = 'identified'
+}
+
+export class IdentityManager {
+  private state: IdentityState = IdentityState.ANONYMOUS
+  private anonymousLoginUserId: string
+
+  constructor(
+    private userId: string,
+    private deviceId: string
+  ) {
+    this.identify()
+  }
+
+  public setUserId(userId: string): void {
+    if (this.state === IdentityState.ANONYMOUS) {
+      this.anonymousLoginUserId = userId
+      this.state = IdentityState.IDENTIFIED
+    }
+    this.userId = userId
+  }
+
+  public identify(): void {
+    if (this.isAnonymous) {
+      this.state = IdentityState.ANONYMOUS
+    } else {
+      this.identifyNonAnonymous()
+    }
+  }
+
+  public identifyNonAnonymous(): void {
+    if (this.state === IdentityState.ANONYMOUS) {
+      this.anonymousLoginUserId = this.userId
+    }
+    this.state = IdentityState.IDENTIFIED
+  }
+
+  public get cleverTapID(): string {
+    if (this.userId !== this.anonymousLoginUserId && !this.isAnonymous) {
+      return `${this.deviceId}_${this.userId}`
+    }
+
+    return this.deviceId
+  }
+
+  public get profile(): { [key: string]: string } {
+    return { Identity: this.userId }
+  }
+
+  public get isAnonymous(): boolean {
+    return this.userId === this.deviceId
   }
 }

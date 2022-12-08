@@ -34,18 +34,14 @@ describe(MigrationManager, () => {
     it('saves migration state to local storage', () => {
       jest.spyOn(StorageManager, 'save').mockImplementationOnce(() => {})
 
-      createRequest.mockImplementationOnce((_, __, options) => options.response(LEANPLUM))
-
-      manager.getState();
+      setMigrationState(LEANPLUM)
 
       expect(StorageManager.save).toHaveBeenCalled()
       expect(StorageManager.save).toHaveBeenCalledWith('__leanplum_migration_state', JSON.stringify(LEANPLUM.response[0]))
     })
 
     it('loads migration state from cache upon init', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(LEANPLUM))
-
-      manager.getState();
+      setMigrationState(LEANPLUM)
 
       manager = new MigrationManager(createRequest)
 
@@ -59,9 +55,7 @@ describe(MigrationManager, () => {
 
   describe('verifyState', () => {
     it('fetches new migration state if the sha differs', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(LEANPLUM))
-
-      manager.getState();
+      setMigrationState(LEANPLUM)
 
       manager.verifyState('different-sha')
 
@@ -73,9 +67,7 @@ describe(MigrationManager, () => {
     })
 
     it('does not perform fetch if the sha matches', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(LEANPLUM))
-
-      manager.getState();
+      setMigrationState(LEANPLUM)
 
       const sha = LEANPLUM.response[0].sha256
 
@@ -87,9 +79,7 @@ describe(MigrationManager, () => {
 
   describe('modifyRequest', () => {
     it('adds ct parameter when duplicating requests', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       const args = new ArgsBuilder()
 
@@ -100,9 +90,7 @@ describe(MigrationManager, () => {
     })
 
     it('does not add ct parameter by default', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(LEANPLUM))
-
-      manager.getState();
+      setMigrationState(LEANPLUM)
 
       const args = new ArgsBuilder()
 
@@ -113,9 +101,7 @@ describe(MigrationManager, () => {
     })
 
     it('returns true if request should be suppressed', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(CLEVERTAP))
-
-      manager.getState();
+      setMigrationState(CLEVERTAP)
 
       const args = new ArgsBuilder()
 
@@ -125,9 +111,7 @@ describe(MigrationManager, () => {
     })
 
     it('sends request to clevertap if mode is duplicate', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.event, 'push')
 
@@ -151,9 +135,7 @@ describe(MigrationManager, () => {
     })
 
     it('does not send engagement events', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.event, 'push')
 
@@ -168,9 +150,7 @@ describe(MigrationManager, () => {
     })
 
     it('encodes array parameters', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.event, 'push')
 
@@ -192,9 +172,7 @@ describe(MigrationManager, () => {
     })
 
     it('tracks purchases as charged event', () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.event, 'push')
 
@@ -216,9 +194,7 @@ describe(MigrationManager, () => {
     })
 
     it(`prefixes state changes with 'state_'`, () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.event, 'push')
 
@@ -242,9 +218,7 @@ describe(MigrationManager, () => {
     })
 
     it(`sends user attributes with profilePush`, () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.profile, 'push')
 
@@ -264,9 +238,7 @@ describe(MigrationManager, () => {
     })
 
     it(`uses attribute mapping from migration state`, () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.profile, 'push')
 
@@ -284,9 +256,7 @@ describe(MigrationManager, () => {
     })
 
     it(`sets user ids with onUserLogin`, () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.profile, 'push')
       jest.spyOn(clevertap.onUserLogin, 'push')
@@ -307,9 +277,7 @@ describe(MigrationManager, () => {
     })
 
     it(`sends user attributes along with login`, () => {
-      createRequest.mockImplementationOnce((_, __, options) => options.response(DUPLICATE))
-
-      manager.getState();
+      setMigrationState(DUPLICATE)
 
       jest.spyOn(clevertap.profile, 'push')
       jest.spyOn(clevertap.onUserLogin, 'push')
@@ -330,6 +298,34 @@ describe(MigrationManager, () => {
         }
       })
     })
+
+    it(`sends onUserLogin on start when device is not anonymous`, () => {
+      localStorage.setItem('__leanplum_device_id', 'd1')
+      localStorage.setItem('__leanplum_user_id', 'u1')
+      manager = new MigrationManager(createRequest)
+
+      setMigrationState(DUPLICATE)
+
+      jest.spyOn(clevertap.onUserLogin, 'push')
+
+      const args = new ArgsBuilder()
+
+      manager.duplicateRequest('start', args, {})
+
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledWith({
+        Site: {
+          'Identity': 'u1',
+          'tz': expect.any(String)
+        }
+      })
+    })
   })
+
+  function setMigrationState(state: Object): void {
+    createRequest.mockImplementationOnce((_, __, options) => options.response(state))
+
+    manager.getState();
+  }
 })
 
