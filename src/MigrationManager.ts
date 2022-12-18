@@ -80,12 +80,14 @@ export default class MigrationManager {
     }
   }
 
-  public initCleverTap(): void {
+  public initCleverTap(): typeof clevertap {
     const config = this.response?.ct
     if (!config) {
       return
     }
     clevertap.init(config.accountId, config.regionCode)
+
+    return clevertap
   }
 
   public duplicateRequest(action: string, args: ArgsBuilder, options: RequestOptions): boolean {
@@ -202,7 +204,7 @@ export default class MigrationManager {
   }
 
   private getMigrationState(callback: MigrationStateLoadedCallback): void {
-    this.createRequest('getMigrateState', null, {
+    this.createRequest('getMigrateState', new ArgsBuilder(), {
       sendNow: true,
       response: (r: MigrationStateApiResponse) => {
         const response = r?.response?.[0]

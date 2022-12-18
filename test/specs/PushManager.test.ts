@@ -1,4 +1,5 @@
 import Constants from '../../src/Constants'
+import EventEmitter from '../../src/EventEmitter'
 import PushManager from '../../src/PushManager'
 
 describe(PushManager, () => {
@@ -7,7 +8,8 @@ describe(PushManager, () => {
   const createRequestSpy: jest.Mock<() => void> = jest.fn()
 
   beforeEach(() => {
-    pushManager = new PushManager(createRequestSpy)
+    const events = new EventEmitter()
+    pushManager = new PushManager(events, createRequestSpy)
     windowMock = jest.spyOn(globalThis, 'window', 'get')
   })
 

@@ -20,12 +20,10 @@ import Constants from './Constants'
 import StorageManager from './StorageManager'
 import Network from './Network'
 import EventEmitter from './EventEmitter'
+import { BatchResponse, SingleResponse } from './types/internal'
 
-interface HostConfig {
-  apiHost: string;
-  apiPath: string;
-  devServerHost: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RequestArgs = any
 
 export default class LeanplumRequest {
   private cooldownTimeout = null
@@ -173,31 +171,25 @@ export default class LeanplumRequest {
     return `${this.apiPath}?${args.build()}`
   }
 
-  /**
-   * Sets the network timeout.
-   * @param {number} seconds The timeout in seconds.
-   */
-  public setNetworkTimeout(seconds): void {
+  public setNetworkTimeout(seconds: number): void {
     this.network.setNetworkTimeout(seconds)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public getLastResponse(response): any {
+  public getLastResponse(response: BatchResponse): any {
     const count = response?.response?.length ?? 0
     return (count > 0) ? response?.response?.[count - 1] : null
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public getFirstResponse(response): any {
+  public getFirstResponse(response: BatchResponse): any {
     const count = response?.response?.length ?? 0
     return (count > 0) ? response?.response?.[0] : null
   }
 
-  public isResponseSuccess(response): boolean {
+  public isResponseSuccess(response: SingleResponse): boolean {
     return Boolean(response?.success)
   }
 
-  private saveRequestForLater(args): void {
+  private saveRequestForLater(args: RequestArgs): void {
     let count = this.loadLocal<number>(Constants.DEFAULT_KEYS.COUNT) || 0
     const itemKey = Constants.DEFAULT_KEYS.ITEM + count
     this.saveLocal(itemKey, JSON.stringify(args))
@@ -205,15 +197,15 @@ export default class LeanplumRequest {
     this.saveLocal(Constants.DEFAULT_KEYS.COUNT, count)
   }
 
-  private sendRequest(query: string, data: string, success: Function, error: Function, queued: boolean): void {
+  public sendRequest(query: string, data: string, success: Function, error: Function, queued: boolean): void {
     this.network.ajax(
       'POST',
       `${this.apiPath}${query}`,
       data,
-      (response) => {
+      (response: BatchResponse) => {
         const methodResponse = this.getFirstResponse(response)
 
-        this.events.emit('migrateStateReceived', response.sha)
+        this.events.emit('migrateStateReceived', response.migrateState?.sha256)
 
         if (!methodResponse.success && methodResponse.apiHost) {
           const { apiHost, apiPath, devServerHost } = methodResponse

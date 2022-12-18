@@ -15,6 +15,7 @@ module.exports = {
   rules: {
     '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true }],
     '@typescript-eslint/no-use-before-define': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
     'comma-dangle': ['error', 'always-multiline'],
     'eqeqeq': 'error',
     'max-len': ['warn', { code: 120, tabWidth: 2 }],

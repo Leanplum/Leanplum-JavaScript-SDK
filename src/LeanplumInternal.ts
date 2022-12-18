@@ -21,7 +21,7 @@ import {
   WebPushOptions,
   UserAttributes,
 } from './types/public'
-import { MigrationState } from './types/internal'
+import { BatchResponse, MigrationState } from './types/internal'
 import VarCache from './VarCache'
 
 /* eslint-disable @typescript-eslint/ban-types */
@@ -48,7 +48,10 @@ export default class LeanplumInternal {
     this._lpRequest.getLastResponse.bind(this._lpRequest),
     this._events
   )
-  private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
+  private _pushManager: PushManager = new PushManager(
+    this._events,
+    this.createRequest.bind(this)
+  )
   private _webPushOptions: WebPushOptions
   private _messages: Messages = new Messages(
     this._events,
@@ -62,6 +65,8 @@ export default class LeanplumInternal {
   private _systemName: string
   private _systemVersion: string
   private _sessionLength: number
+
+  private _ct: any
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
@@ -81,6 +86,16 @@ export default class LeanplumInternal {
       (host: string) => this.setSocketHost(host))
     this._events.on('migrateStateReceived',
       (sha: string) => this._migration.verifyState(sha))
+
+    this._events.on('webPushSubscribed',
+      () => {
+        this._ct && this._ct.notifications.push({
+          titleText: '',
+          bodyText: '',
+          okButtonText: '',
+          rejectButtonText: '',
+        })
+      })
   }
 
   setApiPath(apiPath: string): void {
@@ -236,7 +251,7 @@ export default class LeanplumInternal {
     this.createRequest(Constants.METHODS.GET_VARS, args, {
       queued: false,
       sendNow: true,
-      response: (response: Array<Object>) => {
+      response: (response: BatchResponse) => {
         const getVarsResponse = this._lpRequest.getLastResponse(response)
         const isSuccess = this._lpRequest.isResponseSuccess(getVarsResponse)
         if (isSuccess) {
@@ -283,9 +298,16 @@ export default class LeanplumInternal {
 
     this._migration.getState((state: MigrationState) => {
       if (state === MigrationState.DUPLICATE) {
-        this._migration.initCleverTap()
+        this._ct = this._migration.initCleverTap()
+
+        // silently register subscription in CT
+        this.isWebPushSubscribed().then((isSubscribed) => {
+          if (isSubscribed) {
+            this._events.emit('webPushSubscribed')
+          }
+        })
       } else if (state === MigrationState.CLEVERTAP) {
-        this._migration.initCleverTap()
+        this._ct = this._migration.initCleverTap()
 
         Object.values(Constants.DEFAULT_KEYS)
           .filter(key => ![
@@ -327,7 +349,7 @@ export default class LeanplumInternal {
       this.createRequest(Constants.METHODS.START, args, {
         queued: true,
         sendNow: true,
-        response: (response: Array<Object>) => {
+        response: (response: BatchResponse) => {
           this._internalState.hasStarted = true
           const startResponse = this._lpRequest.getLastResponse(response)
           const isSuccess = this._lpRequest.isResponseSuccess(startResponse)

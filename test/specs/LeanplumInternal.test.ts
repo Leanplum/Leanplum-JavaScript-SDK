@@ -16,6 +16,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import clevertap from 'clevertap-web-sdk'
 import { MigrationState } from '../../src/types/internal'
 import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
@@ -566,7 +567,7 @@ describe(LeanplumInternal, () => {
         expect(registerCall[1]).toEqual({ scope })
       })
 
-      it('can set client url for push regsitration', async() => {
+      it('can set client url for push registration', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
 
         const clientUrl = '/products'
@@ -925,6 +926,11 @@ describe(LeanplumInternal, () => {
   })
 
   describe('Migration state handling', () => {
+    beforeEach(() => {
+      jest.spyOn(clevertap.notifications, 'push')
+      jest.spyOn(lp, 'isWebPushSubscribed').mockReturnValueOnce(Promise.resolve(false))
+    })
+
     it('initializes clevertap and calls start if migration state is lp+ct', () => {
       migrationMock.getState.mockImplementationOnce(
         (callback) => callback(MigrationState.DUPLICATE)
@@ -978,6 +984,16 @@ describe(LeanplumInternal, () => {
       lp.start()
 
       expect(lpRequestMock.request).toHaveBeenCalledTimes(0)
+    })
+
+    it('does not push notification token if not subscribed', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.DUPLICATE)
+      );
+
+      lp.start()
+
+      expect(clevertap.notifications.push).toHaveBeenCalledTimes(0)
     })
   })
 

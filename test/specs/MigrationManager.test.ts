@@ -25,7 +25,7 @@ describe(MigrationManager, () => {
     it('fetches migration state with getMigrateState', () => {
       manager.getState();
 
-      expect(createRequest).toHaveBeenCalledWith('getMigrateState', null, {
+      expect(createRequest).toHaveBeenCalledWith('getMigrateState', expect.anything(), {
         sendNow: true,
         response: expect.any(Function)
       })
@@ -60,7 +60,7 @@ describe(MigrationManager, () => {
       manager.verifyState('different-sha')
 
       expect(createRequest).toHaveBeenCalledTimes(2)
-      expect(createRequest).toHaveBeenCalledWith('getMigrateState', null, {
+      expect(createRequest).toHaveBeenCalledWith('getMigrateState', expect.anything(), {
         sendNow: true,
         response: expect.any(Function)
       })

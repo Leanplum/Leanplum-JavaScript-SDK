@@ -43,3 +43,16 @@ export enum MigrationState {
   CLEVERTAP = 'ct'
 }
 
+export type SingleResponse = {
+  success: boolean;
+  syncNewsfeed?: boolean;
+  messages?: any;
+  actionDefinitions?: any;
+}
+
+export type BatchResponse = {
+  response?: Array<SingleResponse>;
+  migrateState?: {
+    sha256: string;
+  };
+}

@@ -33,11 +33,18 @@
  *  limitations under the License
  *
  */
+// eslint-disable no-var
 
-// eslint-disable-next-line no-var
-declare var clients
-// eslint-disable-next-line no-var
-declare var registration
+
+declare function importScripts(url: string): void;
+declare let clients: {
+  openWindow(url: string): any;
+}
+declare let registration: {
+  showNotification(title: string, options: any): any;
+}
+
+importScripts('https://s3-eu-west-1.amazonaws.com/static.wizrocket.com/js/sw_webpush.js')
 
 const ACTION_NAME_KEY = '__name__'
 const OPEN_URL_ACTION = 'Open URL'
