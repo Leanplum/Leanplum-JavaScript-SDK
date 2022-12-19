@@ -75,7 +75,7 @@ export default class MigrationManager {
   }
 
   public verifyState(sha: string): void {
-    if (this.response.sha256 !== sha) {
+    if (this.response?.sha256 !== sha) {
       this.getMigrationState(noop)
     }
   }

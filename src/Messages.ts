@@ -333,7 +333,7 @@ export default class Messages {
         'get',
         templateName.replace('-10.html', '-11.html'),
         '',
-        template => this.renderRichInAppMessage(template, options),
+        (template: string) => this.renderRichInAppMessage(template, options),
         () => { /* skip rendering on error */ },
         false,
         true
