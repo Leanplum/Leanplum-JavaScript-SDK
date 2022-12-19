@@ -37,10 +37,10 @@
 
 
 declare function importScripts(url: string): void;
-declare let clients: {
+declare var clients: {
   openWindow(url: string): any;
 }
-declare let registration: {
+declare var registration: {
   showNotification(title: string, options: any): any;
 }
 
