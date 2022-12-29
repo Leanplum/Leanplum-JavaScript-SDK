@@ -93,6 +93,10 @@ export default class MigrationManager {
   public duplicateRequest(action: string, args: ArgsBuilder, options: RequestOptions): boolean {
     const state = toMigrationState(this.response)
 
+    if (state === MigrationState.LEANPLUM) {
+      return false
+    }
+
     if (state === MigrationState.DUPLICATE) {
       args.add(Constants.PARAMS.CT, true)
     }
@@ -189,7 +193,7 @@ export default class MigrationManager {
   }
 
   private mapAttributes(obj: Attributes): Attributes {
-    const mapping = this.response.ct?.attributeMappings
+    const mapping = this.response?.ct?.attributeMappings
 
     if (!mapping) return obj
 

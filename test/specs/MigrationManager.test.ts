@@ -134,6 +134,23 @@ describe(MigrationManager, () => {
       )
     })
 
+    it('does not send request to clevertap if mode is lp-only', () => {
+      setMigrationState(LEANPLUM)
+
+      jest.spyOn(clevertap.event, 'push')
+
+      const args = new ArgsBuilder()
+        .add('event', 'View Product')
+        .add('value', 5.0)
+        .add('info', 'test')
+        .add('params', JSON.stringify({ param1: 'value1' }))
+
+      const suppress = manager.duplicateRequest('track', args, {})
+
+      expect(suppress).toBe(false)
+      expect(clevertap.event.push).toHaveBeenCalledTimes(0)
+    })
+
     it('does not send engagement events', () => {
       setMigrationState(DUPLICATE)
 

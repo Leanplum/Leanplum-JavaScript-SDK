@@ -8,7 +8,8 @@ export const startResponse = {
       "regions": {},
       "success": true,
       "messages": {},
-      "interfaceEvents": []
+      "interfaceEvents": [],
+      "sha256": "ded4fc0d016a7f1f89b97a8c2d2962712a8ee8c3c25ab8618123e5fc17c62674"
     }
   ]
 }
@@ -16,7 +17,8 @@ export const startResponse = {
 export const successResponse = {
   "response": [
     {
-      "success": true
+      "success": true,
+      "sha256": "ded4fc0d016a7f1f89b97a8c2d2962712a8ee8c3c25ab8618123e5fc17c62674"
     }
   ]
 }
@@ -31,7 +33,8 @@ export const forceContentUpdateResponse = {
       "regions": {},
       "success": true,
       "messages": {},
-      "interfaceEvents": []
+      "interfaceEvents": [],
+      "sha256": "ded4fc0d016a7f1f89b97a8c2d2962712a8ee8c3c25ab8618123e5fc17c62674"
     }
   ]
 }

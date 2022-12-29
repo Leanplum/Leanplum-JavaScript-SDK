@@ -18,7 +18,8 @@ import sinon from 'sinon'
 import {
   startResponse,
   successResponse,
-  forceContentUpdateResponse
+  forceContentUpdateResponse,
+  migrationResponses
 } from '../data/responses'
 
 (global as any).WebSocket = undefined
@@ -314,31 +315,36 @@ Object.keys(testModes).forEach((mode) => {
     })
 
     describe('Test variable changed callback after forceContentUpdate.', () => {
-      it('test setVariable forceContentUpdate', (done) => {
+      it('test setVariable forceContentUpdate', async (done) => {
         interceptRequest((request) => {
-          if (getAction(request) == 'getVars'){
+          const methodName = getAction(request)
+          if (methodName == 'getVars'){
             request.respond(200, {
               'Content-Type': 'application/json'
             }, JSON.stringify(forceContentUpdateResponse))
           } else {
-              request.respond(200, {
-                'Content-Type': 'application/json'
-              }, JSON.stringify(startResponse))
-            }
-          })
+            request.respond(200, {
+              'Content-Type': 'application/json'
+            }, JSON.stringify(startResponse))
+          }
+        })
+
         Leanplum.setVariables(userAttributes)
         Leanplum.start()
+
         var isVariablesChangedFromStart = true
         let vars = forceContentUpdateResponse.response[0].vars
         Leanplum.addVariablesChangedHandler(() => {
           if(isVariablesChangedFromStart) {
+            // female, 27
             isVariablesChangedFromStart = false;
             expect(Leanplum.getVariables().gender).toBe(userAttributes.gender)
             expect(Leanplum.getVariables().age).toBe(userAttributes.age)
           } else {
+            // male, 28
             expect(Leanplum.getVariables().gender).toBe(vars.gender)
             expect(Leanplum.getVariables().age).toBe(vars.age)
-            return done()
+            done()
           }
         })
 
@@ -397,7 +403,10 @@ Object.keys(testModes).forEach((mode) => {
           if (getAction(request) == 'getVars'){
             request.respond(200, {
               'Content-Type': 'application/json'
-            }, JSON.stringify({"response": [{"success": false}]}))
+            }, JSON.stringify({"response": [{
+                "success": false,
+                "sha256": migrationResponses.LP.response[0].sha256
+              }]}))
           } else {
               request.respond(200, {
                 'Content-Type': 'application/json'
