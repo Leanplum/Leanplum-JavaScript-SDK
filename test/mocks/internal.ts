@@ -1,12 +1,15 @@
 import LeanplumRequest from '../../src/LeanplumRequest'
 import PushManager from '../../src/PushManager'
 import VarCache from '../../src/VarCache'
+import EventEmitter from '../../src/EventEmitter'
+import MigrationManager from '../../src/MigrationManager'
+import { BatchResponse } from '../../src/types/internal'
 
-export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> = {
+export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> & { events?: EventEmitter } = {
   getLastResponse: jest.fn().mockImplementation((data) => data.response[0]),
   isResponseSuccess: jest.fn().mockImplementation((response) => Boolean(response?.success)),
   request: jest.fn(),
-  getFileUrl: jest.fn(),
+  getFileUrl: jest.fn()
 }
 
 export const lpSocketMock = {
@@ -36,10 +39,18 @@ export const varCacheMock: Partial<jest.Mocked<VarCache>> = {
   clearUserContent: jest.fn(),
 }
 
+export const migrationMock: Partial<jest.Mocked<MigrationManager>> = {
+  getState: jest.fn().mockImplementation(
+    (callback) => callback('lp')
+  ),
+  initCleverTap: jest.fn(),
+  duplicateRequest: jest.fn().mockReturnValue(false)
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mockNextResponse(data: any): void {
+export function mockNextResponse(data: BatchResponse): void {
   lpRequestMock.request.mockImplementationOnce(
-    (method, args, options) => {
+    (_method, _args, options) => {
       if (options.response) {
         options.response(data)
       }

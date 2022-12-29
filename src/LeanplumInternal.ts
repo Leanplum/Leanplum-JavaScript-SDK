@@ -1,19 +1,3 @@
-/*
- *  Copyright 2020 Leanplum Inc. All rights reserved.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at:
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 import ArgsBuilder from './ArgsBuilder'
 import BrowserDetector from './BrowserDetector'
 import Constants from './Constants'
@@ -25,6 +9,7 @@ import StorageManager from './StorageManager'
 import PushManager from './PushManager'
 import Messages from './Messages'
 import EventEmitter from './EventEmitter'
+import MigrationManager from './MigrationManager'
 import {
   Action,
   EventType,
@@ -36,6 +21,7 @@ import {
   WebPushOptions,
   UserAttributes,
 } from './types/public'
+import { BatchResponse, MigrationState } from './types/internal'
 import VarCache from './VarCache'
 
 /* eslint-disable @typescript-eslint/ban-types */
@@ -44,6 +30,9 @@ import VarCache from './VarCache'
 const SESSION_KEY = Constants.DEFAULT_KEYS.SESSION
 
 export default class LeanplumInternal {
+  private _migration = new MigrationManager(
+    this.createRequest.bind(this)
+  )
   private _events: EventEmitter = new EventEmitter();
   private _browserDetector: BrowserDetector
   private _internalState: InternalState = new InternalState()
@@ -59,7 +48,10 @@ export default class LeanplumInternal {
     this._lpRequest.getLastResponse.bind(this._lpRequest),
     this._events
   )
-  private _pushManager: PushManager = new PushManager(this.createRequest.bind(this))
+  private _pushManager: PushManager = new PushManager(
+    this._events,
+    this.createRequest.bind(this)
+  )
   private _webPushOptions: WebPushOptions
   private _messages: Messages = new Messages(
     this._events,
@@ -73,6 +65,8 @@ export default class LeanplumInternal {
   private _systemName: string
   private _systemVersion: string
   private _sessionLength: number
+
+  private _ct: any
 
   constructor(private wnd: Window) {
     this._browserDetector = new BrowserDetector(wnd)
@@ -90,6 +84,18 @@ export default class LeanplumInternal {
     this._events.on('registerForPush', () => this.registerForWebPush())
     this._events.on('updateDevServerHost',
       (host: string) => this.setSocketHost(host))
+    this._events.on('migrateStateReceived',
+      (sha: string) => this._migration.verifyState(sha))
+
+    this._events.on('webPushSubscribed',
+      () => {
+        this._ct && this._ct.notifications.push({
+          titleText: '',
+          bodyText: '',
+          okButtonText: '',
+          rejectButtonText: '',
+        })
+      })
   }
 
   setApiPath(apiPath: string): void {
@@ -245,7 +251,7 @@ export default class LeanplumInternal {
     this.createRequest(Constants.METHODS.GET_VARS, args, {
       queued: false,
       sendNow: true,
-      response: (response: Array<Object>) => {
+      response: (response: BatchResponse) => {
         const getVarsResponse = this._lpRequest.getLastResponse(response)
         const isSuccess = this._lpRequest.isResponseSuccess(getVarsResponse)
         if (isSuccess) {
@@ -290,79 +296,102 @@ export default class LeanplumInternal {
       return this.startFromCache(userId, userAttributes, callback)
     }
 
-    this._lpRequest.userId = userId
+    this._migration.getState((state: MigrationState) => {
+      if (state === MigrationState.DUPLICATE) {
+        this._ct = this._migration.initCleverTap()
 
-    if (callback) {
-      this.addStartResponseHandler(callback)
-    }
-
-    this._varCache.onUpdate = () => {
-      this._varCache.triggerVariablesChangedHandlers()
-    }
-
-    const args = new ArgsBuilder()
-      .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
-      .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
-      .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
-      .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
-      .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
-      .add(Constants.PARAMS.SYSTEM_NAME, this._systemName || this._browserDetector.OS)
-      .add(Constants.PARAMS.SYSTEM_VERSION, (this._systemVersion || '').toString())
-      .add(Constants.PARAMS.BROWSER_NAME, this._browserDetector.browser)
-      .add(Constants.PARAMS.BROWSER_VERSION, this._browserDetector.version.toString())
-      .add(Constants.PARAMS.LOCALE, this._locale || Constants.VALUES.DETECT)
-      .add(Constants.PARAMS.DEVICE_NAME, this._deviceName ||
-          `${this._browserDetector.browser} ${this._browserDetector.version}`)
-      .add(Constants.PARAMS.DEVICE_MODEL, this._deviceModel || 'Web Browser')
-      .add(Constants.PARAMS.NEWSFEED_MESSAGES, this._lpInbox.messageIds())
-      .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
-      .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, this._internalState.variantDebugInfoEnabled)
-
-    this.createRequest(Constants.METHODS.START, args, {
-      queued: true,
-      sendNow: true,
-      response: (response: Array<Object>) => {
-        this._internalState.hasStarted = true
-        const startResponse = this._lpRequest.getLastResponse(response)
-        const isSuccess = this._lpRequest.isResponseSuccess(startResponse)
-        this._internalState.startSuccessful = isSuccess
-
-        if (isSuccess) {
-
-          this.updateSession()
-
-          const messages = startResponse[Constants.KEYS.MESSAGES]
-          if (startResponse.actionDefinitions) {
-            messages.actionDefinitions = startResponse.actionDefinitions
+        // silently register subscription in CT
+        this.isWebPushSubscribed().then((isSubscribed) => {
+          if (isSubscribed) {
+            this._events.emit('webPushSubscribed')
           }
-          this._events.emit('messagesReceived', messages)
+        })
+      } else if (state === MigrationState.CLEVERTAP) {
+        this._ct = this._migration.initCleverTap()
 
-          if (startResponse[Constants.KEYS.SYNC_INBOX]) {
-            this._lpInbox.downloadMessages()
-          }
+        Object.values(Constants.DEFAULT_KEYS)
+          .filter(key => ![
+            Constants.DEFAULT_KEYS.USER_ID,
+            Constants.DEFAULT_KEYS.DEVICE_ID,
+            Constants.DEFAULT_KEYS.TOKEN,
+          ].includes(key))
+          .forEach(key => StorageManager.remove(key))
+      }
 
-          if (this._internalState.devMode) {
-            const latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
-            if (latestVersion) {
-              console.log(`A newer version of the Leanplum SDK, ${latestVersion}, is available.
-Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
+      this._lpRequest.userId = userId
+
+      if (callback) {
+        this.addStartResponseHandler(callback)
+      }
+
+      this._varCache.onUpdate = () => {
+        this._varCache.triggerVariablesChangedHandlers()
+      }
+
+      const args = new ArgsBuilder()
+        .add(Constants.PARAMS.USER_ATTRIBUTES, JSON.stringify(userAttributes))
+        .add(Constants.PARAMS.COUNTRY, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.REGION, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.CITY, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.LOCATION, Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.SYSTEM_NAME, this._systemName || this._browserDetector.OS)
+        .add(Constants.PARAMS.SYSTEM_VERSION, (this._systemVersion || '').toString())
+        .add(Constants.PARAMS.BROWSER_NAME, this._browserDetector.browser)
+        .add(Constants.PARAMS.BROWSER_VERSION, this._browserDetector.version.toString())
+        .add(Constants.PARAMS.LOCALE, this._locale || Constants.VALUES.DETECT)
+        .add(Constants.PARAMS.DEVICE_NAME, this._deviceName ||
+            `${this._browserDetector.browser} ${this._browserDetector.version}`)
+        .add(Constants.PARAMS.DEVICE_MODEL, this._deviceModel || 'Web Browser')
+        .add(Constants.PARAMS.NEWSFEED_MESSAGES, this._lpInbox.messageIds())
+        .add(Constants.PARAMS.INCLUDE_DEFAULTS, false)
+        .add(Constants.PARAMS.INCLUDE_VARIANT_DEBUG_INFO, this._internalState.variantDebugInfoEnabled)
+
+      this.createRequest(Constants.METHODS.START, args, {
+        queued: true,
+        sendNow: true,
+        response: (response: BatchResponse) => {
+          this._internalState.hasStarted = true
+          const startResponse = this._lpRequest.getLastResponse(response)
+          const isSuccess = this._lpRequest.isResponseSuccess(startResponse)
+          this._internalState.startSuccessful = isSuccess
+
+          if (isSuccess) {
+
+            this.updateSession()
+
+            const messages = startResponse[Constants.KEYS.MESSAGES]
+            if (startResponse.actionDefinitions) {
+              messages.actionDefinitions = startResponse.actionDefinitions
             }
-            this.connectSocket()
+            this._events.emit('messagesReceived', messages)
+
+            if (startResponse[Constants.KEYS.SYNC_INBOX]) {
+              this._lpInbox.downloadMessages()
+            }
+
+            if (this._internalState.devMode) {
+              const latestVersion = startResponse[Constants.KEYS.LATEST_VERSION]
+              if (latestVersion) {
+                console.log(`A newer version of the Leanplum SDK, ${latestVersion}, is available.
+  Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javascript-setup to download it.`)
+              }
+              this.connectSocket()
+            }
+
+            this._varCache.applyDiffs(
+              startResponse[Constants.KEYS.VARS],
+              startResponse[Constants.KEYS.VARIANTS],
+              startResponse[Constants.KEYS.ACTION_DEFINITIONS])
+            this._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
+            this._varCache.token = startResponse[Constants.KEYS.TOKEN]
+          } else {
+            this._varCache.loadDiffs()
           }
 
-          this._varCache.applyDiffs(
-            startResponse[Constants.KEYS.VARS],
-            startResponse[Constants.KEYS.VARIANTS],
-            startResponse[Constants.KEYS.ACTION_DEFINITIONS])
-          this._varCache.setVariantDebugInfo(startResponse[Constants.KEYS.VARIANT_DEBUG_INFO])
-          this._varCache.token = startResponse[Constants.KEYS.TOKEN]
-        } else {
-          this._varCache.loadDiffs()
-        }
-
-        this._events.emit('start', { success: isSuccess })
-        this._internalState.triggerStartHandlers()
-      },
+          this._events.emit('start', { success: isSuccess })
+          this._internalState.triggerStartHandlers()
+        },
+      })
     })
   }
 
@@ -524,6 +553,7 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
 
     this.createRequest(Constants.METHODS.TRACK, args, {
       queued: true,
+      isPurchase: true,
     })
   }
 
@@ -618,10 +648,15 @@ Use "npm update leanplum-sdk" or go to https://docs.leanplum.com/reference#javas
   }
 
   private createRequest(action: string, args: ArgsBuilder, options: any = {}): void {
-    this._lpRequest.request(action, args, {
-      devMode: this._internalState.devMode,
-      ...options,
-    })
+
+    const suppress = this._migration.duplicateRequest(action, args, options)
+
+    if (!suppress) {
+      this._lpRequest.request(action, args, {
+        devMode: this._internalState.devMode,
+        ...options,
+      })
+    }
   }
 
   private connectSocket(): void {

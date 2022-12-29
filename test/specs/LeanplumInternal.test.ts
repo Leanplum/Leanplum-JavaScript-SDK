@@ -16,16 +16,19 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import clevertap from 'clevertap-web-sdk'
+import { MigrationState } from '../../src/types/internal'
 import Constants from '../../src/Constants'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { APP_ID, KEY_DEV } from '../data/constants'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, lpSocketMock, mockNextResponse, pushManagerMock, varCacheMock } from '../mocks/internal'
+import { lpRequestMock, lpSocketMock, mockNextResponse, pushManagerMock, varCacheMock, migrationMock } from '../mocks/internal'
 
 jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation(() => lpRequestMock))
 jest.mock('../../src/LeanplumSocket', () => jest.fn().mockImplementation(() => lpSocketMock))
 jest.mock('../../src/PushManager', () => jest.fn().mockImplementation(() => pushManagerMock))
 jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
+jest.mock('../../src/MigrationManager', () => jest.fn().mockImplementation(() => migrationMock))
 
 describe(LeanplumInternal, () => {
   let lp: LeanplumInternal
@@ -564,7 +567,7 @@ describe(LeanplumInternal, () => {
         expect(registerCall[1]).toEqual({ scope })
       })
 
-      it('can set client url for push regsitration', async() => {
+      it('can set client url for push registration', async() => {
         pushManagerMock.isWebPushSupported.mockReturnValueOnce(true)
 
         const clientUrl = '/products'
@@ -919,6 +922,78 @@ describe(LeanplumInternal, () => {
       })
 
       expect(lp.registerForWebPush).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('Migration state handling', () => {
+    beforeEach(() => {
+      jest.spyOn(clevertap.notifications, 'push')
+      jest.spyOn(lp, 'isWebPushSubscribed').mockReturnValueOnce(Promise.resolve(false))
+    })
+
+    it('initializes clevertap and calls start if migration state is lp+ct', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.DUPLICATE)
+      );
+
+      lp.start()
+
+      expect(migrationMock.initCleverTap).toHaveBeenCalledTimes(1)
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(1)
+      const [method] = lpRequestMock.request.mock.calls[0]
+      expect(method).toBe('start')
+    })
+
+    it('initializes clevertap if migration state is ct', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.CLEVERTAP)
+      );
+
+      lp.start()
+
+      expect(migrationMock.initCleverTap).toHaveBeenCalledTimes(1)
+    })
+
+    it('cleans up LP data in CT-only mode', () => {
+      const KEYS = Constants.DEFAULT_KEYS
+      const keys = Object.values(KEYS)
+
+      keys.forEach(key => localStorage[key] = 'aaa');
+
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.CLEVERTAP)
+      );
+
+      lp.start()
+
+      expect(localStorage[KEYS.COUNT]).toBeUndefined()
+      expect(localStorage[KEYS.MESSAGE_CACHE]).toBeUndefined()
+      expect(localStorage[KEYS.ACTION_DEFINITIONS]).toBeUndefined()
+      expect(localStorage[KEYS.USER_ID]).toBe('aaa')
+      expect(localStorage[KEYS.DEVICE_ID]).toBe('aaa')
+      expect(localStorage[KEYS.TOKEN]).toBe('aaa')
+    })
+
+    it('suppresses requests in ct-only mode', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.CLEVERTAP)
+      );
+      migrationMock.duplicateRequest.mockReturnValueOnce(true)
+
+      lp.start()
+
+      expect(lpRequestMock.request).toHaveBeenCalledTimes(0)
+    })
+
+    it('does not push notification token if not subscribed', () => {
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.DUPLICATE)
+      );
+
+      lp.start()
+
+      expect(clevertap.notifications.push).toHaveBeenCalledTimes(0)
     })
   })
 
