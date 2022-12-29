@@ -96,6 +96,7 @@ Object.keys(testModes).forEach((mode) => {
     const LEANPLUM_PATH = '../../dist/leanplum.js'
 
     beforeEach(() => {
+      localStorage.setItem('__leanplum_migration_state', JSON.stringify(migrationResponses.LP.response[0]))
       Leanplum = require(LEANPLUM_PATH)
 
       setAppId(testModes[mode])
