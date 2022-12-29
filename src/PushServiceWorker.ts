@@ -33,7 +33,7 @@
  *  limitations under the License
  *
  */
-// eslint-disable no-var
+/* eslint-disable no-var */
 
 
 declare function importScripts(url: string): void;
