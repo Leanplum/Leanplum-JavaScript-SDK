@@ -1,6 +1,7 @@
+import Leanplum from './dist/leanplum';
 var isProdKey = function (accessKey) { return /^prod_/.test(accessKey); };
 var d = Leanplum._lp._browserDetector;
-var browser = d.browser + " " + d.version + ", running on " + d.OS;
+var browser = "".concat(d.browser, " ").concat(d.version, ", running on ").concat(d.OS);
 $('#browserVersion').text(browser);
 $('[data-action=setup]')
     .submit(function (e) {
@@ -8,7 +9,7 @@ $('[data-action=setup]')
     var appId = $('#appId').val();
     var accessKey = $('#accessKey').val();
     var apiPath = $('#apiPath').val();
-    var useSocketHost = function (s) { return Leanplum.setSocketHost(s + ".leanplum.com"); };
+    var useSocketHost = function (s) { return Leanplum.setSocketHost("".concat(s, ".leanplum.com")); };
     if (appId && accessKey) {
         if (isProdKey(accessKey)) {
             Leanplum.setAppIdForProductionMode(appId, accessKey);
@@ -190,13 +191,13 @@ function renderAppInbox() {
     var friendlyText = function (timestamp) {
         var MS_IN_DAY = 24 * 60 * 60 * 1000;
         var diff = Math.floor((Date.now() - timestamp) / MS_IN_DAY);
-        return (diff > 1 ? diff + " days ago" :
+        return (diff > 1 ? "".concat(diff, " days ago") :
             diff > 0 ? 'yesterday' :
                 'today');
     };
     /* eslint-disable max-len */
     var html = '<div class="list-group mb-3">' +
-        inbox.allMessages().map(function (message) { return "\n      <button type=\"button\" class=\"list-group-item list-group-item-action\" data-id=\"" + message.id() + "\">\n        <span class=\"unread-indicator bg-primary\" " + (message.isRead() ? 'hidden' : '') + "></span>\n        " + (message.imageUrl() ? '<img width=64 class="rounded float-left mr-3" src="' + message.imageUrl() + '" />' : '') + "\n        <div class=\"d-flex justify-content-between\">\n          <h5 class=\"mb-1\">" + message.title() + "</h5>\n          <small title=\"" + new Date(message.timestamp()).toLocaleDateString() + "\">\n            " + friendlyText(message.timestamp()) + "\n          </small>\n        </div>\n        <div class=\"float-right ml-3\">\n          <a href=\"#\" class=\"btn btn-sm btn-outline-secondary m-1\" data-action=\"markAsRead\" title=\"Mark as read\" " + (message.isRead() ? 'hidden' : '') + ">\u2713</a>\n          <a href=\"#\" class=\"btn btn-sm btn-outline-danger\" data-action=\"delete\" title=\"Delete\">\u00D7</a>\n        </div>\n        <p class=\"text-left\">" + message.subtitle() + "</p>\n      </button>\n    "; }).join('') +
+        inbox.allMessages().map(function (message) { return "\n      <button type=\"button\" class=\"list-group-item list-group-item-action\" data-id=\"".concat(message.id(), "\">\n        <span class=\"unread-indicator bg-primary\" ").concat(message.isRead() ? 'hidden' : '', "></span>\n        ").concat(message.imageUrl() ? '<img width=64 class="rounded float-left mr-3" src="' + message.imageUrl() + '" />' : '', "\n        <div class=\"d-flex justify-content-between\">\n          <h5 class=\"mb-1\">").concat(message.title(), "</h5>\n          <small title=\"").concat(new Date(message.timestamp()).toLocaleDateString(), "\">\n            ").concat(friendlyText(message.timestamp()), "\n          </small>\n        </div>\n        <div class=\"float-right ml-3\">\n          <a href=\"#\" class=\"btn btn-sm btn-outline-secondary m-1\" data-action=\"markAsRead\" title=\"Mark as read\" ").concat(message.isRead() ? 'hidden' : '', ">\u2713</a>\n          <a href=\"#\" class=\"btn btn-sm btn-outline-danger\" data-action=\"delete\" title=\"Delete\">\u00D7</a>\n        </div>\n        <p class=\"text-left\">").concat(message.subtitle(), "</p>\n      </button>\n    "); }).join('') +
         '</div>';
     /* eslint-enable max-len */
     $('#appInbox').html(html);
@@ -228,7 +229,7 @@ Leanplum.on('showMessage', function (args) {
             // Dismiss button has no action
             buttons.push({ text: 'Dismiss' });
         }
-        body = "<iframe class=\"w-100 border-0\" src=\"" + message.URL + "\"></iframe>";
+        body = "<iframe class=\"w-100 border-0\" src=\"".concat(message.URL, "\"></iframe>");
     }
     else if (message.__name__ === 'Center Popup') {
         title = message.Title.Text;
@@ -247,14 +248,14 @@ Leanplum.on('showMessage', function (args) {
     }
     else {
         // unknown action, do not show
-        console.log("Skipping unsupported (by Rondo) action: " + message.__name__);
+        console.log("Skipping unsupported (by Rondo) action: ".concat(message.__name__));
         return;
     }
-    var modalId = "lpModal-" + message.messageId + (args.isPreview ? '-preview' : '');
-    var getButtonHtml = function (button) { return ("\n    <button\n      class=\"btn btn-" + (button.primary ? 'primary' : 'secondary') + "\"\n      data-action=\"" + button.action + "\"\n      data-toggle=\"modal\"\n      data-target=\"#" + modalId + "\"\n    >\n      " + button.text + "\n    </button>\n  "); };
-    var footerHtml = buttons.length && ("\n    <div class=\"modal-footer\">" + buttons.map(getButtonHtml).join('') + "</div>\n  ");
-    var headerHtml = title && ("\n    <div class=\"modal-header\">\n      <h5 class=\"modal-title\">" + title + "</h5>\n      <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n    </div>\n  ");
-    var modalHtml = ("\n    <div class=\"modal\" id=\"" + modalId + "\" tabIndex=\"-1\" role=\"dialog\">\n      <form class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n        <div class=\"modal-content\">\n          " + (headerHtml || '') + "\n          <div class=\"modal-body\">\n            " + body + "\n          </div>\n          " + (footerHtml || '') + "\n        </div>\n      </form>\n    </div>\n  ");
+    var modalId = "lpModal-".concat(message.messageId).concat(args.isPreview ? '-preview' : '');
+    var getButtonHtml = function (button) { return ("\n    <button\n      class=\"btn btn-".concat(button.primary ? 'primary' : 'secondary', "\"\n      data-action=\"").concat(button.action, "\"\n      data-toggle=\"modal\"\n      data-target=\"#").concat(modalId, "\"\n    >\n      ").concat(button.text, "\n    </button>\n  ")); };
+    var footerHtml = buttons.length && ("\n    <div class=\"modal-footer\">".concat(buttons.map(getButtonHtml).join(''), "</div>\n  "));
+    var headerHtml = title && ("\n    <div class=\"modal-header\">\n      <h5 class=\"modal-title\">".concat(title, "</h5>\n      <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n    </div>\n  "));
+    var modalHtml = ("\n    <div class=\"modal\" id=\"".concat(modalId, "\" tabIndex=\"-1\" role=\"dialog\">\n      <form class=\"modal-dialog modal-dialog-centered\" role=\"document\">\n        <div class=\"modal-content\">\n          ").concat(headerHtml || '', "\n          <div class=\"modal-body\">\n            ").concat(body, "\n          </div>\n          ").concat(footerHtml || '', "\n        </div>\n      </form>\n    </div>\n  "));
     var runTrackedAction = function (e) {
         e.preventDefault();
         var action = $(e.currentTarget).data('action');
@@ -264,7 +265,7 @@ Leanplum.on('showMessage', function (args) {
     };
     var modal = $(modalHtml)
         .on('shown.bs.modal', function () { return context.track(); })
-        .on('hidden.bs.modal', function () { return $("#" + modalId).remove(); });
+        .on('hidden.bs.modal', function () { return $("#".concat(modalId)).remove(); });
     modal.hide().appendTo('body');
     modal.find('button').on('click', runTrackedAction);
     modal.modal({ show: true });
