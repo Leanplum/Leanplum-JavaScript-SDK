@@ -1,4 +1,3 @@
-import Leanplum from './dist/leanplum';
 var isProdKey = function (accessKey) { return /^prod_/.test(accessKey); };
 var d = Leanplum._lp._browserDetector;
 var browser = "".concat(d.browser, " ").concat(d.version, ", running on ").concat(d.OS);

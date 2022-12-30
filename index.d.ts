@@ -1,1 +1,10 @@
-export {};
+declare const Leanplum: any;
+declare const isProdKey: (accessKey: string) => boolean;
+declare const d: any;
+declare const browser: string;
+declare let scope: any;
+declare let serviceWorkerUrl: string;
+declare function refreshWebPush(): void;
+declare function updateUserId(): void;
+declare const inbox: any;
+declare function renderAppInbox(): void;
