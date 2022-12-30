@@ -101,6 +101,7 @@ function createConfig(
       }],
     },
     output: {
+      hashFunction: 'xxhash64',
       path: path.resolve(__dirname, './dist'),
       filename: filename,
     },
