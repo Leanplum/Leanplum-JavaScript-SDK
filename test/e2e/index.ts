@@ -1,8 +1,8 @@
-import Leanplum from './dist/leanplum'
+declare const Leanplum: any
 
 const isProdKey = (accessKey: string): boolean => /^prod_/.test(accessKey)
 
-const d = (Leanplum as any)._lp._browserDetector;
+const d = Leanplum._lp._browserDetector;
 const browser = `${d.browser} ${d.version}, running on ${d.OS}`;
 $('#browserVersion').text(browser);
 
