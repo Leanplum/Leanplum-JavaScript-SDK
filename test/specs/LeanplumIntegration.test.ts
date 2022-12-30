@@ -94,7 +94,7 @@ describe('Integration Tests', () => {
     })
   })
 
-  it('pushes notification token when registering with LP', async (done) => {
+  it('pushes notification token when registering with LP', (done) => {
     mockNextResponse(migrationResponses.DUPLICATE)
     mockNextResponse(startResponse)
 
@@ -106,7 +106,6 @@ describe('Integration Tests', () => {
 
       done()
     })
-
   })
 
   it('pushes previously registered notification token', (done) => {

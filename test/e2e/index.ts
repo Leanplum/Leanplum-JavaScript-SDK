@@ -1,5 +1,4 @@
-declare const Leanplum: typeof import('../../dist/leanplum').default
-import { RenderOptions } from '../../dist/leanplum'
+import Leanplum from './dist/leanplum'
 
 const isProdKey = (accessKey: string): boolean => /^prod_/.test(accessKey)
 
@@ -257,7 +256,7 @@ function renderAppInbox(): void {
 
 // register handler for in-app messages
 Leanplum.enableRichInAppMessages(true)
-Leanplum.on('showMessage', (args: RenderOptions) => {
+Leanplum.on('showMessage', (args) => {
   const { message, context } = args
   let title, body
   const buttons = []

@@ -12,7 +12,7 @@ describe(Messages, () => {
   let getFileUrl: jest.Mock
 
   beforeEach(() => {
-    localStorage.clear()
+    window.localStorage.clear()
     Network.prototype.ajax = jest.fn()
     events = new EventEmitter()
     createRequest = jest.fn().mockImplementation((_, __, options) => options?.response())
@@ -1194,7 +1194,7 @@ describe(Messages, () => {
 
       events.emit('track', { eventName: 'Add to cart' })
 
-      await (new Promise(resolve => setImmediate(resolve)));
+      await (new Promise(resolve => setTimeout(resolve, 0)));
       const messageVars = JSON.stringify({ messageId: "12345", ...vars })
       expect(iframe.srcdoc).toEqual(
         `<body><script>window.messageId='12345'</script>${messageVars}</body>`
