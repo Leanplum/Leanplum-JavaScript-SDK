@@ -89,11 +89,14 @@ export default class LeanplumInternal {
 
     this._events.on('webPushSubscribed',
       () => {
+        const serviceWorkerPath = this._webPushOptions?.serviceWorkerUrl
+        const path = serviceWorkerPath ? { serviceWorkerPath } : {}
         this._ct && this._ct.notifications.push({
           titleText: '',
           bodyText: '',
           okButtonText: '',
           rejectButtonText: '',
+          ...path,
         })
       })
   }
