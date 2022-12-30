@@ -4,7 +4,7 @@ import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
 import fs from 'fs'
 import merge from 'lodash.merge'
 import path from 'path'
-import UglifyJS from 'uglifyjs-webpack-plugin'
+import TerserPlugin from 'terser-webpack-plugin';
 import webpack from 'webpack'
 
 let configuration = null
@@ -16,8 +16,9 @@ class DtsBundlePlugin {
 
   apply(compiler: webpack.Compiler): void {
     compiler.hooks.done.tap('DtsBundlePlugin', (stats) => {
+      return;
       // Do not bundle TypeScript declaration files if there are errors.
-      if (stats.compilation.errors?.length) {
+      if (stats.hasErrors()) {
         return
       }
 
@@ -59,24 +60,19 @@ class DtsBundlePlugin {
   }
 }
 
-const optimization: webpack.Options.Optimization = {
+const optimization = {
   minimize: true,
   minimizer: [
-    new UglifyJS({
-      cache: true,
+    new TerserPlugin({
       parallel: true,
-      uglifyOptions: {
+      terserOptions: {
+        // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
         ecma: 5,
         mangle: true,
-        output: {
-          beautify: false,
-          comments: false,
-        },
-        warnings: false,
       },
     }),
   ],
-  noEmitOnErrors: true,
+  emitOnErrors: false,
   sideEffects: true,
   usedExports: true,
 }

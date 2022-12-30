@@ -316,7 +316,7 @@ Object.keys(testModes).forEach((mode) => {
     })
 
     describe('Test variable changed callback after forceContentUpdate.', () => {
-      it('test setVariable forceContentUpdate', async (done) => {
+      it('test setVariable forceContentUpdate', (done) => {
         interceptRequest((request) => {
           const methodName = getAction(request)
           if (methodName == 'getVars'){

@@ -372,7 +372,7 @@ export default class Messages {
     if ('srcdoc' in iframe) {
       iframe.srcdoc = content
     } else {
-      const doc = iframe.contentWindow.document
+      const doc = (iframe as HTMLIFrameElement).contentWindow.document
       doc.open()
       doc.write(content)
       doc.close()
