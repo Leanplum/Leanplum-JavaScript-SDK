@@ -249,8 +249,11 @@ describe(MigrationManager, () => {
 
       expect(clevertap.profile.push).toHaveBeenCalledTimes(1)
       expect(clevertap.profile.push).toHaveBeenCalledWith({
-        age: 42,
-        interests: '[jumping,running]'
+        Site: {
+          age: 42,
+          interests: '[jumping,running]',
+          'tz': expect.any(String)
+        }
       })
     })
 
@@ -268,7 +271,10 @@ describe(MigrationManager, () => {
 
       expect(clevertap.profile.push).toHaveBeenCalledTimes(1)
       expect(clevertap.profile.push).toHaveBeenCalledWith({
-        'ct-name1': 'foo'
+        Site: {
+          'ct-name1': 'foo',
+          'tz': expect.any(String)
+        }
       })
     })
 

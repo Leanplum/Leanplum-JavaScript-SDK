@@ -142,7 +142,7 @@ export default class MigrationManager {
       Object.assign(attrs, { Identity: userId })
       clevertap.onUserLogin.push({ Site: attrs })
     } else {
-      clevertap.profile.push(attrs)
+      clevertap.profile.push({ Site: attrs })
     }
   }
 
