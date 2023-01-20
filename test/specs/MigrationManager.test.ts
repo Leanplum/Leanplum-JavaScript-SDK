@@ -77,7 +77,7 @@ describe(MigrationManager, () => {
     })
   })
 
-  describe('modifyRequest', () => {
+  describe('duplicateRequest', () => {
     it('adds ct parameter when duplicating requests', () => {
       setMigrationState(DUPLICATE)
 
@@ -97,6 +97,14 @@ describe(MigrationManager, () => {
       const suppress = manager.duplicateRequest('start', args, {})
 
       expect(args.buildDict().ct).toBeUndefined()
+      expect(suppress).toBe(false)
+    })
+
+    it('does not crash when request has no args', () => {
+      setMigrationState(DUPLICATE)
+
+      const suppress = manager.duplicateRequest('getNewsfeedMessages', undefined, {})
+
       expect(suppress).toBe(false)
     })
 

@@ -97,6 +97,10 @@ export default class MigrationManager {
       return false
     }
 
+    if (!args) {
+      args = new ArgsBuilder()
+    }
+
     if (state === MigrationState.DUPLICATE) {
       args.add(Constants.PARAMS.CT, true)
     }
