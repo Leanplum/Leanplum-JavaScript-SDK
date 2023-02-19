@@ -3,7 +3,6 @@ import { CreateRequestFunction, MigrationState } from './types/internal'
 import StorageManager from './StorageManager'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
-import shajs from 'sha.js'
 
 type Region = 'eu1' | 'in1' | 'sg1' | 'us1' | 'sk1';
 
@@ -244,7 +243,6 @@ export enum IdentityState {
 
 export class IdentityManager {
   private state: IdentityState = IdentityState.ANONYMOUS
-  private anonymousLoginUserId: string
 
   constructor(
     private userId: string,
@@ -255,7 +253,6 @@ export class IdentityManager {
 
   public setUserId(userId: string): void {
     if (this.state === IdentityState.ANONYMOUS) {
-      this.anonymousLoginUserId = userId
       this.state = IdentityState.IDENTIFIED
     }
     this.userId = userId
@@ -270,20 +267,7 @@ export class IdentityManager {
   }
 
   public identifyNonAnonymous(): void {
-    if (this.state === IdentityState.ANONYMOUS) {
-      this.anonymousLoginUserId = this.userId
-    }
     this.state = IdentityState.IDENTIFIED
-  }
-
-  public get cleverTapID(): string {
-    if (this.userId !== this.anonymousLoginUserId && !this.isAnonymous) {
-      const sha = this.sha256(this.userId)
-
-      return `${this.deviceId}_${sha}`
-    }
-
-    return this.deviceId
   }
 
   public get profile(): { [key: string]: string } {
@@ -292,11 +276,5 @@ export class IdentityManager {
 
   public get isAnonymous(): boolean {
     return this.userId === this.deviceId
-  }
-
-  private sha256(s: string): string {
-    const sha = new shajs.sha256().update(s).digest('hex')
-
-    return sha.substring(0, 10)
   }
 }
