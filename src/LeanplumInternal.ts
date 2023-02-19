@@ -49,7 +49,6 @@ export default class LeanplumInternal {
     this._events
   )
   private _pushManager: PushManager = new PushManager(
-    this._events,
     this.createRequest.bind(this)
   )
   private _webPushOptions: WebPushOptions
@@ -86,19 +85,6 @@ export default class LeanplumInternal {
       (host: string) => this.setSocketHost(host))
     this._events.on('migrateStateReceived',
       (sha: string) => this._migration.verifyState(sha))
-
-    this._events.on('webPushSubscribed',
-      () => {
-        const serviceWorkerPath = this._webPushOptions?.serviceWorkerUrl
-        const path = serviceWorkerPath ? { serviceWorkerPath } : {}
-        this._ct && this._ct.notifications.push({
-          titleText: '',
-          bodyText: '',
-          okButtonText: '',
-          rejectButtonText: '',
-          ...path,
-        })
-      })
   }
 
   setApiPath(apiPath: string): void {
@@ -302,15 +288,25 @@ export default class LeanplumInternal {
     this._migration.getState((state: MigrationState) => {
       if (state === MigrationState.DUPLICATE) {
         this._ct = this._migration.initCleverTap()
-
-        // silently register subscription in CT
-        this.isWebPushSubscribed().then((isSubscribed) => {
-          if (isSubscribed) {
-            this._events.emit('webPushSubscribed')
-          }
-        })
       } else if (state === MigrationState.CLEVERTAP) {
         this._ct = this._migration.initCleverTap()
+
+        // move subscription in CT
+        this.isWebPushSubscribed().then((isSubscribed) => {
+          if (isSubscribed) {
+            this._pushManager.unsubscribeUser()
+
+            const serviceWorkerPath = this._webPushOptions?.serviceWorkerUrl
+            const path = serviceWorkerPath ? { serviceWorkerPath } : {}
+            this._ct && this._ct.notifications.push({
+              titleText: '',
+              bodyText: '',
+              okButtonText: '',
+              rejectButtonText: '',
+              ...path,
+            })
+          }
+        })
 
         Object.values(Constants.DEFAULT_KEYS)
           .filter(key => ![

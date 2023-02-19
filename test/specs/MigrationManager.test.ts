@@ -351,6 +351,29 @@ describe(MigrationManager, () => {
         }
       })
     })
+
+    it(`sends onUserLogin on start with userId parameter`, () => {
+      localStorage.setItem('__leanplum_device_id', 'anon1')
+      localStorage.setItem('__leanplum_user_id', 'anon1')
+      manager = new MigrationManager(createRequest)
+
+      setMigrationState(DUPLICATE)
+
+      jest.spyOn(clevertap.onUserLogin, 'push')
+
+      const args = new ArgsBuilder()
+      args.add('userId', 'john')
+
+      manager.duplicateRequest('start', args, {})
+
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledTimes(1)
+      expect(clevertap.onUserLogin.push).toHaveBeenCalledWith({
+        Site: {
+          'Identity': 'john',
+          'tz': expect.any(String)
+        }
+      })
+    })
   })
 
   function setMigrationState(state: Object): void {

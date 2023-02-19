@@ -3,6 +3,7 @@ import { CreateRequestFunction, MigrationState } from './types/internal'
 import StorageManager from './StorageManager'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
+import shajs from 'sha.js'
 
 type Region = 'eu1' | 'in1' | 'sg1' | 'us1' | 'sk1';
 
@@ -107,6 +108,11 @@ export default class MigrationManager {
 
     const argsDict = args?.buildDict() || {}
 
+    const userId = argsDict[Constants.PARAMS.USER_ID]
+    if (userId) {
+      this.identity.setUserId(userId)
+    }
+
     switch (action) {
       case Constants.METHODS.START:
         if (!this.identity.isAnonymous) {
@@ -143,7 +149,8 @@ export default class MigrationManager {
       )
 
     if (userId) {
-      Object.assign(attrs, { Identity: userId })
+      this.identity.setUserId(userId)
+      Object.assign(attrs, this.identity.profile)
       clevertap.onUserLogin.push({ Site: attrs })
     } else {
       clevertap.profile.push({ Site: attrs })
@@ -271,7 +278,9 @@ export class IdentityManager {
 
   public get cleverTapID(): string {
     if (this.userId !== this.anonymousLoginUserId && !this.isAnonymous) {
-      return `${this.deviceId}_${this.userId}`
+      const sha = this.sha256(this.userId)
+
+      return `${this.deviceId}_${sha}`
     }
 
     return this.deviceId
@@ -283,5 +292,11 @@ export class IdentityManager {
 
   public get isAnonymous(): boolean {
     return this.userId === this.deviceId
+  }
+
+  private sha256(s: string): string {
+    const sha = new shajs.sha256().update(s).digest('hex')
+
+    return sha.substring(0, 10)
   }
 }

@@ -16,7 +16,6 @@
  */
 
 import ArgsBuilder from './ArgsBuilder'
-import EventEmitter from './EventEmitter'
 import Constants from './Constants'
 import StorageManager from './StorageManager'
 import { CreateRequestFunction } from './types/internal'
@@ -35,7 +34,6 @@ export default class PushManager {
   }
 
   public constructor(
-    private events: EventEmitter,
     private createRequest: CreateRequestFunction
   ) { }
 
@@ -200,8 +198,6 @@ export default class PushManager {
       ) as string
 
       if (existingSubscriptionString !== preparedSubscriptionString) {
-        this.events.emit('webPushSubscribed')
-
         StorageManager.save(
           Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION,
           preparedSubscriptionString

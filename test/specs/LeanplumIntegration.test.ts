@@ -94,20 +94,6 @@ describe('Integration Tests', () => {
     })
   })
 
-  it('pushes notification token when registering with LP', (done) => {
-    mockNextResponse(migrationResponses.DUPLICATE)
-    mockNextResponse(startResponse)
-
-    lp.start(async () => {
-      await lp.registerForWebPush('/sw.test.js')
-
-      // expect ct push to be registered, too
-      expect(clevertap.notifications.push).toHaveBeenCalled()
-
-      done()
-    })
-  })
-
   it('pushes previously registered notification token', (done) => {
     mockNextResponse(migrationResponses.LP)
     mockNextResponse(startResponse)
@@ -129,7 +115,7 @@ describe('Integration Tests', () => {
           sha256: 'changed-sha' // triggers config refresh
         }
       })
-      mockNextResponse(migrationResponses.DUPLICATE)
+      mockNextResponse(migrationResponses.CLEVERTAP)
       mockNextResponse(startResponse)
       lp.track('some-event')
       lpRequestMock.events.emit('migrateStateReceived', 'changed-sha');
