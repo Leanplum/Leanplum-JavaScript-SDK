@@ -47,7 +47,7 @@ const toMigrationState = (obj?: MigrationStateResponse): MigrationState => {
 
 export default class MigrationManager {
   private response: MigrationStateResponse | null = null
-  private identity: IdentityManager
+  public identity: IdentityManager
 
   constructor(private createRequest: CreateRequestFunction) {
     const savedResponse = StorageManager.get(Constants.DEFAULT_KEYS.MIGRATION_STATE)

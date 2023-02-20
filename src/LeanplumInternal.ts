@@ -318,6 +318,9 @@ export default class LeanplumInternal {
       }
 
       this._lpRequest.userId = userId
+      if (userId) {
+        this._migration.identity.setUserId(userId)
+      }
 
       if (callback) {
         this.addStartResponseHandler(callback)
