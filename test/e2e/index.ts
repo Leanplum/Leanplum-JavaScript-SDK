@@ -68,7 +68,6 @@ $('#start,#startFromCache')
 
       $('.requires-start').removeClass('requires-start')
       $('.session-status .badge-warning').remove()
-      updateUserId()
     })
 
 $('#forceContentUpdate')
@@ -166,6 +165,7 @@ $('#sdkVersion').text(Leanplum.VERSION)
 // populate initial info
 updateUserId()
 refreshWebPush()
+Leanplum.on('start', updateUserId)
 
 function refreshWebPush(): void {
   const isSupported = Leanplum.isWebPushSupported()
