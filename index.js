@@ -56,7 +56,6 @@ $('#start,#startFromCache')
     }
     $('.requires-start').removeClass('requires-start');
     $('.session-status .badge-warning').remove();
-    updateUserId();
 });
 $('#forceContentUpdate')
     .click(function () { return Leanplum.forceContentUpdate(); });
@@ -146,6 +145,7 @@ $('#sdkVersion').text(Leanplum.VERSION);
 // populate initial info
 updateUserId();
 refreshWebPush();
+Leanplum.on('start', updateUserId);
 function refreshWebPush() {
     var isSupported = Leanplum.isWebPushSupported();
     $('#isWebPushSupported').text(isSupported ? 'Yes' : 'No');
