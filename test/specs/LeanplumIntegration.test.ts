@@ -151,6 +151,28 @@ describe('Integration Tests', () => {
     expect(clevertap.event.push)
       .toHaveBeenCalledWith('duplicated-event', {})
   })
+
+  it('suppresses all traffic in ct-only mode', () => {
+    mockNextNetworkRequest(migrationResponses.CLEVERTAP)
+
+    lp.start('jon')
+
+    expect(networkMock.ajax).toHaveBeenCalledTimes(1)
+  })
+
+  it('suppresses traffic after loading ct-only mode', () => {
+    localStorage.setItem('__leanplum_migration_state', JSON.stringify(migrationResponses.CLEVERTAP.response[0]))
+    lp = new LeanplumInternal(windowMock)
+    lp.setAppIdForDevelopmentMode('app_123', 'dev_123')
+
+    lp.start('jon')
+
+    lp.track('event1')
+
+    lp.setUserAttributes({ name: 'Barney' })
+
+    expect(networkMock.ajax).not.toHaveBeenCalled()
+  })
 })
 
 function sleep(ms = 100) {
