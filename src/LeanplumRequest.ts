@@ -206,7 +206,9 @@ export default class LeanplumRequest {
         const methodResponse = this.getFirstResponse(response)
         const sha256 = response.migrateState?.sha256 || methodResponse.sha256
 
-        this.events.emit('migrateStateReceived', sha256)
+        if (!/\bgetMigrateState\b/.test(data)) {
+          this.events.emit('migrateStateReceived', sha256)
+        }
 
         if (!methodResponse.success && methodResponse.apiHost) {
           const { apiHost, apiPath, devServerHost } = methodResponse

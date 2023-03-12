@@ -1,4 +1,5 @@
 import LeanplumRequest from '../../src/LeanplumRequest'
+import Network from '../../src/Network'
 import PushManager from '../../src/PushManager'
 import VarCache from '../../src/VarCache'
 import EventEmitter from '../../src/EventEmitter'
@@ -12,9 +13,15 @@ export const lpRequestMock: Partial<jest.Mocked<LeanplumRequest>> & { events?: E
   getFileUrl: jest.fn()
 }
 
+export const networkMock: Partial<jest.Mocked<Network>> = {
+  ajax: jest.fn(),
+  setNetworkTimeout: jest.fn()
+}
+
 export const lpSocketMock = {
   connect: jest.fn(),
   setSocketHost: jest.fn(),
+  setNetworkTimeout: jest.fn(),
 }
 
 export const pushManagerMock: Partial<jest.Mocked<PushManager>> = {
@@ -54,6 +61,15 @@ export function mockNextResponse(data: BatchResponse): void {
       if (options.response) {
         options.response(data)
       }
+    }
+  )
+}
+
+export function mockNextNetworkRequest(data: BatchResponse): void {
+  networkMock.ajax.mockImplementationOnce(
+    (_method, _query, _data, callback) => {
+      //console.log('responding to ', _data);
+      callback(data)
     }
   )
 }

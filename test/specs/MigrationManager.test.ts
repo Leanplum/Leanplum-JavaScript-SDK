@@ -59,7 +59,7 @@ describe(MigrationManager, () => {
 
       manager.verifyState('different-sha')
 
-      expect(createRequest).toHaveBeenCalledTimes(2)
+      expect(createRequest).toHaveBeenCalledTimes(1)
       expect(createRequest).toHaveBeenCalledWith('getMigrateState', expect.anything(), {
         sendNow: true,
         response: expect.any(Function)

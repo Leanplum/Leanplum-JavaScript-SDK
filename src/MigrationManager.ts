@@ -75,8 +75,17 @@ export default class MigrationManager {
   }
 
   public verifyState(sha: string): void {
-    if (this.response?.sha256 !== sha) {
-      this.getMigrationState(noop)
+    if (sha && this.response?.sha256 !== sha) {
+      this.getMigrationState((s) => {
+        if (s === MigrationState.DUPLICATE) {
+          this.initCleverTap()
+          if (!this.identity.isAnonymous) {
+            clevertap.onUserLogin.push({
+              Site: this.identity.profile,
+            })
+          }
+        }
+      })
     }
   }
 
@@ -217,22 +226,31 @@ export default class MigrationManager {
     }, {})
   }
 
+  private _fetching: Promise<MigrationState> | null = null
   private getMigrationState(callback: MigrationStateLoadedCallback): void {
-    this.createRequest('getMigrateState', new ArgsBuilder(), {
-      sendNow: true,
-      response: (r: MigrationStateApiResponse) => {
-        const response = r?.response?.[0]
-        const state = toMigrationState(response)
+    if (this._fetching === null) {
 
-        if (state && state !== MigrationState.UNKNOWN) {
-          StorageManager.save(Constants.DEFAULT_KEYS.MIGRATION_STATE, JSON.stringify(response))
+      this._fetching = new Promise(resolve =>
+        this.createRequest('getMigrateState', new ArgsBuilder(), {
+          sendNow: true,
+          response: (r: MigrationStateApiResponse) => {
+            const response = r?.response?.[0]
+            const state = toMigrationState(response)
 
-          this.response = response
-        }
+            if (state && state !== MigrationState.UNKNOWN) {
+              StorageManager.save(Constants.DEFAULT_KEYS.MIGRATION_STATE, JSON.stringify(response))
 
-        callback(state)
-      },
-    })
+              this.response = response
+            }
+
+            resolve(state)
+          },
+        })
+      )
+    }
+
+    this._fetching.then(callback)
+      .then(() => this._fetching = null)
   }
 }
 

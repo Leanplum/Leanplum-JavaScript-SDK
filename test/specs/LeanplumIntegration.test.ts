@@ -1,29 +1,11 @@
-/*
- *  Copyright 2020 Leanplum Inc. All rights reserved.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at:
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 import clevertap from 'clevertap-web-sdk'
 import LeanplumInternal from '../../src/LeanplumInternal'
 import { startResponse, migrationResponses } from '../data/responses'
 import { windowMock } from '../mocks/external'
-import { lpRequestMock, mockNextResponse, varCacheMock } from '../mocks/internal'
+import { networkMock, mockNextNetworkRequest, lpSocketMock, varCacheMock } from '../mocks/internal'
 
-jest.mock('../../src/LeanplumRequest', () => jest.fn().mockImplementation((events) => {
-  Object.assign(lpRequestMock, { events })
-  return lpRequestMock
-}))
+jest.mock('../../src/SocketIoClient', () => jest.fn().mockImplementation(() => lpSocketMock))
+jest.mock('../../src/Network', () => jest.fn().mockImplementation(() => networkMock))
 jest.mock('../../src/VarCache', () => jest.fn().mockImplementation(() => varCacheMock))
 
 const subscription: PushSubscription = {
@@ -67,6 +49,7 @@ describe('Integration Tests', () => {
     localStorage.clear()
     jest.spyOn(clevertap.notifications, 'push');
     lp = new LeanplumInternal(windowMock)
+    lp.setAppIdForDevelopmentMode('app_123', 'dev_123')
   })
 
   afterEach(() => {
@@ -80,8 +63,8 @@ describe('Integration Tests', () => {
       age: 27
     }
 
-    mockNextResponse(startResponse)
-    mockNextResponse(migrationResponses.LP)
+    mockNextNetworkRequest(migrationResponses.LP)
+    mockNextNetworkRequest(startResponse)
 
     lp.setVariables(variables)
     lp.addVariablesChangedHandler(() => {
@@ -95,8 +78,8 @@ describe('Integration Tests', () => {
   })
 
   it('pushes previously registered notification token', (done) => {
-    mockNextResponse(migrationResponses.LP)
-    mockNextResponse(startResponse)
+    mockNextNetworkRequest(migrationResponses.LP)
+    mockNextNetworkRequest(startResponse)
 
     lp.start(async function f() {
       await lp.registerForWebPush('/sw.test.js')
@@ -107,28 +90,69 @@ describe('Integration Tests', () => {
       expect(clevertap.notifications.push).toHaveBeenCalledTimes(0)
 
       // server config changes
-      mockNextResponse({
+      mockNextNetworkRequest({
         response: [{
           success: true,
         }],
         migrateState: {
-          sha256: 'changed-sha' // triggers config refresh
+          sha256: 'ct81dc2ba80cbf55b1977a51d12c69d8696cf549926b7a71e95f0321879faf1a' // triggers config refresh
         }
       })
-      mockNextResponse(migrationResponses.CLEVERTAP)
-      mockNextResponse(startResponse)
+      mockNextNetworkRequest(migrationResponses.CLEVERTAP)
       lp.track('some-event')
-      lpRequestMock.events.emit('migrateStateReceived', 'changed-sha');
 
+      mockNextNetworkRequest(startResponse)
 
       // expect ct push to register with next start
       lp.start()
 
-      setTimeout(() => {
-        expect(clevertap.notifications.push).toHaveBeenCalledTimes(1)
+      await new Promise(r => setTimeout(r, 100));
 
-        done()
-      }, 1000)
+      expect(clevertap.notifications.push).toHaveBeenCalledTimes(1)
+      done()
     })
   })
+
+  it('pushes events to CT after migrating mid-session', async () => {
+    jest.spyOn(clevertap.event, 'push')
+    jest.spyOn(clevertap.onUserLogin, 'push')
+    mockNextNetworkRequest(migrationResponses.LP)
+    mockNextNetworkRequest(startResponse)
+    const userId = 'jon'
+
+    lp.start(userId)
+
+
+    // migration state LP -> DUPLICATE after session start
+
+    const successResponse = {
+      response: [{ success: true }],
+      migrateState: {
+        sha256: migrationResponses.DUPLICATE.response[0].sha256
+      }
+    }
+    mockNextNetworkRequest(successResponse)
+    mockNextNetworkRequest(migrationResponses.DUPLICATE)
+    mockNextNetworkRequest(successResponse)
+
+    await sleep(100)
+
+    lp.track('some-event')
+    lp.track('duplicated-event')
+
+    await sleep(100)
+
+    expect(clevertap.onUserLogin.push).toHaveBeenCalledWith({
+      Site: {
+        Identity: 'jon',
+        tz: expect.any(String)
+      }
+    })
+    expect(clevertap.event.push)
+      .toHaveBeenCalledWith('duplicated-event', {})
+  })
 })
+
+function sleep(ms = 100) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
