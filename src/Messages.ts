@@ -172,6 +172,12 @@ export default class Messages {
     )
   }
 
+  cleanup(): void {
+    StorageManager.remove(Constants.DEFAULT_KEYS.MESSAGE_CACHE)
+    this._messageCache = {}
+    this.onTrigger = () => { /* noop */ }
+  }
+
   private _showRichIAM = false
 
   enableRichInAppMessages(enabled: boolean): void {

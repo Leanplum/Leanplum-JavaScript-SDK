@@ -315,6 +315,8 @@ export default class LeanplumInternal {
             Constants.DEFAULT_KEYS.TOKEN,
           ].includes(key))
           .forEach(key => StorageManager.remove(key))
+
+        this._messages.cleanup()
       }
 
       this._lpRequest.userId = userId
