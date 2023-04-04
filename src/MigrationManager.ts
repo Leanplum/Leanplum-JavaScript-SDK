@@ -77,7 +77,7 @@ export default class MigrationManager {
   public verifyState(sha: string): void {
     if (sha && this.response?.sha256 !== sha) {
       this.getMigrationState((s) => {
-        if (s === MigrationState.DUPLICATE) {
+        if (s === MigrationState.DUPLICATE || s ===  MigrationState.CLEVERTAP) {
           this.initCleverTap()
           if (!this.identity.isAnonymous) {
             clevertap.onUserLogin.push({
