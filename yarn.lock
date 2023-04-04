@@ -1194,9 +1194,9 @@
     popper.js "^1.14.1"
 
 "@types/clevertap-web-sdk@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@types/clevertap-web-sdk/-/clevertap-web-sdk-1.1.0.tgz#6fbc872c32c44a0842203e0eb156f704b7450a22"
-  integrity sha512-bqKKTxqL5hiJMEMSl2ejOC4CcNOjmKlM+6c2Guw2uyNsWUg4RtpJoFOg4w8loxeLJPN7QGGWwmNg6S4jSR6Usg==
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@types/clevertap-web-sdk/-/clevertap-web-sdk-1.1.1.tgz#e95be5dbaa9dfad7512ba60c67422af221a7b124"
+  integrity sha512-UVacDYp4VN01QDoHXjuUidgER9lRNdWaLAmSW5ETeGKeCPJ/BFvEv7oAyBGBi+wOh/Fl+DYB0CCPwVChqOSZjg==
 
 "@types/color-name@^1.1.1":
   version "1.1.1"
@@ -2291,9 +2291,9 @@ clean-stack@^2.0.0:
   integrity sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==
 
 clevertap-web-sdk@^1.3.3:
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/clevertap-web-sdk/-/clevertap-web-sdk-1.3.3.tgz#bc3bb424d22563f26d8f8e8d30d533c12dda0b9d"
-  integrity sha512-vm3+oxigaYejySfDRcvXSz2DiTVnzx72zXuLbGgOGnE5EUIuHe3wyE2KYl2cy7gRtk4t/FBZ9N+8EeKyvSvF1g==
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/clevertap-web-sdk/-/clevertap-web-sdk-1.5.0.tgz#c1eef94374fe553b03abcb0fef1937b803b89b57"
+  integrity sha512-fsTb6HvslMO6mz1KcKWLRVEQs6HJRml55zT5qG12I4O4Hhfc0ae9Z4t6KM4psBNGCCsa+OURzuMAOxxy75jLyg==
 
 cli-columns@^4.0.0:
   version "4.0.0"
