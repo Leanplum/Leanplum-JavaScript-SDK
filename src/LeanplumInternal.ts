@@ -313,6 +313,7 @@ export default class LeanplumInternal {
             Constants.DEFAULT_KEYS.USER_ID,
             Constants.DEFAULT_KEYS.DEVICE_ID,
             Constants.DEFAULT_KEYS.TOKEN,
+            Constants.DEFAULT_KEYS.MIGRATION_STATE,
           ].includes(key))
           .forEach(key => StorageManager.remove(key))
 
