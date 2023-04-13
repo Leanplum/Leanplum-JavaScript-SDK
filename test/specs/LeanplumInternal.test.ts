@@ -973,6 +973,7 @@ describe(LeanplumInternal, () => {
       expect(localStorage[KEYS.USER_ID]).toBe('aaa')
       expect(localStorage[KEYS.DEVICE_ID]).toBe('aaa')
       expect(localStorage[KEYS.TOKEN]).toBe('aaa')
+      expect(localStorage[KEYS.MIGRATION_STATE]).toBe('aaa')
     })
 
     it('suppresses requests in ct-only mode', () => {
