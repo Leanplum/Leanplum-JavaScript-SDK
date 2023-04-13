@@ -428,6 +428,13 @@ export default class LeanplumInternal {
     this._internalState.hasStarted = true
     this._internalState.startSuccessful = true
 
+
+    this._migration.getState((state: MigrationState) => {
+      if (state === MigrationState.DUPLICATE || state === MigrationState.CLEVERTAP) {
+        this._ct = this._migration.initCleverTap()
+      }
+    })
+
     if (this._internalState.devMode) {
       this.connectSocket()
     }

@@ -996,6 +996,17 @@ describe(LeanplumInternal, () => {
 
       expect(clevertap.notifications.push).toHaveBeenCalledTimes(0)
     })
+
+    it('initializes CT state from cache', () => {
+      jest.spyOn(clevertap, 'init')
+
+      migrationMock.getState.mockImplementationOnce(
+        (callback) => callback(MigrationState.CLEVERTAP)
+      )
+      lp.startFromCache(() => {
+        expect(migrationMock.initCleverTap).toHaveBeenCalledTimes(1)
+      })
+    })
   })
 
   describe('Misc', () => {
