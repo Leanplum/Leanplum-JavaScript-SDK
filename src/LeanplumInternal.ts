@@ -291,22 +291,7 @@ export default class LeanplumInternal {
       } else if (state === MigrationState.CLEVERTAP) {
         this._ct = this._migration.initCleverTap()
 
-        // move subscription in CT
-        this.isWebPushSubscribed().then((isSubscribed) => {
-          if (isSubscribed) {
-            this._pushManager.unsubscribeUser()
-
-            const serviceWorkerPath = this._webPushOptions?.serviceWorkerUrl
-            const path = serviceWorkerPath ? { serviceWorkerPath } : {}
-            this._ct && this._ct.notifications.push({
-              titleText: '',
-              bodyText: '',
-              okButtonText: '',
-              rejectButtonText: '',
-              ...path,
-            })
-          }
-        })
+        this.migratePushToken()
 
         Object.values(Constants.DEFAULT_KEYS)
           .filter(key => ![
@@ -701,5 +686,26 @@ export default class LeanplumInternal {
 
   private updateSession(): void {
     StorageManager.save(SESSION_KEY, String(Date.now()))
+  }
+
+  private migratePushToken(): void {
+    if (StorageManager.get(Constants.DEFAULT_KEYS.PUSH_SUBSCRIPTION)) {
+      // move subscription in CT
+      this.isWebPushSubscribed().then((isSubscribed: boolean) => {
+        if (isSubscribed) {
+          this._pushManager.unsubscribeUser()
+
+          const serviceWorkerPath = this._webPushOptions?.serviceWorkerUrl
+          const path = serviceWorkerPath ? { serviceWorkerPath } : {}
+          this._ct && this._ct.notifications.push({
+            titleText: '',
+            bodyText: '',
+            okButtonText: '',
+            rejectButtonText: '',
+            ...path,
+          })
+        }
+      })
+    }
   }
 }
