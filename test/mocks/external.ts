@@ -31,3 +31,12 @@ xhrMock.resolveRequest = function() {
     jest.runAllTimers()
   }
 }
+
+xhrMock.blockRequest = function() {
+  const xhr = xhrQueue.shift()
+  if (xhr) {
+    xhr.status = 0
+    xhr.onerror()
+    jest.runAllTimers()
+  }
+}

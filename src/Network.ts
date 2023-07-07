@@ -109,14 +109,23 @@ export default class Network {
         }
       }
     }
-    xhr.open(method, url, true)
-    xhr.setRequestHeader('Content-Type', 'text/plain') // Avoid pre-flight.
-    xhr.send(data)
-    setTimeout(() => {
-      if (!handled) {
-        xhr.abort()
+    var blocked = false
+    xhr.onerror = xhr.ontimeout = () => {
+      if (xhr.status === 0) {
+        blocked = true
+        this.requestQueue.splice(0, this.requestQueue.length)
       }
-    }, this.networkTimeoutSeconds * 1000)
+    }
+    if (!blocked) {
+      xhr.open(method, url, true)
+      xhr.setRequestHeader('Content-Type', 'text/plain') // Avoid pre-flight.
+      xhr.send(data)
+      setTimeout(() => {
+        if (!handled) {
+          xhr.abort()
+        }
+      }, this.networkTimeoutSeconds * 1000)
+    }
   }
 
   /**
