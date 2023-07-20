@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "yarn run clean && cross-env NODE_ENV=production webpack && yarn run e2e-build",
-    "clean": "rimraf dist",
+    "clean": "rimraf \"dist/!(*.d.ts)\" dist/sw",
     "lint": "yarn eslint 'src/**/*.{ts,tsx}'",
     "start": "cross-env NODE_ENV=development webpack --watch",
     "e2e-build": "mkdir -p ./test/e2e/dist/ && cp ./dist/leanplum.js ./test/e2e/dist/leanplum.js && tsc --project tsconfig.e2e.json && yarn run e2e-copy",
