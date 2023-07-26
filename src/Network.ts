@@ -109,7 +109,7 @@ export default class Network {
         }
       }
     }
-    var blocked = false
+    let blocked = false
     xhr.onerror = xhr.ontimeout = () => {
       if (xhr.status === 0) {
         blocked = true
