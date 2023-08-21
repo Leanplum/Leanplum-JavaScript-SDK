@@ -76,8 +76,9 @@ export default class LeanplumInbox implements Inbox {
     this.createRequest('deleteNewsfeedMessage', args, {})
   }
 
-  public onChanged(handler: Function): void {
-    this.changeHandlers.push(handler)
+  public onChanged(handler: Function): Function {
+    const idx = this.changeHandlers.push(handler)
+    return () => this.changeHandlers.splice(idx-1, 1)
   }
 
   private triggerChangeHandlers(): void {

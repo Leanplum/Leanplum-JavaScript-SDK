@@ -116,7 +116,7 @@ export interface Inbox {
   markAsRead(messageId: string): void;
   read(messageId: string): void;
   remove(messageId: string): void;
-  onChanged(handler: Function): void;
+  onChanged(handler: Function): Function;
   count(): number;
   unreadCount(): number;
   allMessages(): InboxMessage[];
