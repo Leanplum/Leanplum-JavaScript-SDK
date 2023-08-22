@@ -77,8 +77,8 @@ export default class LeanplumInbox implements Inbox {
   }
 
   public onChanged(handler: Function): Function {
-    const idx = this.changeHandlers.push(handler)
-    return () => this.changeHandlers.splice(idx-1, 1)
+    this.changeHandlers.push(handler)
+    return () => this.changeHandlers = this.changeHandlers.filter(x => x !== handler)
   }
 
   private triggerChangeHandlers(): void {

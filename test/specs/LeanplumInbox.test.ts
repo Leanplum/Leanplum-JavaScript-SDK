@@ -86,6 +86,26 @@ describe(LeanplumInbox, () => {
 
       expect(handler).toHaveBeenCalledTimes(0)
     })
+
+    it('unsubscribes the correct handler', () => {
+      const one = jest.fn()
+      const two = jest.fn()
+      const three = jest.fn()
+
+      const removeOne = inbox.onChanged(one)
+      inbox.onChanged(two)
+      const removeThree = inbox.onChanged(three)
+      removeOne();
+      removeThree();
+
+      mockMessages({
+        '123##1': {},
+      })
+
+      expect(one).toHaveBeenCalledTimes(0)
+      expect(two).toHaveBeenCalledTimes(1)
+      expect(three).toHaveBeenCalledTimes(0)
+    })
   })
 
   describe('allMessages', () => {
