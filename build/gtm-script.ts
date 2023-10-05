@@ -1,6 +1,5 @@
 import { exec } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
-import Leanplum from '../src/LeanplumInternal';
 
 const GTM_REPO_PATH = './gtm-tag';
 const GTM_REPO = 'git@github.com:Leanplum/Leanplum-GTM-Tag.git';
@@ -23,9 +22,7 @@ const execSequential = (commands: string[]): Promise<any> =>
   )
 
 async function run() {
-  const allMethods = Object.getOwnPropertyNames(Leanplum.prototype);
-  // hack: createRequest is the first private method, thus slicing all public ones, removing the constructor (first field)
-  const publicMethods = allMethods.slice(1, allMethods.indexOf('createRequest'));
+  const publicMethods = [ "setApiPath", "setEmail", "setNetworkTimeout", "setAppIdForDevelopmentMode", "setAppIdForProductionMode", "setSocketHost", "setDeviceId", "setLocale", "setAppVersion", "setDeviceName", "setDeviceModel", "setRequestBatching", "setSystemName", "setSystemVersion", "setVariables", "setVariantDebugInfoEnabled", "enableRichInAppMessages", "processMessageEvent", "getVariantDebugInfo", "getVariables", "getVariable", "getVariants", "inbox", "addStartResponseHandler", "removeStartResponseHandler", "addVariablesChangedHandler", "removeVariablesChangedHandler", "forceContentUpdate", "useSessionLength", "start", "startFromCache", "stop", "pauseSession", "resumeSession", "pauseState", "resumeState", "getUserId", "setUserId", "setUserAttributes", "track", "trackPurchase", "advanceTo", "isWebPushSupported", "isWebPushSubscribed", "setWebPushOptions", "registerForWebPush", "unregisterFromWebPush", "clearUserContent", "defineAction", "applyQueue", "on", "off", "getFileUrl"];
   let [ version ] = await execParallel([
     'npm show leanplum-sdk version',
     `git clone ${GTM_REPO} ${GTM_REPO_PATH}`
