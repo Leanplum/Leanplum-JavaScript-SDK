@@ -4,7 +4,7 @@ import StorageManager from './StorageManager'
 import Constants from './Constants'
 import ArgsBuilder from './ArgsBuilder'
 
-type Region = 'eu1' | 'in1' | 'sg1' | 'us1' | 'sk1';
+type Region = 'eu1' | 'in1' | 'sg1' | 'us1' | 'sk1' | 'aps3' | 'mec1';
 
 type Attributes = Record<string, string>;
 
@@ -94,7 +94,7 @@ export default class MigrationManager {
     if (!config) {
       return
     }
-    clevertap.init(config.accountId, config.regionCode)
+    clevertap.init(config.accountId, config.regionCode, '', config.token)
 
     return clevertap
   }
