@@ -15,7 +15,7 @@
   "devDependencies": {
     "@semantic-release/exec": "^6.0.3",
     "@types/bootstrap": "^4.5.0",
-    "@types/clevertap-web-sdk": "1.1.11",
+    "@types/clevertap-web-sdk": "^1.1.13",
     "@types/jest": "^25.2.1",
     "@types/jquery": "^3.3.38",
     "@types/node": "^13.13.4",
@@ -109,6 +109,6 @@
   "homepage": "https://github.com/Leanplum/Leanplum-JavaScript-SDK#readme",
   "dependencies": {
     "@qiwi/semrel-metabranch": "^3.1.2",
-    "clevertap-web-sdk": "1.9.2"
+    "clevertap-web-sdk": "2.3.0"
   }
 }
