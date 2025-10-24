@@ -72,7 +72,7 @@
     "url": "https://github.com/Leanplum/Leanplum-JavaScript-SDK/issues"
   },
   "release": {
-    "repositoryUrl": "git@github.com:Leanplum/Leanplum-JavaScript-SDK.git",
+    "repositoryUrl": "https://github.com/Leanplum/Leanplum-JavaScript-SDK.git",
     "tagFormat": "${version}",
     "branches": [
       "master",
