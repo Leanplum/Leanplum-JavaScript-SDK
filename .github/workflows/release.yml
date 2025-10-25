@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          persist-credentials: false
+          persist-credentials: true
           fetch-depth: 0
       - name: Setup Git
         run: |
@@ -27,5 +27,4 @@ jobs:
         run: npx semantic-release
         env:
           NPM_TOKEN: ${{secrets.npm_token}}
-          GH_TOKEN: ${{secrets.GH_TOKEN}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
